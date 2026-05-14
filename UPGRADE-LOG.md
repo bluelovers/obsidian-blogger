@@ -13,6 +13,19 @@
 | 套件管理 | npm | pnpm |
 | 打包工具 | esbuild | esbuild（未變） |
 
+### npm → pnpm 轉換相關變更
+
+**移除 `commit-and-tag-version`**：原本用於自動化版本號 bump 與 release 流程（提供 `release`、`release-major`、`release-minor`、`release-patch` 等腳本）。切換至 pnpm 後，release 流程改用新版 Node.js 內建功能或獨立工具執行，不再依賴此套件，因此移除相關腳本與設定區塊。
+
+**新增 `pnpm-workspace.yaml`**：
+```yaml
+allowBuilds:
+  esbuild: true
+```
+pnpm 預設不允許套件執行 postinstall scripts（隔離政策以提升安全性）。`esbuild` 在安裝時需要執行下載二進位檔的 postinstall 腳本，因此需要在 `pnpm-workspace.yaml` 中明確允許。
+
+**更新多數 devDependencies 至最新相容版本**：TypeScript 6 對套件類型定義的相容性要求更高，因此一併將 `@types/*`、eslint 相關套件、`esbuild`、`markdown-it`、`juice`、`date-fns` 等多個依賴更新至與 TypeScript 6 相容的最新版本。其中 `markdown-it`（13→14）、`esbuild`（0.17→0.28）等屬於 major 版本升級，引入了各自的 breaking changes，已在後續章節中處理相關型別問題。
+
 ---
 
 ## 二、問題一：`Cannot find name 'http'`
@@ -132,18 +145,56 @@ body.push(encoder.encode(data));  // encoder.encode() 回傳 Uint8Array ❌
 ```
 `TextEncoder.encode()` 回傳 `Uint8Array`，但 `body` 被聲明為 `ArrayBuffer[]`。
 
-### WHAT（解決方式）
+### ❌ 負面案例：使用 `.buffer` 轉換來滿足錯誤的型別註記（0001 錯誤方案）
 
-**oauth2-client.ts** — 使用 `.buffer` 屬性取得底層 `ArrayBuffer`：
+**第一次嘗試** — 在回傳點加 `.buffer` 轉換，保留 `: ArrayBuffer` 型別註記：
 ```typescript
 const stringToBuffer = (input: string): ArrayBuffer => {
    const buf = new Uint8Array(input.length);
    for (let i = 0; i < input.length; i++) {
      buf[i] = input.charCodeAt(i) & 0xff;
    }
-   return buf.buffer;  // ✅ 正確取得 ArrayBuffer
+   return buf.buffer;  // ❌ 強制轉型去迎合錯誤的型別註記
 };
 ```
+同時在 `generateCodeVerifier` 也加入 `.buffer`：
+```typescript
+return base64Url(arr.buffer);  // arr 已是 Uint8Array，.buffer 多餘
+```
+此外，此方案還伴隨著大範圍的縮排錯誤變更（2→3 空格）。
+
+**問題：**
+1. **迴避根本原因** — `: ArrayBuffer` 這個型別註記本身就是錯誤的（函式實際產出 `Uint8Array`），正確做法應移除它而非加 `.buffer` 轉換繞過
+2. **多餘的轉換** — `crypto.subtle.digest()` 接受 `BufferSource`，`Uint8Array` 屬於 `ArrayBufferView`，可直接傳入，不需要轉 `ArrayBuffer`；`base64Url` 本體的 `new Uint8Array(buf)` 也兩者皆可接受
+3. **人為 API 限制** — `base64Url(buf: ArrayBuffer)` 維持過窄簽章，拒絕了合法的 `Uint8Array` 輸入，但本體實作明明可以處理
+4. **縮排錯誤** — 大範圍的縮排變更產生 diff 雜訊（約 20 行非功能性變更），使 code review 難以聚焦
+5. **修改擴散** — 需要一一找出所有 `Uint8Array`→`ArrayBuffer` 傳遞點加 `.buffer`，而非從源頭修正型別，後續維護成本高
+
+### WHAT（最終正確解決方式）
+
+**核心思路**：不要對抗型別系統，讓型別自然流通。
+
+**oauth2-client.ts** — 只需修改兩處函式簽章，不需任何 `.buffer` 轉換：
+```typescript
+// 1. 移除錯誤的 :ArrayBuffer 回傳型別 — 函式本來就回傳 Uint8Array
+const stringToBuffer = (input: string) => {  // TS 自動推導為 Uint8Array
+   const buf = new Uint8Array(input.length);
+   for (let i = 0; i < input.length; i++) {
+     buf[i] = input.charCodeAt(i) & 0xff;
+   }
+   return buf;  // ✅ 正確回傳 Uint8Array
+};
+
+// 2. 放寬參數型別為聯合型別 — 本體實作已支援
+const base64Url = (buf: ArrayBuffer | Uint8Array): string => {
+   return btoa(String.fromCharCode(...new Uint8Array(buf)))
+     .replace(/\+/g, '-')
+     .replace(/\//g, '_')
+     .replace(/=+$/, '');
+};
+```
+
+> `generateCodeVerifier` 無需任何修改。因 `base64Url` 已接受 `Uint8Array`，傳入 `Uint8Array` 的 `arr` 自然相容。
 
 **types.ts** — 擴大 `body` 的類型定義，並用 `as any` 處理 `Blob` 類型不匹配：
 ```typescript
@@ -232,15 +283,13 @@ import Token from 'markdown-it/lib/token';
 import StateInline from 'markdown-it/lib/rules_inline/state_inline';
 import StateBlock from 'markdown-it/lib/rules_block/state_block';
 
-// ✅ 改為使用 any 避免類型問題（因為這些是內部 API）
-// 在 markdown-it-mathjax3-plugin.ts 中：
-// 移除 Token import，改用 any[] 替代
-// 移除 StateInline/StateBlock import，改用 any 替代
+// ✅ 改為從主模組匯入（@types/markdown-it 已匯出這些類型）
+import MarkdownIt, { StateBlock, StateInline, Token } from 'markdown-it';
 ```
 
 實際上，刪除自建的 `markdown-it.d.ts` 後，`@types/markdown-it` 的主模組已經提供了 `Token`、`StateInline`、`StateBlock` 的類型。問題在於子路徑 `import` 語句本身無法被解析。
 
-最終的實際解決方案是：**保留子路徑 import，但讓 `@types/markdown-it` 的 types 欄位處理類型載入**。pnpm + TS6 的組合在 `types` 欄位正確設定的情況下，能夠自動解析子路徑模組。
+最終的實際解決方案是：**將子路徑 import 全部改為從主模組匯入**（如 `import MarkdownIt, { Token } from 'markdown-it'`），讓 `@types/markdown-it` 的 main entry 處理類型載入。配合 tsconfig 中 `types: ["markdown-it", "node"]` 的設定，TypeScript 即可正確解析所有 markdown-it 的類型。
 
 ---
 
@@ -287,23 +336,61 @@ src/markdown-it-mathjax3-plugin.ts(30,52): error TS2345: Argument of type '(stat
 
 ### `tsconfig.json` 變更
 ```diff
-   "compilerOptions": {
-     ...
+    "compilerOptions": {
+      ...
++    "ignoreDeprecations": "6.0",
+      "lib": [
+        "DOM",
+        "ES5",
+        "ES6",
+        "ES7",
++       "ES2017",
++       "ES2019",
++       "ES2020"
+      ],
 +    "types": [
 +      "markdown-it",
 +      "node"
 +    ]
-   }
+    }
 ```
+
+> `ignoreDeprecations: "6.0"` 用於抑制 TypeScript 6 對某些舊語法/選項的棄用警告，確保升級過程中既有程式碼可以被順利編譯。
+
+### `package.json` 變更
+```diff
+-    "release": "commit-and-tag-version",
+-    "release-test": "commit-and-tag-version --dry-run",
+-    "release-major": "commit-and-tag-version --release-as major",
+-    ...
++    // 移除所有 commit-and-tag-version 相關腳本
+-    "commit-and-tag-version": { ... },
++    // 移除整個設定區塊
+```
+
+同時更新所有 `devDependencies` 至與 TypeScript 6 相容的最新版本。主要 major 升級：
+- `markdown-it` 13.x → 14.1.1
+- `esbuild` 0.17.3 → 0.28.0
+- `@types/node` ^20.10.4 → ^25.8.0
+- `@typescript-eslint/*` ^6.14.0 → ^8.59.3
+- `juice` ^9.1.0 → ^11.1.1
+- `date-fns` ^2.28.0 → ^4.1.0
+- `tslib` 2.4.0 → 2.8.1
+
+### 新增檔案
+- `pnpm-workspace.yaml` — pnpm 設定：允許 esbuild 執行 postinstall script
+- `AGENTS.md` — Agent 執行規範
 
 ### `src/oauth2-client.ts` 變更
 ```diff
--  return base64Url(arr);
-+  return base64Url(arr.buffer);
+- const stringToBuffer = (input: string): ArrayBuffer => {
++ const stringToBuffer = (input: string) => {
 
--  return buf;
-+  return buf.buffer;
+- const base64Url = (buf: ArrayBuffer): string => {
++ const base64Url = (buf: ArrayBuffer | Uint8Array): string => {
 ```
+
+> `generateCodeVerifier` 無需修改，因 `base64Url` 已接受 `Uint8Array`。
 
 ### `src/types.ts` 變更
 ```diff
@@ -313,9 +400,6 @@ src/markdown-it-mathjax3-plugin.ts(30,52): error TS2345: Argument of type '(stat
 -  body.push(media.content);
 +  body.push(new Uint8Array(media.content));
 ```
-
-### 新增檔案
-- `AGENTS.md` — Agent 執行規範
 
 ### 刪除檔案
 - `src/markdown-it.d.ts` — 與 `@types/markdown-it` 衝突的自建宣告檔
@@ -328,4 +412,6 @@ src/markdown-it-mathjax3-plugin.ts(30,52): error TS2345: Argument of type '(stat
 2. **`lib` 欄位決定可用的全域 API** — 使用 `Object.fromEntries`、`Object.entries` 等需要對應的 `lib` 版本
 3. **不要輕易覆蓋第三方類型宣告** — `declare module` 與 `@types` 套件可能產生衝突，優先使用套件提供的類型
 4. **子路徑 import 的類型解析** — 某些套件不為子路徑提供獨立 `.d.ts`，需要確認 `@types` 套件是否支援
-5. **`Uint8Array` ≠ `ArrayBuffer`** — 在嚴格類型檢查下，這兩者不能互換，需要明確轉換
+5. **型別註記錯誤是根源，不要加轉換繞過** — `: ArrayBuffer` 回傳型別本身就是錯誤的（實際回傳 `Uint8Array`）。與其加 `.buffer` 轉換去迎合錯誤的型別，不如直接修正型別註記本身。TS6 的嚴格檢查揭露了這些歷史遺留的型別錯誤
+6. **API 簽章應與實作一致** — 如果函式本體可以處理多種輸入型別（如 `new Uint8Array(buf)` 可接受 `ArrayBuffer` 和 `Uint8Array`），簽章就不應人為限制為較窄的型別
+7. **Diff 應保持最小變更** — 修復型別錯誤時不應夾帶無關的縮排變更，這會產生 diff 雜訊、干擾 code review

@@ -72,14 +72,14 @@ export class FormItems {
             `Content-Disposition: form-data; name="${itemName}"; filename="${media.fileName}"${CRLF}Content-Type: ${media.mimeType}${CRLF}${CRLF}`,
           ),
         );
-        body.push(media.content);
+        body.push(new Uint8Array(media.content));
       }
       body.push(encoder.encode(CRLF));
     };
 
     const encoder = new TextEncoder();
     const encodedItemStart = encoder.encode(`--${option.boundary}${CRLF}`);
-    const body: ArrayBuffer[] = [];
+    const body: (Uint8Array | ArrayBuffer)[] = [];
     Object.entries(this.#formData).forEach(([name, data]) => {
       if (isArray(data)) {
         data.forEach((item) => {
@@ -90,6 +90,6 @@ export class FormItems {
       }
     });
     body.push(encoder.encode(`--${option.boundary}--`));
-    return new Blob(body).arrayBuffer();
+    return new Blob(body as any).arrayBuffer();
   }
 }

@@ -229,7 +229,7 @@ const getCodeChallenge = async (codeVerifier: string): Promise<['plain' | 'S256'
   return ['S256', base64Url(await crypto.subtle.digest('SHA-256', stringToBuffer(codeVerifier)))];
 };
 
-const stringToBuffer = (input: string): ArrayBuffer => {
+const stringToBuffer = (input: string) => {
   const buf = new Uint8Array(input.length);
   for (let i = 0; i < input.length; i++) {
     buf[i] = input.charCodeAt(i) & 0xff;
@@ -237,7 +237,7 @@ const stringToBuffer = (input: string): ArrayBuffer => {
   return buf;
 };
 
-const base64Url = (buf: ArrayBuffer): string => {
+const base64Url = (buf: ArrayBuffer | Uint8Array): string => {
   return btoa(String.fromCharCode(...new Uint8Array(buf)))
     .replace(/\+/g, '-')
     .replace(/\//g, '_')

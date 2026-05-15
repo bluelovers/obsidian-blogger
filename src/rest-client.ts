@@ -1,8 +1,9 @@
-import { requestUrl } from 'obsidian';
 import { getBoundary } from './utils';
 import { ISafeAny } from './types';
 import { IFormItemNameMapper, FormItems } from './utils/type-utils';
 import { EnumPostStatus } from './types/const';
+import { AbstractRequestClientWithConstructor } from './client/request/request-client';
+import { IObsidianRequest } from './client/request/abstract-request-client';
 
 interface IRestOptions
 {
@@ -98,14 +99,18 @@ export interface IBloggerPostApiReturn extends Omit<IBloggerPostApiBody, 'labels
   status: EnumPostStatus,
 }
 
-export class RestClient {
+export class RestClient extends AbstractRequestClientWithConstructor
+{
   /**
    * Href without '/' at the very end.
    * @private
    */
-  private readonly href: string;
+  protected readonly href: string;
 
-  constructor(private readonly options: IRestOptions) {
+  constructor(protected readonly options: IRestOptions, obsidianRequest?: IObsidianRequest)
+  {
+    super(obsidianRequest);
+
     this.href = this.options.url.href;
     if (this.href.endsWith('/')) {
       this.href = this.href.substring(0, this.href.length - 1);
@@ -130,7 +135,7 @@ export class RestClient {
       headers: {},
       ...options,
     };
-    const response = await requestUrl({
+    const response = await this.requestUrl({
       url: endpoint,
       method: 'GET',
       headers: {
@@ -178,7 +183,7 @@ export class RestClient {
       requestBody = JSON.stringify(body);
       predefinedHeaders['content-type'] = 'application/json';
     }
-    const response = await requestUrl({
+    const response = await this.requestUrl({
       url: endpoint,
       method: 'POST',
       headers: {
@@ -228,7 +233,7 @@ export class RestClient {
       requestBody = JSON.stringify(body);
       predefinedHeaders['content-type'] = 'application/json';
     }
-    const response = await requestUrl({
+    const response = await this.requestUrl({
       url: endpoint,
       method: 'PUT',
       headers: {

@@ -1,4 +1,4 @@
-import { Modal, Notice, Platform, Plugin, Setting, requestUrl } from 'obsidian';
+import { Notice, Platform, Plugin, Setting } from 'obsidian';
 import { getGlobalI18n } from './i18n/i18n';
 import { IBloggerProfile } from './blogger-profile';
 import { BLOGGER_API_ENDPOINT } from './consts';
@@ -6,6 +6,8 @@ import { IFreshInternalOAuth2Token, OAuth2Client } from './oauth2-client';
 import { generateQueryString, isValidBloggerUrl, showError } from './utils';
 import { reauthorizeGoogleToken } from './blogger-oauth2-client';
 import { ITranslateKey } from './i18n/langs';
+import { IAbstractRequestClientLike } from './client/request/abstract-request-client';
+import { AbstractObsidianModal } from './client/request/obsidian-request';
 
 export const openProfileModal = (
   plugin: Plugin,
@@ -34,11 +36,12 @@ export const openProfileModal = (
 const fetchBlogId = async (
   blogEndpoint: string,
   token: IFreshInternalOAuth2Token,
+  requestClient: IAbstractRequestClientLike,
 ): Promise<IBloggerProfile["blogId"]> => {
   const blogIdEndpoint = `${BLOGGER_API_ENDPOINT}/byurl?${generateQueryString({
     url: blogEndpoint,
   })}`;
-  const response = await requestUrl({
+  const response = await requestClient.requestUrl({
     url: blogIdEndpoint,
     method: 'GET',
     headers: {
@@ -53,7 +56,8 @@ const fetchBlogId = async (
 /**
  * Blogger profile modal.
  */
-class BloggerProfileModal extends Modal {
+class BloggerProfileModal extends AbstractObsidianModal
+{
   private readonly profileData: Partial<IBloggerProfile>;
 
   constructor(
@@ -188,7 +192,7 @@ class BloggerProfileModal extends Modal {
       throw new Error(getGlobalI18n().t('error_invalidGoogleToken'));
     }
     const fresh_token = await this.oAuth2Client.ensureFreshToken(googleOAuth2Token);
-    const blogId = await fetchBlogId(endpoint, fresh_token);
+    const blogId = await fetchBlogId(endpoint, fresh_token, this);
     const isDefault = this.profileData.isDefault ?? false;
     return { name, endpoint, blogId, googleOAuth2Token, isDefault };
   };

@@ -1,5 +1,4 @@
 import { generateQueryString, openWithBrowser } from './utils';
-import { requestUrl } from 'obsidian';
 import {
   GOOGLE_OAUTH2_AUTHORIZE_ENDPOINT,
   GOOGLE_OAUTH2_TOKEN_ENDPOINT,
@@ -8,6 +7,8 @@ import {
 import { IBrand } from './types';
 import { getGlobalI18n } from './i18n/i18n';
 import { IOauth2ClientCredentials } from './plugin-settings';
+import { IObsidianRequest } from './client/request/abstract-request-client';
+import { AbstractRequestClientWithConstructor } from './client/request/request-client';
 
 export type IOAuth2TokenProto = {
   accessToken: string;
@@ -75,8 +76,12 @@ export const getGoogleOAuth2Client = (
   });
 };
 
-export class OAuth2Client {
-  constructor(private readonly options: IOAuth2Options) {}
+export class OAuth2Client extends AbstractRequestClientWithConstructor
+{
+  constructor(protected readonly options: IOAuth2Options, obsidianRequest?: IObsidianRequest)
+  {
+    super(obsidianRequest);
+  }
 
   getAuthorizeCode = async (params: IGetAuthorizeCodeParams): Promise<void> => {
     const query: {
@@ -130,7 +135,7 @@ export class OAuth2Client {
       code_verifier: params.codeVerifier,
     };
     const requestTime = Date.now();
-    const response = await requestUrl({
+    const response = await this.requestUrl({
       url: this.options.tokenEndpoint,
       method: 'POST',
       headers: {
@@ -169,7 +174,7 @@ export class OAuth2Client {
       refresh_token: params.refresh_token,
     };
     const requestTime = Date.now();
-    const response = await requestUrl({
+    const response = await this.requestUrl({
       url: this.options.tokenEndpoint,
       method: 'POST',
       headers: {
@@ -208,7 +213,7 @@ export class OAuth2Client {
   };
 
   validateToken = async (params: IValidateTokenParams): Promise<void> => {
-    await requestUrl({
+    await this.requestUrl({
       url: `${this.options.validateTokenEndpoint}?access_token=${params.token}`,
       method: 'GET',
       headers: {

@@ -5,7 +5,7 @@ import {
   GOOGLE_OAUTH2_REDIRECT_URI_LOCAL,
   GOOGLE_OAUTH2_REDIRECT_URI_WEB,
 } from './consts';
-import { getGlobalI18n } from './i18n';
+import { getGlobalI18n } from './i18n/i18n';
 import { IFreshInternalOAuth2Token, OAuth2Client, generateCodeVerifier } from './oauth2-client';
 import { createServer } from 'http';
 import { Notice, Plugin } from 'obsidian';

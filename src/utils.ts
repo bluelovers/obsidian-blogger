@@ -1,5 +1,5 @@
 import { App, Notice, TFile } from 'obsidian';
-import { IBloggerClientResult } from './blogger-client-interface';
+import { IBloggerClientResult } from './types/blogger-client-interface';
 import { isString } from 'lodash-es';
 import { ERROR_NOTICE_TIMEOUT } from './consts';
 import { format } from 'date-fns';
@@ -69,7 +69,7 @@ export async function processFile(
 ): Promise<{ content: string; matter: IMatterData }> {
   let fm = app.metadataCache.getFileCache(file)?.frontmatter;
   if (!fm) {
-    await app.fileManager.processFrontMatter(file, (matter) => {
+    await app.fileManager.processFrontMatter(file, (matter: IMatterData) => {
       fm = matter;
     });
   }

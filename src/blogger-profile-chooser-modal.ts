@@ -1,6 +1,7 @@
 import { App, Modal, Setting } from 'obsidian';
 import { IBloggerProfile, rendererProfile } from './blogger-profile';
-import { ITranslateKey, getGlobalI18n } from './i18n';
+import { getGlobalI18n } from './i18n/i18n';
+import { ITranslateKey } from './i18n/langs';
 
 export function openProfileChooserModal(
   app: App,

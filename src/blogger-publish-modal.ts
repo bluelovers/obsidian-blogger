@@ -1,9 +1,10 @@
 import { App, Modal, Setting } from 'obsidian';
-import { IBloggerPostParams } from './blogger-client-interface';
-import { ITranslateKey, getGlobalI18n } from './i18n';
+import { IBloggerPostParams } from './types/blogger-client-interface';
+import { getGlobalI18n } from './i18n/i18n';
 import { IMatterData } from './types';
 import { IPluginSettings } from './plugin-settings';
 import { EnumPostStatus } from './types/const';
+import { ITranslateKey } from './i18n/langs';
 
 /**
  * Blogger publish modal.
@@ -23,7 +24,7 @@ export class BloggerPublishModal extends Modal {
   onOpen() {
     const params: IBloggerPostParams = {
       status: this.settings.defaultPostStatus,
-      labels: [],
+      tags: [],
       title: '',
       content: '',
     };

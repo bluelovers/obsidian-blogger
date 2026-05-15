@@ -1,10 +1,11 @@
 import { Modal, Notice, Platform, Plugin, Setting, requestUrl } from 'obsidian';
-import { ITranslateKey, getGlobalI18n } from './i18n';
+import { getGlobalI18n } from './i18n/i18n';
 import { IBloggerProfile } from './blogger-profile';
 import { BLOGGER_API_ENDPOINT } from './consts';
 import { IFreshInternalOAuth2Token, OAuth2Client } from './oauth2-client';
 import { generateQueryString, isValidBloggerUrl, showError } from './utils';
 import { reauthorizeGoogleToken } from './blogger-oauth2-client';
+import { ITranslateKey } from './i18n/langs';
 
 export const openProfileModal = (
   plugin: Plugin,
@@ -33,7 +34,7 @@ export const openProfileModal = (
 const fetchBlogId = async (
   blogEndpoint: string,
   token: IFreshInternalOAuth2Token,
-): Promise<string> => {
+): Promise<IBloggerProfile["blogId"]> => {
   const blogIdEndpoint = `${BLOGGER_API_ENDPOINT}/byurl?${generateQueryString({
     url: blogEndpoint,
   })}`;

@@ -1,10 +1,11 @@
 import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
-import { ITranslateKey, getGlobalI18n } from './i18n';
+import { getGlobalI18n } from './i18n/i18n';
 import { BloggerProfileManageModal } from './blogger-profile-manage-modal';
 import { IPluginSettings } from './plugin-settings';
 import { getGlobalMarkdownParser, setupMarkdownParser } from './markdown-it-default';
 
 import { EnumMathJaxOutputType, EnumPostStatus } from './types/const';
+import { ITranslateKey } from './i18n/langs';
 
 export class BloggerSettingTab extends PluginSettingTab {
   constructor(

@@ -4,14 +4,22 @@
   "description": "A plugin for publishing Obsidian notes to Blogger.",
   "main": "main.js",
   "scripts": {
-    "dev": "node esbuild.config.mjs",
-    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "dev": "node --run build:esbuild -- watch",
+    "prebuild": "node --run test:typecheck",
+    "build": "node --run build:esbuild -- production",
+    "build:esbuild": "node esbuild.config.mjs",
+    "test:typecheck": "tsc -noEmit -skipLibCheck",
     "version": "node version-bump.mjs && git add manifest.json versions.json"
   },
   "keywords": [
     "blogger",
     "obsidian",
     "plugin"
+  ],
+  "files": [
+    "styles.css",
+    "manifest.json",
+    "main.js"
   ],
   "author": "Hugo Sansaqua",
   "license": "Apache-2.0",

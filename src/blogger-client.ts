@@ -1,27 +1,30 @@
 import {
+  IBloggerClient,
   IBloggerClientResult,
   IBloggerMediaUploadResult,
   IBloggerPostParams,
   IBloggerPublishResult,
-  IBloggerClient,
-
-} from './blogger-client-interface';
-import { IBloggerPostApiBody, IBloggerPostApiReturn, RestClient } from './rest-client';
+} from './types/blogger-client-interface';
+import { IBloggerPostApiReturn, RestClient } from './rest-client';
 import { isFunction, isString, template } from 'lodash-es';
 import { IBloggerProfile } from './blogger-profile';
-import { ISafeAny, IMatterData } from './types';
+import { IMatterData, ISafeAny } from './types';
 import { BLOGGER_API_ENDPOINT } from './consts';
 import { getGoogleOAuth2Client } from './oauth2-client';
 import { App, Notice } from 'obsidian';
 import { BloggerPublishModal } from './blogger-publish-modal';
-import { BLOGGER_DEFAULT_PROFILE_NAME } from './consts';
 import { openWithBrowser, processFile, showError } from './utils';
 import { openConfirmModal } from './confirm-modal';
-import { getGlobalI18n } from './i18n';
+import { getGlobalI18n } from './i18n/i18n';
 import { getGlobalMarkdownParser } from './markdown-it-default';
 import { IPluginSettings, isPluginSettingsWithOAuth2 } from './plugin-settings';
-import { IFormItemNameMapper } from './utils/type-utils';
-import { EnumBloggerClientReturnCode, EnumConfirmCode, EnumPostStatus } from './types/const';
+import { _hasError, IFormItemNameMapper } from './utils/type-utils';
+import { EnumBloggerClientReturnCode, EnumConfirmCode, EnumobsidianBloggerTags, EnumPostStatus } from './types/const';
+import {
+  _handleTagsForBloggerPostApi,
+  _frontMatterToBloggerPostParams,
+  _updateFrontMatterTagsByPostStatus,
+} from './data/tags-utils';
 
 export abstract class AbstractBloggerClient implements IBloggerClient {
   /**
@@ -94,6 +97,9 @@ export abstract class AbstractBloggerClient implements IBloggerClient {
           await this.app.fileManager.processFrontMatter(file, (fm: IMatterData) => {
             fm.profileName = this.profile.name;
             fm.postId = postId;
+
+            fm.tags = _updateFrontMatterTagsByPostStatus(fm, result.data.status);
+
             if (isFunction(updateMatterData)) {
               updateMatterData(fm);
             }
@@ -191,17 +197,7 @@ export abstract class AbstractBloggerClient implements IBloggerClient {
   ): IBloggerPostParams {
     const postParams = { ...params };
     postParams.title = noteTitle;
-    if (matterData.title) {
-      postParams.title = matterData.title;
-    }
-    if (matterData.postId) {
-      postParams.postId = matterData.postId;
-    }
-    if (matterData.labels) {
-      postParams.labels = matterData.labels;
-    }
-    postParams.profileName = matterData.profileName ?? BLOGGER_DEFAULT_PROFILE_NAME;
-    return postParams;
+    return _frontMatterToBloggerPostParams(matterData, postParams);
   }
 }
 
@@ -272,7 +268,7 @@ export class BloggerRestClient extends AbstractBloggerClient {
       });
       method = this.client.httpPost.bind(this.client);
     }
-    const resp: ISafeAny = await method(
+    const resp = await method(
       url,
       {
         kind: 'blogger#post',
@@ -281,20 +277,21 @@ export class BloggerRestClient extends AbstractBloggerClient {
         },
         title,
         content,
-        labels: postParams.labels ?? [],
+        labels: _handleTagsForBloggerPostApi(postParams.tags),
         status: postParams.status,
       },
       {
         headers: await this.getHeaders(),
       },
     );
-    if (resp.error !== undefined) {
+    if (_hasError(resp)) {
+      const error = resp.error
       let message = getGlobalI18n().t('error_requestFailed', {
-        code: resp.error.code,
-        message: resp.error.message,
+        code: error.code,
+        message: error.message,
       });
       // Detect typical error cases
-      if (method === this.client.httpPut.bind(this.client) && resp.error.code === 404) {
+      if (method === this.client.httpPut.bind(this.client) && error.code === 404) {
         message = `${message} ${getGlobalI18n().t('error_postNotFound')}`;
       }
       return {

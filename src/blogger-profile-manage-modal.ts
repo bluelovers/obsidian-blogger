@@ -1,11 +1,12 @@
 import { Modal, Plugin, Setting } from 'obsidian';
 import { IBloggerProfile, rendererProfile } from './blogger-profile';
-import { ITranslateKey, getGlobalI18n } from './i18n';
+import { getGlobalI18n } from './i18n/i18n';
 import { openProfileModal } from './blogger-profile-modal';
 import { isNil } from 'lodash-es';
 import { IPluginSettings, isPluginSettingsWithOAuth2 } from './plugin-settings';
 import { showError } from './utils';
 import { getGoogleOAuth2Client } from './oauth2-client';
+import { ITranslateKey } from './i18n/langs';
 
 /**
  * Blogger profiles manage modal.

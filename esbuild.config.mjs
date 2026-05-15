@@ -9,7 +9,9 @@ if you want to view the source, please visit the github repository of this plugi
 */
 `;
 
-const prod = (process.argv[2] === "production");
+const prod = (process.argv[2] !== "watch");
+
+console.log(prod, process.argv);
 
 const context = await esbuild.context({
 	banner: {
@@ -42,6 +44,7 @@ const context = await esbuild.context({
 
 if (prod) {
 	await context.rebuild();
+	console.log(`[build] build finished`);
 	process.exit(0);
 } else {
 	await context.watch();

@@ -1,5 +1,5 @@
 import { Setting } from 'obsidian';
-import { IInternalOAuth2Token } from './oauth2-client';
+import { IInternalOAuth2Token } from './client/blogger/oauth2-client';
 
 export interface IBloggerProfile
 {

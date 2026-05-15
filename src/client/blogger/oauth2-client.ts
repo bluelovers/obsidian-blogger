@@ -1,14 +1,14 @@
-import { generateQueryString, openWithBrowser } from './utils';
+import { generateQueryString, openWithBrowser } from '../../utils';
 import {
   GOOGLE_OAUTH2_AUTHORIZE_ENDPOINT,
   GOOGLE_OAUTH2_TOKEN_ENDPOINT,
   GOOGLE_OAUTH2_VALIDATE_TOKEN_ENDPOINT,
-} from './consts';
-import { IBrand } from './types';
-import { getGlobalI18n } from './i18n/i18n';
-import { IOauth2ClientCredentials } from './plugin-settings';
-import { IObsidianRequest } from './client/request/abstract-request-client';
-import { AbstractRequestClientWithConstructor } from './client/request/request-client';
+} from '../../consts';
+import { IBrand } from '../../types';
+import { getGlobalI18n } from '../../i18n/i18n';
+import { IOauth2ClientCredentials } from '../../plugin-settings';
+import { IObsidianRequest } from '../request/abstract-request-client';
+import { AbstractRequestClientWithConstructor } from '../request/request-client';
 
 export type IOAuth2TokenProto = {
   accessToken: string;

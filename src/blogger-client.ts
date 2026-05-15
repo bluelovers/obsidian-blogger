@@ -5,12 +5,12 @@ import {
   IBloggerPostParams,
   IBloggerPublishResult,
 } from './types/blogger-client-interface';
-import { IBloggerPostApiReturn, RestClient } from './rest-client';
+import { IBloggerPostApiReturn, RestClient } from './client/blogger/rest-client';
 import { isFunction, isString, template } from 'lodash-es';
 import { IBloggerProfile } from './blogger-profile';
 import { IMatterData, ISafeAny } from './types';
 import { BLOGGER_API_ENDPOINT } from './consts';
-import { getGoogleOAuth2Client } from './oauth2-client';
+import { getGoogleOAuth2Client } from './client/blogger/oauth2-client';
 import { App, Notice } from 'obsidian';
 import { BloggerPublishModal } from './blogger-publish-modal';
 import { openWithBrowser, processFile, showError } from './utils';

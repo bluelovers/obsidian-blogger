@@ -1,9 +1,9 @@
-import { getBoundary } from './utils';
-import { ISafeAny } from './types';
-import { IFormItemNameMapper, FormItems } from './utils/type-utils';
-import { EnumPostStatus } from './types/const';
-import { AbstractRequestClientWithConstructor } from './client/request/request-client';
-import { IObsidianRequest } from './client/request/abstract-request-client';
+import { getBoundary } from '../../utils';
+import { ISafeAny } from '../../types';
+import { IFormItemNameMapper, FormItems } from '../../utils/type-utils';
+import { EnumPostStatus } from '../../types/const';
+import { AbstractRequestClientWithConstructor } from '../request/request-client';
+import { IObsidianRequest } from '../request/abstract-request-client';
 
 interface IRestOptions
 {

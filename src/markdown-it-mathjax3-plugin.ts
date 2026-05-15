@@ -8,7 +8,8 @@ import { AssistiveMmlHandler } from 'mathjax-full/js/a11y/assistive-mml';
 import { mathjax } from 'mathjax-full/js/mathjax';
 import juice from 'juice';
 import { SafeAny } from './types';
-import { MathJaxOutputType } from './plugin-settings';
+
+import { MathJaxOutputType } from './types/const';
 
 interface MarkdownItMathJax3PluginOptions {
   outputType: MathJaxOutputType;

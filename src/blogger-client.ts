@@ -1,26 +1,27 @@
 import {
   BloggerClientResult,
-  BloggerClientReturnCode,
   BloggerMediaUploadResult,
   BloggerPostParams,
   BloggerPublishResult,
   BloggerClient,
-  PostStatus,
+
 } from './blogger-client-interface';
 import { RestClient } from './rest-client';
 import { isFunction, isString, template } from 'lodash-es';
 import { BloggerProfile } from './blogger-profile';
-import { FormItemNameMapper, SafeAny, MatterData } from './types';
+import { SafeAny, MatterData } from './types';
 import { BLOGGER_API_ENDPOINT } from './consts';
 import { getGoogleOAuth2Client } from './oauth2-client';
 import { App, Notice } from 'obsidian';
 import { BloggerPublishModal } from './blogger-publish-modal';
 import { BLOGGER_DEFAULT_PROFILE_NAME } from './consts';
 import { openWithBrowser, processFile, showError } from './utils';
-import { ConfirmCode, openConfirmModal } from './confirm-modal';
+import { openConfirmModal } from './confirm-modal';
 import { getGlobalI18n } from './i18n';
 import { getGlobalMarkdownParser } from './markdown-it-default';
 import { PluginSettings, isPluginSettingsWithOAuth2 } from './plugin-settings';
+import { FormItemNameMapper } from './utils/type-utils';
+import { BloggerClientReturnCode, ConfirmCode, PostStatus } from './types/const';
 
 export abstract class AbstractBloggerClient implements BloggerClient {
   /**

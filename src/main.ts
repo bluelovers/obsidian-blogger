@@ -1,7 +1,7 @@
 import { Platform, Plugin } from 'obsidian';
 import { BloggerSettingTab } from './setting-tab';
 import { addIcons } from './icons';
-import { BloggerPostParams, PostStatus } from './blogger-client-interface';
+import { BloggerPostParams } from './blogger-client-interface';
 import { openProfileChooserModal } from './blogger-profile-chooser-modal';
 import {
   DEFAULT_SETTINGS,
@@ -16,6 +16,7 @@ import { getBloggerClient } from './blogger-client';
 import { getGlobalMarkdownParser, setupMarkdownParser } from './markdown-it-default';
 import { getGlobalI18n, setGlobalLang } from './i18n';
 import { MobileOAuth2Helper } from './blogger-oauth2-client';
+import { PostStatus } from './types/const';
 
 const doClientPublish = (
   plugin: BloggerPlugin,

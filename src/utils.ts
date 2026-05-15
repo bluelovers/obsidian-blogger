@@ -1,9 +1,10 @@
 import { App, Notice, TFile } from 'obsidian';
-import { BloggerClientResult, BloggerClientReturnCode } from './blogger-client-interface';
+import { BloggerClientResult } from './blogger-client-interface';
 import { isString } from 'lodash-es';
 import { ERROR_NOTICE_TIMEOUT } from './consts';
 import { format } from 'date-fns';
 import { MatterData, SafeAny } from './types';
+import { BloggerClientReturnCode } from './types/const';
 
 export function openWithBrowser(
   url: string,

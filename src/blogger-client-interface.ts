@@ -1,20 +1,5 @@
 import { SafeAny } from './types';
-
-export const PostStatus = {
-  Draft: 'DRAFT',
-  Live: 'LIVE',
-  Scheduled: 'SCHEDULED',
-  SoftTrashed: 'SOFT_TRASHED',
-} as const;
-export type PostStatus = (typeof PostStatus)[keyof typeof PostStatus];
-
-export const BloggerClientReturnCode = {
-  OK: 'OK',
-  Error: 'Error',
-  ServerInternalError: 'ServerInternalError',
-} as const;
-export type BloggerClientReturnCode =
-  (typeof BloggerClientReturnCode)[keyof typeof BloggerClientReturnCode];
+import { BloggerClientReturnCode, PostStatus } from './types/const';
 
 interface _bloggerClientResult {
   /**

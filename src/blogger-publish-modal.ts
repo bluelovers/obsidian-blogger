@@ -1,8 +1,9 @@
 import { App, Modal, Setting } from 'obsidian';
-import { BloggerPostParams, PostStatus } from './blogger-client-interface';
+import { BloggerPostParams } from './blogger-client-interface';
 import { TranslateKey, getGlobalI18n } from './i18n';
 import { MatterData } from './types';
 import { PluginSettings } from './plugin-settings';
+import { PostStatus } from './types/const';
 
 /**
  * Blogger publish modal.

@@ -1,9 +1,10 @@
 import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
 import { TranslateKey, getGlobalI18n } from './i18n';
 import { BloggerProfileManageModal } from './blogger-profile-manage-modal';
-import { MathJaxOutputType, PluginSettings } from './plugin-settings';
+import { PluginSettings } from './plugin-settings';
 import { getGlobalMarkdownParser, setupMarkdownParser } from './markdown-it-default';
-import { PostStatus } from './blogger-client-interface';
+
+import { MathJaxOutputType, PostStatus } from './types/const';
 
 export class BloggerSettingTab extends PluginSettingTab {
   constructor(

@@ -1,6 +1,7 @@
 import { requestUrl } from 'obsidian';
 import { getBoundary } from './utils';
-import { FormItemNameMapper, FormItems, SafeAny } from './types';
+import { SafeAny } from './types';
+import { FormItemNameMapper, FormItems } from './utils/type-utils';
 
 interface RestOptions {
   url: URL;

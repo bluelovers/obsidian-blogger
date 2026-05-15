@@ -1,28 +1,42 @@
 {
-  "name": "obsidian-blogger",
+  "name": "obsidian-blogger2",
   "version": "0.9.7",
   "description": "A plugin for publishing Obsidian notes to Blogger.",
-  "main": "main.js",
-  "scripts": {
-    "dev": "node --run build:esbuild -- watch",
-    "prebuild": "node --run test:typecheck",
-    "build": "node --run build:esbuild -- production",
-    "build:esbuild": "node esbuild.config.mjs",
-    "test:typecheck": "tsc -noEmit -skipLibCheck",
-    "version": "node version-bump.mjs && git add manifest.json versions.json"
-  },
   "keywords": [
     "blogger",
     "obsidian",
+    "obsidian-blogger",
+    "obsidian-plugin",
     "plugin"
   ],
+  "license": "Apache-2.0",
+  "author": "Hugo Sansaqua",
+  "main": "main.js",
   "files": [
     "styles.css",
     "manifest.json",
     "main.js"
   ],
-  "author": "Hugo Sansaqua",
-  "license": "Apache-2.0",
+  "scripts": {
+    "dev": "node --run build:esbuild -- watch",
+    "pretest": "echo node --run test:typecheck",
+    "test:typecheck": "tsc -noEmit -skipLibCheck",
+    "prebuild": "node --run test:typecheck",
+    "build": "node --run build:esbuild -- production",
+    "build:esbuild": "node esbuild.config.mjs",
+    "npm:publish:bump": "node --run version:bump && npm publish",
+    "preversion": "echo preversion && pnpm run build",
+    "version": "node version-bump.mjs",
+    "version:bump": "ynpx yarn-tool version",
+    "prepublishOnly": "pnpm run preversion",
+    "postpublish": "node --run postpublish:changelog && node --run postpublish:git:commit && node --run postpublish:git:tag && node --run postpublish:git:push",
+    "postpublish:changelog": "ynpx --quiet @yarn-tool/changelog && git add ./CHANGELOG.md",
+    "postpublish:git:commit": "git add manifest.json versions.json & git commit -m \"chore(release): publish\" . & echo postpublish:git:commit",
+    "postpublish:git:push": "git push --follow-tags",
+    "postpublish:git:tag": "ynpx --quiet @yarn-tool/tag",
+    "ncu": "yarn-tool ncu -u",
+    "sort-package-json": "yarn-tool sort"
+  },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
     "@types/lodash-es": "^4.17.12",

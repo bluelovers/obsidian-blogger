@@ -16,7 +16,7 @@ export interface IBloggerProfile
   /**
    * Blogger blog ID.
    */
-  blogId: string;
+  blogId: `${number}`;
 
   /**
    * OAuth2 token for Google

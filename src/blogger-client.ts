@@ -6,7 +6,7 @@ import {
   IBloggerClient,
 
 } from './blogger-client-interface';
-import { RestClient } from './rest-client';
+import { IBloggerPostApiBody, IBloggerPostApiReturn, RestClient } from './rest-client';
 import { isFunction, isString, template } from 'lodash-es';
 import { IBloggerProfile } from './blogger-profile';
 import { ISafeAny, IMatterData } from './types';
@@ -49,7 +49,7 @@ export abstract class AbstractBloggerClient implements IBloggerClient {
         {
           message: getGlobalI18n().t('error_profileNotMatch'),
           cancelText: getGlobalI18n().t('profileNotMatch_useOld', {
-            profileName: matterData.profileName,
+            profileName: matterData.profileName!,
           }),
           confirmText: getGlobalI18n().t('profileNotMatch_useNew', {
             profileName: this.profile.name,
@@ -91,7 +91,7 @@ export abstract class AbstractBloggerClient implements IBloggerClient {
         // this.updateFrontMatter(modified);
         const file = this.app.workspace.getActiveFile();
         if (file) {
-          await this.app.fileManager.processFrontMatter(file, (fm) => {
+          await this.app.fileManager.processFrontMatter(file, (fm: IMatterData) => {
             fm.profileName = this.profile.name;
             fm.postId = postId;
             if (isFunction(updateMatterData)) {
@@ -265,12 +265,12 @@ export class BloggerRestClient extends AbstractBloggerClient {
       url = getUrl(this.context.endpoints?.editPost, 'dummy/update/<%= postId %>', {
         postId: postParams.postId,
       });
-      method = this.client.httpPut;
+      method = this.client.httpPut.bind(this.client);
     } else {
       url = getUrl(this.context.endpoints?.newPost, 'dummy/post?isDraft=<%= isDraft %>', {
         isDraft: postParams.status === EnumPostStatus.Draft,
       });
-      method = this.client.httpPost;
+      method = this.client.httpPost.bind(this.client);
     }
     const resp: ISafeAny = await method(
       url,
@@ -294,7 +294,7 @@ export class BloggerRestClient extends AbstractBloggerClient {
         message: resp.error.message,
       });
       // Detect typical error cases
-      if (method === this.client.httpPut && resp.error.code === 404) {
+      if (method === this.client.httpPut.bind(this.client) && resp.error.code === 404) {
         message = `${message} ${getGlobalI18n().t('error_postNotFound')}`;
       }
       return {
@@ -391,7 +391,7 @@ export class BloggerRestClientGoogleOAuth2Context implements IBloggerRestClientC
   responseParser = {
     toBloggerPublishResult: (
       postParams: IBloggerPostParams,
-      response: ISafeAny,
+      response: IBloggerPostApiReturn,
     ): IBloggerPublishResult => {
       if (response.id) {
         if (postParams.postId !== undefined && postParams.postId !== response.id) {

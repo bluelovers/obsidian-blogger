@@ -23,9 +23,16 @@ interface IBloggerClientErrorResult extends _IBloggerClientResult {
 
 export type IBloggerClientResult<T> = IBloggerClientOkResult<T> | IBloggerClientErrorResult;
 
-export interface IBloggerPostParams
+export interface IBloggerPostParamsCore
 {
-  status: EnumPostStatus;
+  /**
+   * 對應 IBloggerPostApiBody.labels
+   *
+   * @see AbstractBloggerClient.publish
+   * @see RestClient.httpPut
+   * @see RestClient.httpPost
+   * @see IBloggerPostApiBody.labels
+   */
   labels: string[];
 
   /**
@@ -34,21 +41,28 @@ export interface IBloggerPostParams
   title: string;
 
   /**
-   * Post content.
-   */
-  content: string;
-
-  /**
    * Blogger post ID.
    *
    * If this is assigned, the post will be updated, otherwise created.
+   *
+   * @see IBloggerPostApiReturn.id
    */
-  postId?: string;
+  postId?: `${number}`;
 
   /**
    * Blogger profile name.
    */
   profileName?: string;
+}
+
+export interface IBloggerPostParams extends IBloggerPostParamsCore
+{
+  status: EnumPostStatus;
+
+  /**
+   * Post content.
+   */
+  content: string;
 }
 
 export interface IBloggerPublishParams
@@ -57,16 +71,19 @@ export interface IBloggerPublishParams
   matterData: { [p: string]: ISafeAny };
 }
 
-export interface IBloggerPublishResult
+interface _IBloggerPublishResult
 {
-  postId: string;
   url: string;
-  status: EnumPostStatus;
 }
 
-export interface IBloggerMediaUploadResult
+export interface IBloggerPublishResult extends Pick<IBloggerPostParams, 'postId' | 'status'>, _IBloggerPublishResult
 {
-  url: string;
+
+}
+
+export interface IBloggerMediaUploadResult extends _IBloggerPublishResult
+{
+
 }
 
 export interface IBloggerClient

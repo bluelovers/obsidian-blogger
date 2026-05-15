@@ -1,7 +1,7 @@
 import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
-import { TranslateKey, getGlobalI18n } from './i18n';
+import { ITranslateKey, getGlobalI18n } from './i18n';
 import { BloggerProfileManageModal } from './blogger-profile-manage-modal';
-import { PluginSettings } from './plugin-settings';
+import { IPluginSettings } from './plugin-settings';
 import { getGlobalMarkdownParser, setupMarkdownParser } from './markdown-it-default';
 
 import { EnumMathJaxOutputType, EnumPostStatus } from './types/const';
@@ -9,7 +9,7 @@ import { EnumMathJaxOutputType, EnumPostStatus } from './types/const';
 export class BloggerSettingTab extends PluginSettingTab {
   constructor(
     readonly app: App,
-    private readonly settings: PluginSettings,
+    private readonly settings: IPluginSettings,
     private readonly saveSettings: () => Promise<void>,
     readonly plugin: Plugin,
   ) {
@@ -17,7 +17,7 @@ export class BloggerSettingTab extends PluginSettingTab {
   }
 
   display(): void {
-    const t = (key: TranslateKey, vars?: Record<string, string>): string => {
+    const t = (key: ITranslateKey, vars?: Record<string, string>): string => {
       return getGlobalI18n().t(key, vars);
     };
 

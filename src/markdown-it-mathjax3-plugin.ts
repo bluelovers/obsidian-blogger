@@ -7,21 +7,23 @@ import { RegisterHTMLHandler } from 'mathjax-full/js/handlers/html';
 import { AssistiveMmlHandler } from 'mathjax-full/js/a11y/assistive-mml';
 import { mathjax } from 'mathjax-full/js/mathjax';
 import juice from 'juice';
-import { SafeAny } from './types';
+import { ISafeAny } from './types';
 
 import { EnumMathJaxOutputType } from './types/const';
 
-interface MarkdownItMathJax3PluginOptions {
+interface IMarkdownItMathJax3PluginOptions
+{
   outputType: EnumMathJaxOutputType;
 }
 
-interface ConvertOptions {
+interface IConvertOptions
+{
   display: boolean;
 }
 
 export default function MarkdownItMathJax3Plugin(
   md: MarkdownIt,
-  options: MarkdownItMathJax3PluginOptions,
+  options: IMarkdownItMathJax3PluginOptions,
 ): void {
   // set MathJax as the renderer for markdown-it-simplemath
   md.inline.ruler.after('escape', 'math_inline', mathInline);
@@ -50,8 +52,8 @@ export default function MarkdownItMathJax3Plugin(
 
 function renderMath(
   content: string,
-  convertOptions: ConvertOptions,
-  options: MarkdownItMathJax3PluginOptions,
+  convertOptions: IConvertOptions,
+  options: IMarkdownItMathJax3PluginOptions,
 ): string {
   if (options.outputType === EnumMathJaxOutputType.SVG) {
     const documentOptions = {
@@ -64,7 +66,7 @@ function renderMath(
     const mathDocument = mathjax.document(content, documentOptions);
     const html = adaptor.outerHTML(mathDocument.convert(content, convertOptions));
     const stylesheet = adaptor.outerHTML(
-      documentOptions.OutputJax.styleSheet(mathDocument) as SafeAny,
+      documentOptions.OutputJax.styleSheet(mathDocument) as ISafeAny,
     );
     return juice(html + stylesheet);
   } else {

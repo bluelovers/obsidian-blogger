@@ -1,12 +1,12 @@
 import { App, Modal, Setting } from 'obsidian';
-import { BloggerProfile, rendererProfile } from './blogger-profile';
-import { TranslateKey, getGlobalI18n } from './i18n';
+import { IBloggerProfile, rendererProfile } from './blogger-profile';
+import { ITranslateKey, getGlobalI18n } from './i18n';
 
 export function openProfileChooserModal(
   app: App,
-  profiles: BloggerProfile[],
-): Promise<BloggerProfile> {
-  return new Promise<BloggerProfile>((resolve, reject) => {
+  profiles: IBloggerProfile[],
+): Promise<IBloggerProfile> {
+  return new Promise<IBloggerProfile>((resolve, reject) => {
     const modal = new BloggerProfileChooserModal(app, profiles, (profile) => {
       resolve(profile);
     });
@@ -20,18 +20,18 @@ export function openProfileChooserModal(
 class BloggerProfileChooserModal extends Modal {
   constructor(
     readonly app: App,
-    private readonly profiles: BloggerProfile[],
-    private readonly onChoose: (profile: BloggerProfile) => void,
+    private readonly profiles: IBloggerProfile[],
+    private readonly onChoose: (profile: IBloggerProfile) => void,
   ) {
     super(app);
   }
 
   onOpen() {
-    const t = (key: TranslateKey, vars?: Record<string, string>): string => {
+    const t = (key: ITranslateKey, vars?: Record<string, string>): string => {
       return getGlobalI18n().t(key, vars);
     };
 
-    const chooseProfile = (profile: BloggerProfile): void => {
+    const chooseProfile = (profile: IBloggerProfile): void => {
       this.onChoose(profile);
       this.close();
     };

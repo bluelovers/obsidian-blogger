@@ -1,28 +1,30 @@
-import { SafeAny } from './types';
+import { ISafeAny } from './types';
 import { EnumBloggerClientReturnCode, EnumPostStatus } from './types/const';
 
-interface _bloggerClientResult {
+interface _IBloggerClientResult
+{
   /**
    * Response from Blogger server.
    */
-  response?: SafeAny;
+  response?: ISafeAny;
 
   code: EnumBloggerClientReturnCode;
 }
 
-interface BloggerClientOkResult<T> extends _bloggerClientResult {
+interface IBloggerClientOkResult<T> extends _IBloggerClientResult {
   code: EnumBloggerClientReturnCode.OK;
   data: T;
 }
 
-interface BloggerClientErrorResult extends _bloggerClientResult {
+interface IBloggerClientErrorResult extends _IBloggerClientResult {
   code: EnumBloggerClientReturnCode.Error;
   message: string;
 }
 
-export type BloggerClientResult<T> = BloggerClientOkResult<T> | BloggerClientErrorResult;
+export type IBloggerClientResult<T> = IBloggerClientOkResult<T> | IBloggerClientErrorResult;
 
-export interface BloggerPostParams {
+export interface IBloggerPostParams
+{
   status: EnumPostStatus;
   labels: string[];
 
@@ -49,22 +51,26 @@ export interface BloggerPostParams {
   profileName?: string;
 }
 
-export interface BloggerPublishParams {
-  postParams: BloggerPostParams;
-  matterData: { [p: string]: SafeAny };
+export interface IBloggerPublishParams
+{
+  postParams: IBloggerPostParams;
+  matterData: { [p: string]: ISafeAny };
 }
 
-export interface BloggerPublishResult {
+export interface IBloggerPublishResult
+{
   postId: string;
   url: string;
   status: EnumPostStatus;
 }
 
-export interface BloggerMediaUploadResult {
+export interface IBloggerMediaUploadResult
+{
   url: string;
 }
 
-export interface BloggerClient {
+export interface IBloggerClient
+{
   /**
    * Publish a post to Blogger.
    *
@@ -74,6 +80,6 @@ export interface BloggerClient {
    * @param defaultPostParams Use this parameter instead of popup publish modal if this is not undefined.
    */
   publishPost(
-    defaultPostParams?: BloggerPostParams,
-  ): Promise<BloggerClientResult<BloggerPublishResult>>;
+    defaultPostParams?: IBloggerPostParams,
+  ): Promise<IBloggerClientResult<IBloggerPublishResult>>;
 }

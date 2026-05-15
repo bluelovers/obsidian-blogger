@@ -1,8 +1,8 @@
 import { App, Modal, Setting } from 'obsidian';
-import { BloggerPostParams } from './blogger-client-interface';
-import { TranslateKey, getGlobalI18n } from './i18n';
-import { MatterData } from './types';
-import { PluginSettings } from './plugin-settings';
+import { IBloggerPostParams } from './blogger-client-interface';
+import { ITranslateKey, getGlobalI18n } from './i18n';
+import { IMatterData } from './types';
+import { IPluginSettings } from './plugin-settings';
 import { EnumPostStatus } from './types/const';
 
 /**
@@ -11,17 +11,17 @@ import { EnumPostStatus } from './types/const';
 export class BloggerPublishModal extends Modal {
   constructor(
     readonly app: App,
-    private readonly settings: PluginSettings,
+    private readonly settings: IPluginSettings,
     private readonly onSubmit: (
-      params: BloggerPostParams,
-      updateMatterData: (matter: MatterData) => void,
+      params: IBloggerPostParams,
+      updateMatterData: (matter: IMatterData) => void,
     ) => void,
   ) {
     super(app);
   }
 
   onOpen() {
-    const params: BloggerPostParams = {
+    const params: IBloggerPostParams = {
       status: this.settings.defaultPostStatus,
       labels: [],
       title: '',
@@ -36,8 +36,8 @@ export class BloggerPublishModal extends Modal {
     contentEl.empty();
   }
 
-  private display(params: BloggerPostParams): void {
-    const t = (key: TranslateKey, vars?: Record<string, string>): string => {
+  private display(params: IBloggerPostParams): void {
+    const t = (key: ITranslateKey, vars?: Record<string, string>): string => {
       return getGlobalI18n().t(key, vars);
     };
 

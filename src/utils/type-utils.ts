@@ -1,7 +1,7 @@
-import { Media, SafeAny } from '../types';
+import { IMedia, ISafeAny } from '../types';
 import { isArray, isString } from 'lodash-es';
 
-export function isMedia(obj: SafeAny): obj is Media
+export function isMedia(obj: ISafeAny): obj is IMedia
 {
 	return (
 		typeof obj === 'object' &&
@@ -21,15 +21,15 @@ export function isMedia(obj: SafeAny): obj is Media
  * @param name original item name. If `isArray` is `true`, which means is in an array, the `name` will be appended by `[]`
  * @param isArray whether this item is in an array
  */
-export type FormItemNameMapper = (name: string, isArray: boolean) => string;
+export type IFormItemNameMapper = (name: string, isArray: boolean) => string;
 
 export class FormItems
 {
-	#formData: Record<string, SafeAny> = {};
+	#formData: Record<string, ISafeAny> = {};
 
 	append(name: string, data: string): FormItems;
-	append(name: string, data: Media): FormItems;
-	append(name: string, data: string | Media): FormItems
+	append(name: string, data: IMedia): FormItems;
+	append(name: string, data: string | IMedia): FormItems
 	{
 		const existing = this.#formData[name];
 		if (existing)
@@ -46,11 +46,11 @@ export class FormItems
 
 	toArrayBuffer(option: {
 		boundary: string;
-		nameMapper?: FormItemNameMapper;
+		nameMapper?: IFormItemNameMapper;
 	}): Promise<ArrayBuffer>
 	{
 		const CRLF = '\r\n';
-		const itemPart = (name: string, data: string | Media, isArray: boolean) =>
+		const itemPart = (name: string, data: string | IMedia, isArray: boolean) =>
 		{
 			let itemName = name;
 			if (option.nameMapper)

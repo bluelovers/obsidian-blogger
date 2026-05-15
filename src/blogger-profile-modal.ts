@@ -1,17 +1,17 @@
 import { Modal, Notice, Platform, Plugin, Setting, requestUrl } from 'obsidian';
-import { TranslateKey, getGlobalI18n } from './i18n';
-import { BloggerProfile } from './blogger-profile';
+import { ITranslateKey, getGlobalI18n } from './i18n';
+import { IBloggerProfile } from './blogger-profile';
 import { BLOGGER_API_ENDPOINT } from './consts';
-import { FreshInternalOAuth2Token, OAuth2Client } from './oauth2-client';
+import { IFreshInternalOAuth2Token, OAuth2Client } from './oauth2-client';
 import { generateQueryString, isValidBloggerUrl, showError } from './utils';
 import { reauthorizeGoogleToken } from './blogger-oauth2-client';
 
 export const openProfileModal = (
   plugin: Plugin,
-  profile: Partial<BloggerProfile>,
+  profile: Partial<IBloggerProfile>,
   oAuth2Client: OAuth2Client,
   atIndex = -1,
-): Promise<{ profile: BloggerProfile; atIndex?: number }> => {
+): Promise<{ profile: IBloggerProfile; atIndex?: number }> => {
   return new Promise((resolve, reject) => {
     const modal = new BloggerProfileModal(
       plugin,
@@ -32,7 +32,7 @@ export const openProfileModal = (
 // TODO: integrate this into blogger-rest-client.ts
 const fetchBlogId = async (
   blogEndpoint: string,
-  token: FreshInternalOAuth2Token,
+  token: IFreshInternalOAuth2Token,
 ): Promise<string> => {
   const blogIdEndpoint = `${BLOGGER_API_ENDPOINT}/byurl?${generateQueryString({
     url: blogEndpoint,
@@ -53,12 +53,12 @@ const fetchBlogId = async (
  * Blogger profile modal.
  */
 class BloggerProfileModal extends Modal {
-  private readonly profileData: Partial<BloggerProfile>;
+  private readonly profileData: Partial<IBloggerProfile>;
 
   constructor(
     readonly plugin: Plugin,
-    private readonly onSubmit: (profile: BloggerProfile, atIndex?: number) => void,
-    profile: Partial<BloggerProfile>,
+    private readonly onSubmit: (profile: IBloggerProfile, atIndex?: number) => void,
+    profile: Partial<IBloggerProfile>,
     private readonly oAuth2Client: OAuth2Client,
     private readonly atIndex: number = -1,
   ) {
@@ -68,7 +68,7 @@ class BloggerProfileModal extends Modal {
   }
 
   onOpen = () => {
-    const t = (key: TranslateKey, vars?: Record<string, string>): string => {
+    const t = (key: ITranslateKey, vars?: Record<string, string>): string => {
       return getGlobalI18n().t(key, vars);
     };
 
@@ -173,7 +173,7 @@ class BloggerProfileModal extends Modal {
     contentEl.empty();
   };
 
-  private createFullProfile = async (): Promise<BloggerProfile> => {
+  private createFullProfile = async (): Promise<IBloggerProfile> => {
     const name = this.profileData.name;
     if (name === undefined || name.length === 0) {
       throw new Error(getGlobalI18n().t('error_noProfileName'));

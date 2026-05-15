@@ -5,34 +5,34 @@ import {
   GOOGLE_OAUTH2_TOKEN_ENDPOINT,
   GOOGLE_OAUTH2_VALIDATE_TOKEN_ENDPOINT,
 } from './consts';
-import { Brand } from './types';
+import { IBrand } from './types';
 import { getGlobalI18n } from './i18n';
-import { Oauth2ClientCredentials } from './plugin-settings';
+import { IOauth2ClientCredentials } from './plugin-settings';
 
-export type OAuth2TokenProto = {
+export type IOAuth2TokenProto = {
   accessToken: string;
   tokenType: string;
 };
 
-export type OAuth2Token = OAuth2TokenProto & {
+export type IOAuth2Token = IOAuth2TokenProto & {
   expiresIn: number;
   refreshToken: string;
   scope: string;
 };
 
-export type InternalOAuth2Token = OAuth2Token & {
+export type IInternalOAuth2Token = IOAuth2Token & {
   expiresAt: number;
 };
 
-export type FreshInternalOAuth2Token = Brand<InternalOAuth2Token, 'FreshInternalOAuth2Token'>;
+export type IFreshInternalOAuth2Token = IBrand<IInternalOAuth2Token, 'IFreshInternalOAuth2Token'>;
 
 const isFreshInternalOAuth2Token = (
-  token: InternalOAuth2Token,
-): token is FreshInternalOAuth2Token => {
+  token: IInternalOAuth2Token,
+): token is IFreshInternalOAuth2Token => {
   return token.expiresAt > Date.now();
 };
 
-export type GetAuthorizeCodeParams = {
+export type IGetAuthorizeCodeParams = {
   redirectUri: string;
   scope?: string[];
   blog?: string;
@@ -40,23 +40,23 @@ export type GetAuthorizeCodeParams = {
   state?: string;
 };
 
-export type GetTokenParams = {
+export type IGetTokenParams = {
   code: string;
   redirectUri: string;
   codeVerifier: string;
 };
 
-export type RefreshTokenParams = {
+export type IRefreshTokenParams = {
   client_id: string;
   client_secret: string;
   refresh_token: string;
 };
 
-export type ValidateTokenParams = {
+export type IValidateTokenParams = {
   token: string;
 };
 
-export type OAuth2Options = {
+export type IOAuth2Options = {
   clientId: string;
   clientSecret: string;
   tokenEndpoint: string;
@@ -65,7 +65,7 @@ export type OAuth2Options = {
 };
 
 export const getGoogleOAuth2Client = (
-  oAuth2ClientCredentials: Oauth2ClientCredentials,
+  oAuth2ClientCredentials: IOauth2ClientCredentials,
 ): OAuth2Client => {
   return new OAuth2Client({
     ...oAuth2ClientCredentials,
@@ -76,9 +76,9 @@ export const getGoogleOAuth2Client = (
 };
 
 export class OAuth2Client {
-  constructor(private readonly options: OAuth2Options) {}
+  constructor(private readonly options: IOAuth2Options) {}
 
-  getAuthorizeCode = async (params: GetAuthorizeCodeParams): Promise<void> => {
+  getAuthorizeCode = async (params: IGetAuthorizeCodeParams): Promise<void> => {
     const query: {
       client_id: string;
       response_type: 'code';
@@ -113,7 +113,7 @@ export class OAuth2Client {
     openWithBrowser(this.options.authorizeEndpoint, query);
   };
 
-  getToken = async (params: GetTokenParams): Promise<FreshInternalOAuth2Token> => {
+  getToken = async (params: IGetTokenParams): Promise<IFreshInternalOAuth2Token> => {
     const body: {
       grant_type: 'authorization_code';
       client_id: string;
@@ -156,7 +156,7 @@ export class OAuth2Client {
     return res;
   };
 
-  refreshToken = async (params: RefreshTokenParams): Promise<FreshInternalOAuth2Token> => {
+  refreshToken = async (params: IRefreshTokenParams): Promise<IFreshInternalOAuth2Token> => {
     const body: {
       grant_type: 'refresh_token';
       client_id: string;
@@ -195,7 +195,7 @@ export class OAuth2Client {
     return res;
   };
 
-  ensureFreshToken = async (token: InternalOAuth2Token): Promise<FreshInternalOAuth2Token> => {
+  ensureFreshToken = async (token: IInternalOAuth2Token): Promise<IFreshInternalOAuth2Token> => {
     if (isFreshInternalOAuth2Token(token)) {
       return token;
     } else {
@@ -203,11 +203,11 @@ export class OAuth2Client {
         client_id: this.options.clientId,
         client_secret: this.options.clientSecret,
         refresh_token: token.refreshToken,
-      }) as Promise<FreshInternalOAuth2Token>;
+      }) as Promise<IFreshInternalOAuth2Token>;
     }
   };
 
-  validateToken = async (params: ValidateTokenParams): Promise<void> => {
+  validateToken = async (params: IValidateTokenParams): Promise<void> => {
     await requestUrl({
       url: `${this.options.validateTokenEndpoint}?access_token=${params.token}`,
       method: 'GET',

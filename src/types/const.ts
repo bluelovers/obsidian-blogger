@@ -24,3 +24,8 @@ export const enum EnumConfirmCode
 	Confirm = 'confirm',
 	Cancel = 'cancel',
 }
+
+export const enum EnumSettingsVersion
+{
+	V1 = '1',
+}

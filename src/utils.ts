@@ -1,9 +1,9 @@
 import { App, Notice, TFile } from 'obsidian';
-import { BloggerClientResult } from './blogger-client-interface';
+import { IBloggerClientResult } from './blogger-client-interface';
 import { isString } from 'lodash-es';
 import { ERROR_NOTICE_TIMEOUT } from './consts';
 import { format } from 'date-fns';
-import { MatterData, SafeAny } from './types';
+import { IMatterData, ISafeAny } from './types';
 import { EnumBloggerClientReturnCode } from './types/const';
 
 export function openWithBrowser(
@@ -22,7 +22,7 @@ export function generateQueryString(params: Record<string, undefined | number | 
   ).toString();
 }
 
-export function isPromiseFulfilledResult<T>(obj: SafeAny): obj is PromiseFulfilledResult<T> {
+export function isPromiseFulfilledResult<T>(obj: ISafeAny): obj is PromiseFulfilledResult<T> {
   return !!obj && obj.status === 'fulfilled' && obj.value;
 }
 
@@ -47,14 +47,14 @@ export function getBoundary(): string {
   return `----obsidianBoundary${format(new Date(), 'yyyyMMddHHmmss')}`;
 }
 
-export function showError<T>(error: unknown): BloggerClientResult<T> {
+export function showError<T>(error: unknown): IBloggerClientResult<T> {
   let errorMessage: string;
   if (isString(error)) {
     errorMessage = error;
   } else if (error instanceof Error) {
     errorMessage = error.message;
   } else {
-    errorMessage = (error as SafeAny).toString();
+    errorMessage = (error as ISafeAny).toString();
   }
   new Notice(errorMessage, ERROR_NOTICE_TIMEOUT);
   return {
@@ -66,7 +66,7 @@ export function showError<T>(error: unknown): BloggerClientResult<T> {
 export async function processFile(
   file: TFile,
   app: App,
-): Promise<{ content: string; matter: MatterData }> {
+): Promise<{ content: string; matter: IMatterData }> {
   let fm = app.metadataCache.getFileCache(file)?.frontmatter;
   if (!fm) {
     await app.fileManager.processFrontMatter(file, (matter) => {

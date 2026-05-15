@@ -1,9 +1,9 @@
 import { Modal, Plugin, Setting } from 'obsidian';
-import { BloggerProfile, rendererProfile } from './blogger-profile';
-import { TranslateKey, getGlobalI18n } from './i18n';
+import { IBloggerProfile, rendererProfile } from './blogger-profile';
+import { ITranslateKey, getGlobalI18n } from './i18n';
 import { openProfileModal } from './blogger-profile-modal';
 import { isNil } from 'lodash-es';
-import { PluginSettings, isPluginSettingsWithOAuth2 } from './plugin-settings';
+import { IPluginSettings, isPluginSettingsWithOAuth2 } from './plugin-settings';
 import { showError } from './utils';
 import { getGoogleOAuth2Client } from './oauth2-client';
 
@@ -11,10 +11,10 @@ import { getGoogleOAuth2Client } from './oauth2-client';
  * Blogger profiles manage modal.
  */
 export class BloggerProfileManageModal extends Modal {
-  private readonly profiles: BloggerProfile[];
+  private readonly profiles: IBloggerProfile[];
   constructor(
     readonly plugin: Plugin,
-    readonly settings: PluginSettings,
+    readonly settings: IPluginSettings,
     private readonly saveSettings: () => Promise<void>,
   ) {
     super(plugin.app);
@@ -22,7 +22,7 @@ export class BloggerProfileManageModal extends Modal {
   }
 
   onOpen() {
-    const t = (key: TranslateKey, vars?: Record<string, string>): string => {
+    const t = (key: ITranslateKey, vars?: Record<string, string>): string => {
       return getGlobalI18n().t(key, vars);
     };
 

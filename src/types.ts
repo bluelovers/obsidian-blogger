@@ -1,9 +1,10 @@
-export type SafeAny = any; // eslint-disable-line @typescript-eslint/no-explicit-any
-export type Brand<K, T> = K & { __brand: T };
+export type ISafeAny = any; // eslint-disable-line @typescript-eslint/no-explicit-any
+export type IBrand<K, T> = K & { __brand: T };
 
-export type MatterData = { [p: string]: SafeAny };
+export type IMatterData = { [p: string]: ISafeAny };
 
-export interface Media {
+export interface IMedia
+{
   mimeType: string;
   fileName: string;
   content: ArrayBuffer;

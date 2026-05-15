@@ -1,29 +1,28 @@
 import { Platform, Plugin } from 'obsidian';
 import { BloggerSettingTab } from './setting-tab';
 import { addIcons } from './icons';
-import { BloggerPostParams } from './blogger-client-interface';
+import { IBloggerPostParams } from './blogger-client-interface';
 import { openProfileChooserModal } from './blogger-profile-chooser-modal';
 import {
   DEFAULT_SETTINGS,
-  SettingsVersion,
   upgradeSettings,
-  PluginSettings,
+  IPluginSettings,
 } from './plugin-settings';
 import { showError } from './utils';
 import { isString } from 'lodash-es';
-import { BloggerProfile } from './blogger-profile';
+import { IBloggerProfile } from './blogger-profile';
 import { getBloggerClient } from './blogger-client';
 import { getGlobalMarkdownParser, setupMarkdownParser } from './markdown-it-default';
 import { getGlobalI18n, setGlobalLang } from './i18n';
 import { MobileOAuth2Helper } from './blogger-oauth2-client';
-import { EnumPostStatus } from './types/const';
+import { EnumPostStatus, EnumSettingsVersion } from './types/const';
 
 const doClientPublish = (
   plugin: BloggerPlugin,
-  profileOrName: BloggerProfile | string,
-  defaultPostParams?: BloggerPostParams,
+  profileOrName: IBloggerProfile | string,
+  defaultPostParams?: IBloggerPostParams,
 ): void => {
-  let profile: BloggerProfile | undefined;
+  let profile: IBloggerProfile | undefined;
   if (isString(profileOrName)) {
     profile = plugin.settings.profiles.find((it) => it.name === profileOrName);
   } else {
@@ -44,7 +43,7 @@ const doClientPublish = (
 };
 
 export default class BloggerPlugin extends Plugin {
-  #settings: PluginSettings | undefined;
+  #settings: IPluginSettings | undefined;
   get settings() {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return this.#settings!;
@@ -73,7 +72,7 @@ export default class BloggerPlugin extends Plugin {
       editorCallback: () => {
         const defaultProfile = this.#settings?.profiles.find((it) => it.isDefault);
         if (defaultProfile) {
-          const params: BloggerPostParams = {
+          const params: IBloggerPostParams = {
             status: this.#settings?.defaultPostStatus ?? EnumPostStatus.Draft,
             labels: [],
             title: '',
@@ -101,7 +100,7 @@ export default class BloggerPlugin extends Plugin {
 
   loadSettings = async () => {
     this.#settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-    const { needUpgrade, settings } = await upgradeSettings(this.#settings, SettingsVersion.V1);
+    const { needUpgrade, settings } = await upgradeSettings(this.#settings, EnumSettingsVersion.V1);
     this.#settings = settings;
     if (needUpgrade) {
       await this.saveSettings();

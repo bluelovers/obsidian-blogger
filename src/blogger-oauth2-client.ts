@@ -6,7 +6,7 @@ import {
   GOOGLE_OAUTH2_REDIRECT_URI_WEB,
 } from './consts';
 import { getGlobalI18n } from './i18n';
-import { FreshInternalOAuth2Token, OAuth2Client, generateCodeVerifier } from './oauth2-client';
+import { IFreshInternalOAuth2Token, OAuth2Client, generateCodeVerifier } from './oauth2-client';
 import { createServer } from 'http';
 import { Notice, Plugin } from 'obsidian';
 
@@ -26,7 +26,7 @@ const fetchAndRegisterToken = async (
   requestState: string,
   codeVerifier: string,
   redirectUri: string,
-  setGoogleOAuth2Token: (token?: FreshInternalOAuth2Token) => void,
+  setGoogleOAuth2Token: (token?: IFreshInternalOAuth2Token) => void,
 ): Promise<void> => {
   if (params.error) {
     setGoogleOAuth2Token(undefined);
@@ -62,15 +62,15 @@ const fetchAndRegisterToken = async (
   }
 };
 
-export type reauthorizeGoogleTokenParams = {
+export type IReauthorizeGoogleTokenParams = {
   isDesktop: boolean;
   oAuth2Client: OAuth2Client;
   blogEndpoint: string;
-  setGoogleOAuth2Token: (token?: FreshInternalOAuth2Token) => void;
+  setGoogleOAuth2Token: (token?: IFreshInternalOAuth2Token) => void;
 };
 
 export const reauthorizeGoogleToken = async (
-  params: reauthorizeGoogleTokenParams,
+  params: IReauthorizeGoogleTokenParams,
 ): Promise<void> => {
   if (params.isDesktop) {
     await reauthorizeGoogleTokenOnLocalHost(params);
@@ -84,7 +84,7 @@ export class MobileOAuth2Helper {
     oAuth2Client: OAuth2Client;
     state: string;
     codeVerifier: string;
-    setGoogleOAuth2Token: (token?: FreshInternalOAuth2Token) => void;
+    setGoogleOAuth2Token: (token?: IFreshInternalOAuth2Token) => void;
   } | null = null;
   private static isSetUp = false;
   static setOAuth2Record = (oAuth2Record: (typeof MobileOAuth2Helper)['oAuth2Record']): void => {
@@ -118,7 +118,7 @@ const reauthorizeGoogleTokenOnWeb = async ({
   oAuth2Client,
   blogEndpoint,
   setGoogleOAuth2Token,
-}: reauthorizeGoogleTokenParams): Promise<void> => {
+}: IReauthorizeGoogleTokenParams): Promise<void> => {
   const codeVerifier = generateCodeVerifier();
   const state = crypto.randomUUID();
   MobileOAuth2Helper.setOAuth2Record({
@@ -140,7 +140,7 @@ export const reauthorizeGoogleTokenOnLocalHost = async ({
   oAuth2Client,
   blogEndpoint,
   setGoogleOAuth2Token,
-}: reauthorizeGoogleTokenParams): Promise<void> => {
+}: IReauthorizeGoogleTokenParams): Promise<void> => {
   const codeVerifier = generateCodeVerifier();
   const state = crypto.randomUUID();
 

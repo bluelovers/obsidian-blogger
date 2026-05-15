@@ -21,12 +21,12 @@ This file provides guidance to agents when working with code in this repository.
 
 ## Non-Obvious Patterns
 
-- **`Brand<K, T>` type** in `src/types.ts` — branded type used to distinguish `FreshInternalOAuth2Token` from expired `InternalOAuth2Token`. The `isFreshInternalOAuth2Token` guard checks `expiresAt > Date.now()`.
-- **`FormItems` class** in `src/types.ts` — builds `multipart/form-data` as `ArrayBuffer`. Uses private field `#formData` and overloaded `append()` (string vs `Media`). Call `.toArrayBuffer()` to get the final payload.
-- **`showError()` in `src/utils.ts`** — displays an Obsidian `Notice` and returns a `BloggerClientResult` error object. Do NOT throw after calling it.
+- **`Brand<K, T>` type** in `src/types.ts` — branded type used to distinguish `IFreshInternalOAuth2Token` from expired `IInternalOAuth2Token`. The `isFreshInternalOAuth2Token` guard checks `expiresAt > Date.now()`.
+- **`FormItems` class** in `src/types.ts` — builds `multipart/form-data` as `ArrayBuffer`. Uses private field `#formData` and overloaded `append()` (string vs `IMedia`). Call `.toArrayBuffer()` to get the final payload.
+- **`showError()` in `src/utils.ts`** — displays an Obsidian `Notice` and returns a `IBloggerClientResult` error object. Do NOT throw after calling it.
 - **`doClientPublish()` in `src/main.ts`** — throws `Error` when profile is not found (line 41), which is inconsistent with the `showError()` pattern used elsewhere. This is a known rough edge.
 - **`processFile()` in `src/utils.ts`** — strips YAML frontmatter via regex (`/^---[\s\S]+?---/`) rather than using Obsidian's frontmatter API. This means non-standard frontmatter delimiters could break it.
-- **`BloggerPostParams`** — `status` accepts only `'draft'` or `'live'` (from `EnumPostStatus` enum in `blogger-client-interface.ts`). Labels is always `[]` in the default publish command.
+- **`IBloggerPostParams`** — `status` accepts only `'draft'` or `'live'` (from `EnumPostStatus` enum in `blogger-client-interface.ts`). Labels is always `[]` in the default publish command.
 
 ## Source File Map
 
@@ -34,11 +34,11 @@ This file provides guidance to agents when working with code in this repository.
 |------|---------|
 | `src/main.ts` | Plugin entry, commands, settings lifecycle |
 | `src/blogger-client.ts` | Core publishing logic, `getBloggerClient()` singleton |
-| `src/blogger-client-interface.ts` | `EnumPostStatus` enum, `BloggerPostParams`, `BloggerClientResult` types |
+| `src/blogger-client-interface.ts` | `EnumPostStatus` enum, `IBloggerPostParams`, `IBloggerClientResult` types |
 | `src/blogger-oauth2-client.ts` | OAuth2 desktop + web flows, `MobileOAuth2Helper` |
 | `src/oauth2-client.ts` | `OAuth2Client` class, token refresh, code verifier/challenge |
-| `src/plugin-settings.ts` | `PluginSettings` type, `DEFAULT_SETTINGS`, `upgradeSettings()` |
-| `src/types.ts` | `SafeAny`, `Brand`, `Media`, `FormItems`, `isMedia()` |
+| `src/plugin-settings.ts` | `IPluginSettings` type, `DEFAULT_SETTINGS`, `upgradeSettings()` |
+| `src/types.ts` | `ISafeAny`, `IBrand`, `IMedia`, `FormItems`, `isMedia()` |
 | `src/utils.ts` | `showError()`, `processFile()`, `openWithBrowser()`, `getBoundary()` |
 | `src/consts.ts` | All OAuth2 endpoints, `BLOGGER_API_ENDPOINT`, `ERROR_NOTICE_TIMEOUT` |
 | `src/i18n.ts` | Translation function, `setGlobalLang()` |

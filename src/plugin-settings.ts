@@ -1,28 +1,23 @@
-import { LanguageWithAuto } from './i18n';
-import { BloggerProfile } from './blogger-profile';
-import { SafeAny } from './types';
+import { ILanguageWithAuto } from './i18n';
+import { IBloggerProfile } from './blogger-profile';
+import { ISafeAny } from './types';
 
-import { EnumMathJaxOutputType, EnumPostStatus } from './types/const';
+import { EnumMathJaxOutputType, EnumPostStatus, EnumSettingsVersion } from './types/const';
 
-export const SettingsVersion = {
-  V1: '1',
-} as const;
-export type SettingsVersion = (typeof SettingsVersion)[keyof typeof SettingsVersion];
-
-export type Oauth2ClientCredentials = {
+export type IOauth2ClientCredentials = {
   clientId: string;
   clientSecret: string;
 };
 
-export type PluginSettings = {
-  version: SettingsVersion;
+export type IPluginSettings = {
+  version: EnumSettingsVersion;
 
   /**
    * Plugin language.
    */
-  lang: LanguageWithAuto;
+  lang: ILanguageWithAuto;
 
-  profiles: BloggerProfile[];
+  profiles: IBloggerProfile[];
 
   /**
    * Show plugin icon in side.
@@ -42,18 +37,18 @@ export type PluginSettings = {
   mathJaxOutputType: EnumMathJaxOutputType;
 
   enableHtml: boolean;
-} & Partial<Oauth2ClientCredentials>;
+} & Partial<IOauth2ClientCredentials>;
 
-export type PluginSettingsWithOAuth2 = PluginSettings & Oauth2ClientCredentials;
+export type IPluginSettingsWithOAuth2 = IPluginSettings & IOauth2ClientCredentials;
 
 export const isPluginSettingsWithOAuth2 = (
-  settings: PluginSettings,
-): settings is PluginSettingsWithOAuth2 => {
+  settings: IPluginSettings,
+): settings is IPluginSettingsWithOAuth2 => {
   return !!(settings.clientId && settings.clientSecret);
 };
 
-export const DEFAULT_SETTINGS: PluginSettings = {
-  version: SettingsVersion.V1,
+export const DEFAULT_SETTINGS: IPluginSettings = {
+  version: EnumSettingsVersion.V1,
   lang: 'auto',
   profiles: [],
   showRibbonIcon: false,
@@ -65,9 +60,9 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 
 // Currently we only have one version
 export async function upgradeSettings(
-  existingSettings: SafeAny,
-  to: SettingsVersion,
-): Promise<{ needUpgrade: boolean; settings: PluginSettings }> {
+  existingSettings: ISafeAny,
+  to: EnumSettingsVersion,
+): Promise<{ needUpgrade: boolean; settings: IPluginSettings }> {
   return {
     needUpgrade: false,
     settings: existingSettings,

@@ -2,23 +2,25 @@ import MarkdownIt, { Token } from 'markdown-it';
 import { trim } from 'lodash-es';
 
 
-export interface MarkdownItImageActionParams {
+export interface IMarkdownItImageActionParams
+{
   src: string;
   width?: string;
   height?: string;
 }
 
-interface MarkdownItImagePluginOptions {
-  doWithImage: (img: MarkdownItImageActionParams) => void;
+interface IMarkdownItImagePluginOptions
+{
+  doWithImage: (img: IMarkdownItImageActionParams) => void;
 }
 
-const pluginOptions: MarkdownItImagePluginOptions = {
+const pluginOptions: IMarkdownItImagePluginOptions = {
   doWithImage: () => {},
 }
 
 export const MarkdownItImagePluginInstance = {
   plugin: pluginImpl,
-  doWithImage: (action: (img: MarkdownItImageActionParams) => void) => {
+  doWithImage: (action: (img: IMarkdownItImageActionParams) => void) => {
     pluginOptions.doWithImage = action;
   },
 }

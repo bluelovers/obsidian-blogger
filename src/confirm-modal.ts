@@ -1,15 +1,16 @@
 import { App, Modal, Setting } from 'obsidian';
-import { getGlobalI18n, TranslateKey } from './i18n';
+import { getGlobalI18n, ITranslateKey } from './i18n';
 import { EnumConfirmCode } from './types/const';
 
-export interface ConfirmModalMessages {
+export interface IConfirmModalMessages
+{
   message: string;
   cancelText?: string;
   confirmText?: string;
 }
 
 export function openConfirmModal(
-  messages: ConfirmModalMessages,
+  messages: IConfirmModalMessages,
   app: App,
 ): Promise<{ code: EnumConfirmCode }> {
   return new Promise((resolve, reject) => {
@@ -28,7 +29,7 @@ export function openConfirmModal(
  */
 class ConfirmModal extends Modal {
   constructor(
-    private readonly messages: ConfirmModalMessages,
+    private readonly messages: IConfirmModalMessages,
     app: App,
     private readonly onAction: (code: EnumConfirmCode, modal: Modal) => void,
   ) {
@@ -36,7 +37,7 @@ class ConfirmModal extends Modal {
   }
 
   onOpen() {
-    const t = (key: TranslateKey, vars?: Record<string, string>): string => {
+    const t = (key: ITranslateKey, vars?: Record<string, string>): string => {
       return getGlobalI18n().t(key, vars);
     };
 

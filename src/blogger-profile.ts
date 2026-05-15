@@ -1,7 +1,8 @@
 import { Setting } from 'obsidian';
-import { InternalOAuth2Token } from './oauth2-client';
+import { IInternalOAuth2Token } from './oauth2-client';
 
-export interface BloggerProfile {
+export interface IBloggerProfile
+{
   /**
    * Profile name.
    */
@@ -20,7 +21,7 @@ export interface BloggerProfile {
   /**
    * OAuth2 token for Google
    */
-  googleOAuth2Token: InternalOAuth2Token;
+  googleOAuth2Token: IInternalOAuth2Token;
 
   /**
    * Is default profile.
@@ -28,7 +29,7 @@ export interface BloggerProfile {
   isDefault: boolean;
 }
 
-export function rendererProfile(profile: BloggerProfile, container: HTMLElement): Setting {
+export function rendererProfile(profile: IBloggerProfile, container: HTMLElement): Setting {
   let name = profile.name;
   if (profile.isDefault) {
     name += ' ✔️';

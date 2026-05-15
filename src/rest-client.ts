@@ -1,9 +1,10 @@
 import { requestUrl } from 'obsidian';
 import { getBoundary } from './utils';
-import { SafeAny } from './types';
-import { FormItemNameMapper, FormItems } from './utils/type-utils';
+import { ISafeAny } from './types';
+import { IFormItemNameMapper, FormItems } from './utils/type-utils';
 
-interface RestOptions {
+interface IRestOptions
+{
   url: URL;
 }
 
@@ -14,7 +15,7 @@ export class RestClient {
    */
   private readonly href: string;
 
-  constructor(private readonly options: RestOptions) {
+  constructor(private readonly options: IRestOptions) {
     this.href = this.options.url.href;
     if (this.href.endsWith('/')) {
       this.href = this.href.substring(0, this.href.length - 1);
@@ -52,10 +53,10 @@ export class RestClient {
 
   httpPost = async (
     path: string,
-    body: SafeAny,
+    body: ISafeAny,
     options: {
       headers?: Record<string, string>;
-      formItemNameMapper?: FormItemNameMapper;
+      formItemNameMapper?: IFormItemNameMapper;
     },
   ): Promise<unknown> => {
     let realPath = path;
@@ -64,7 +65,7 @@ export class RestClient {
     }
     const endpoint = `${this.href}/${realPath}`;
     const predefinedHeaders: Record<string, string> = {};
-    let requestBody: SafeAny;
+    let requestBody: ISafeAny;
     if (body instanceof FormItems) {
       const boundary = getBoundary();
       requestBody = await body.toArrayBuffer({
@@ -94,10 +95,10 @@ export class RestClient {
 
   httpPut = async (
     path: string,
-    body: SafeAny,
+    body: ISafeAny,
     options: {
       headers?: Record<string, string>;
-      formItemNameMapper?: FormItemNameMapper;
+      formItemNameMapper?: IFormItemNameMapper;
     },
   ): Promise<unknown> => {
     let realPath = path;
@@ -107,7 +108,7 @@ export class RestClient {
 
     const endpoint = `${this.href}/${realPath}`;
     const predefinedHeaders: Record<string, string> = {};
-    let requestBody: SafeAny;
+    let requestBody: ISafeAny;
     if (body instanceof FormItems) {
       const boundary = getBoundary();
       requestBody = await body.toArrayBuffer({

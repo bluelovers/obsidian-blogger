@@ -1,15 +1,15 @@
 import {
-  BloggerClientResult,
-  BloggerMediaUploadResult,
-  BloggerPostParams,
-  BloggerPublishResult,
-  BloggerClient,
+  IBloggerClientResult,
+  IBloggerMediaUploadResult,
+  IBloggerPostParams,
+  IBloggerPublishResult,
+  IBloggerClient,
 
 } from './blogger-client-interface';
 import { RestClient } from './rest-client';
 import { isFunction, isString, template } from 'lodash-es';
-import { BloggerProfile } from './blogger-profile';
-import { SafeAny, MatterData } from './types';
+import { IBloggerProfile } from './blogger-profile';
+import { ISafeAny, IMatterData } from './types';
 import { BLOGGER_API_ENDPOINT } from './consts';
 import { getGoogleOAuth2Client } from './oauth2-client';
 import { App, Notice } from 'obsidian';
@@ -19,11 +19,11 @@ import { openWithBrowser, processFile, showError } from './utils';
 import { openConfirmModal } from './confirm-modal';
 import { getGlobalI18n } from './i18n';
 import { getGlobalMarkdownParser } from './markdown-it-default';
-import { PluginSettings, isPluginSettingsWithOAuth2 } from './plugin-settings';
-import { FormItemNameMapper } from './utils/type-utils';
+import { IPluginSettings, isPluginSettingsWithOAuth2 } from './plugin-settings';
+import { IFormItemNameMapper } from './utils/type-utils';
 import { EnumBloggerClientReturnCode, EnumConfirmCode, EnumPostStatus } from './types/const';
 
-export abstract class AbstractBloggerClient implements BloggerClient {
+export abstract class AbstractBloggerClient implements IBloggerClient {
   /**
    * Client name.
    */
@@ -31,17 +31,17 @@ export abstract class AbstractBloggerClient implements BloggerClient {
 
   protected constructor(
     protected readonly app: App,
-    protected readonly settings: PluginSettings,
-    protected readonly profile: BloggerProfile,
+    protected readonly settings: IPluginSettings,
+    protected readonly profile: IBloggerProfile,
   ) {}
 
   abstract publish(
     title: string,
     content: string,
-    postParams: BloggerPostParams,
-  ): Promise<BloggerClientResult<BloggerPublishResult>>;
+    postParams: IBloggerPostParams,
+  ): Promise<IBloggerClientResult<IBloggerPublishResult>>;
 
-  private async checkExistingProfile(matterData: MatterData) {
+  private async checkExistingProfile(matterData: IMatterData) {
     const { profileName } = matterData;
     const isProfileNameMismatch = profileName && profileName !== this.profile.name;
     if (isProfileNameMismatch) {
@@ -64,9 +64,9 @@ export abstract class AbstractBloggerClient implements BloggerClient {
   }
 
   private async tryToPublish(params: {
-    postParams: BloggerPostParams;
-    updateMatterData?: (matter: MatterData) => void;
-  }): Promise<BloggerClientResult<BloggerPublishResult>> {
+    postParams: IBloggerPostParams;
+    updateMatterData?: (matter: IMatterData) => void;
+  }): Promise<IBloggerClientResult<IBloggerPublishResult>> {
     const { postParams, updateMatterData } = params;
     const result = await this.publish(
       postParams.title ?? 'A post from Obsidian!',
@@ -109,8 +109,8 @@ export abstract class AbstractBloggerClient implements BloggerClient {
   }
 
   async publishPost(
-    defaultPostParams?: BloggerPostParams,
-  ): Promise<BloggerClientResult<BloggerPublishResult>> {
+    defaultPostParams?: IBloggerPostParams,
+  ): Promise<IBloggerClientResult<IBloggerPublishResult>> {
     try {
       if (!this.profile.endpoint || this.profile.endpoint.length === 0) {
         throw new Error(getGlobalI18n().t('error_noEndpoint'));
@@ -130,8 +130,8 @@ export abstract class AbstractBloggerClient implements BloggerClient {
       await this.checkExistingProfile(matterData);
 
       // now we're preparing the publishing data
-      let postParams: BloggerPostParams;
-      let result: BloggerClientResult<BloggerPublishResult> | undefined;
+      let postParams: IBloggerPostParams;
+      let result: IBloggerClientResult<IBloggerPublishResult> | undefined;
       if (defaultPostParams) {
         postParams = this.readFromFrontMatter(title, matterData, defaultPostParams);
         postParams.content = content;
@@ -144,8 +144,8 @@ export abstract class AbstractBloggerClient implements BloggerClient {
             this.app,
             this.settings,
             async (
-              postParams: BloggerPostParams,
-              updateMatterData: (matter: MatterData) => void,
+              postParams: IBloggerPostParams,
+              updateMatterData: (matter: IMatterData) => void,
             ) => {
               postParams = this.readFromFrontMatter(title, matterData, postParams);
               postParams.content = content;
@@ -186,9 +186,9 @@ export abstract class AbstractBloggerClient implements BloggerClient {
 
   private readFromFrontMatter(
     noteTitle: string,
-    matterData: MatterData,
-    params: BloggerPostParams,
-  ): BloggerPostParams {
+    matterData: IMatterData,
+    params: IBloggerPostParams,
+  ): IBloggerPostParams {
     const postParams = { ...params };
     postParams.title = noteTitle;
     if (matterData.title) {
@@ -205,10 +205,11 @@ export abstract class AbstractBloggerClient implements BloggerClient {
   }
 }
 
-interface BloggerRestEndpoint {
-  base: string | UrlGetter;
-  newPost: string | UrlGetter;
-  editPost: string | UrlGetter;
+interface IBloggerRestEndpoint
+{
+  base: string | IUrlGetter;
+  newPost: string | IUrlGetter;
+  editPost: string | IUrlGetter;
 }
 
 export class BloggerRestClient extends AbstractBloggerClient {
@@ -216,12 +217,12 @@ export class BloggerRestClient extends AbstractBloggerClient {
 
   constructor(
     readonly app: App,
-    readonly settings: PluginSettings,
+    readonly settings: IPluginSettings,
     // FIXME: Since only what we need is to refresh the token, there should be a
     // better way than passing `saveSettings` here.
     private readonly saveSettings: () => Promise<void>,
-    readonly profile: BloggerProfile,
-    private readonly context: BloggerRestClientContext,
+    readonly profile: IBloggerProfile,
+    private readonly context: IBloggerRestClientContext,
   ) {
     super(app, settings, profile);
     this.name = 'BloggerRestClient';
@@ -256,8 +257,8 @@ export class BloggerRestClient extends AbstractBloggerClient {
   async publish(
     title: string,
     content: string,
-    postParams: BloggerPostParams,
-  ): Promise<BloggerClientResult<BloggerPublishResult>> {
+    postParams: IBloggerPostParams,
+  ): Promise<IBloggerClientResult<IBloggerPublishResult>> {
     let url: string;
     let method: typeof this.client.httpPut;
     if (postParams.postId) {
@@ -271,7 +272,7 @@ export class BloggerRestClient extends AbstractBloggerClient {
       });
       method = this.client.httpPost;
     }
-    const resp: SafeAny = await method(
+    const resp: ISafeAny = await method(
       url,
       {
         kind: 'blogger#post',
@@ -319,10 +320,10 @@ export class BloggerRestClient extends AbstractBloggerClient {
   }
 }
 
-type UrlGetter = () => string;
+type IUrlGetter = () => string;
 
 function getUrl(
-  url: string | UrlGetter | undefined,
+  url: string | IUrlGetter | undefined,
   defaultValue: string,
   params?: { [p: string]: string | number | boolean },
 ): string {
@@ -342,36 +343,37 @@ function getUrl(
   }
 }
 
-interface BloggerRestClientContext {
+interface IBloggerRestClientContext
+{
   name: string;
 
   responseParser: {
     toBloggerPublishResult: (
-      postParams: BloggerPostParams,
-      response: SafeAny,
-    ) => BloggerPublishResult;
+      postParams: IBloggerPostParams,
+      response: ISafeAny,
+    ) => IBloggerPublishResult;
     /**
-     * Convert response to `BloggerMediaUploadResult`.
+     * Convert response to `IBloggerMediaUploadResult`.
      *
      * If there is any error, throw new error directly.
      * @param response response from remote server
      */
-    toBloggerMediaUploadResult: (response: SafeAny) => BloggerMediaUploadResult;
+    toBloggerMediaUploadResult: (response: ISafeAny) => IBloggerMediaUploadResult;
   };
 
-  endpoints?: Partial<BloggerRestEndpoint>;
+  endpoints?: Partial<IBloggerRestEndpoint>;
 
   needLoginModal?: boolean;
 
-  formItemNameMapper?: FormItemNameMapper;
+  formItemNameMapper?: IFormItemNameMapper;
 }
 
-export class BloggerRestClientGoogleOAuth2Context implements BloggerRestClientContext {
+export class BloggerRestClientGoogleOAuth2Context implements IBloggerRestClientContext {
   name = 'BloggerRestClientGoogleOAuth2Context';
 
   needLoginModal = false;
 
-  endpoints: BloggerRestEndpoint = {
+  endpoints: IBloggerRestEndpoint = {
     base: BLOGGER_API_ENDPOINT,
     newPost: () => `/${this.blogId}/posts?isDraft=<%= isDraft %>`,
     editPost: () => `/${this.blogId}/posts/<%= postId %>`,
@@ -388,9 +390,9 @@ export class BloggerRestClientGoogleOAuth2Context implements BloggerRestClientCo
 
   responseParser = {
     toBloggerPublishResult: (
-      postParams: BloggerPostParams,
-      response: SafeAny,
-    ): BloggerPublishResult => {
+      postParams: IBloggerPostParams,
+      response: ISafeAny,
+    ): IBloggerPublishResult => {
       if (response.id) {
         if (postParams.postId !== undefined && postParams.postId !== response.id) {
           throw new Error(
@@ -405,7 +407,7 @@ export class BloggerRestClientGoogleOAuth2Context implements BloggerRestClientCo
       }
       throw new Error('xx');
     },
-    toBloggerMediaUploadResult: (response: SafeAny): BloggerMediaUploadResult => {
+    toBloggerMediaUploadResult: (response: ISafeAny): IBloggerMediaUploadResult => {
       if (response.media.length > 0) {
         const media = response.media[0];
         return {
@@ -421,10 +423,10 @@ export class BloggerRestClientGoogleOAuth2Context implements BloggerRestClientCo
 
 export function getBloggerClient(
   app: App,
-  settings: PluginSettings,
+  settings: IPluginSettings,
   saveSettings: () => Promise<void>,
-  profile: BloggerProfile,
-): BloggerClient | null {
+  profile: IBloggerProfile,
+): IBloggerClient | null {
   if (!profile.endpoint || profile.endpoint.length === 0) {
     showError(getGlobalI18n().t('error_noEndpoint'));
     return null;

@@ -1,28 +1,26 @@
-export const BloggerClientReturnCode = {
-	OK: 'OK',
-	Error: 'Error',
-	ServerInternalError: 'ServerInternalError',
-} as const;
+export const enum EnumBloggerClientReturnCode
+{
+	OK = 'OK',
+	Error = 'Error',
+	ServerInternalError = 'ServerInternalError',
+}
 
-export type BloggerClientReturnCode =
-	(typeof BloggerClientReturnCode)[keyof typeof BloggerClientReturnCode];
+export const enum EnumPostStatus
+{
+	Draft = 'DRAFT',
+	Live = 'LIVE',
+	Scheduled = 'SCHEDULED',
+	SoftTrashed = 'SOFT_TRASHED',
+}
 
-export const PostStatus = {
-	Draft: 'DRAFT',
-	Live: 'LIVE',
-	Scheduled: 'SCHEDULED',
-	SoftTrashed: 'SOFT_TRASHED',
-} as const;
-export type PostStatus = (typeof PostStatus)[keyof typeof PostStatus];
+export const enum EnumMathJaxOutputType
+{
+	TeX = 'tex',
+	SVG = 'svg',
+}
 
-export const MathJaxOutputType = {
-	TeX: 'tex',
-	SVG: 'svg',
-} as const;
-export type MathJaxOutputType = (typeof MathJaxOutputType)[keyof typeof MathJaxOutputType];
-
-export const ConfirmCode = {
-	Confirm: 'confirm',
-	Cancel: 'cancel',
-} as const;
-export type ConfirmCode = (typeof ConfirmCode)[keyof typeof ConfirmCode];
+export const enum EnumConfirmCode
+{
+	Confirm = 'confirm',
+	Cancel = 'cancel',
+}

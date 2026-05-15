@@ -4,7 +4,7 @@ import { BloggerProfileManageModal } from './blogger-profile-manage-modal';
 import { PluginSettings } from './plugin-settings';
 import { getGlobalMarkdownParser, setupMarkdownParser } from './markdown-it-default';
 
-import { MathJaxOutputType, PostStatus } from './types/const';
+import { EnumMathJaxOutputType, EnumPostStatus } from './types/const';
 
 export class BloggerSettingTab extends PluginSettingTab {
   constructor(
@@ -21,11 +21,11 @@ export class BloggerSettingTab extends PluginSettingTab {
       return getGlobalI18n().t(key, vars);
     };
 
-    const getMathJaxOutputTypeDesc = (type: MathJaxOutputType): string => {
+    const getMathJaxOutputTypeDesc = (type: EnumMathJaxOutputType): string => {
       switch (type) {
-        case MathJaxOutputType.TeX:
+        case EnumMathJaxOutputType.TeX:
           return t('settings_MathJaxOutputTypeTeXDesc');
-        case MathJaxOutputType.SVG:
+        case EnumMathJaxOutputType.SVG:
           return t('settings_MathJaxOutputTypeSVGDesc');
         default:
           return '';
@@ -76,12 +76,12 @@ export class BloggerSettingTab extends PluginSettingTab {
       .setDesc(t('settings_defaultPostStatusDesc'))
       .addDropdown((dropdown) => {
         dropdown
-          .addOption(PostStatus.Draft, t('settings_defaultPostStatusDraft'))
-          .addOption(PostStatus.Live, t('settings_defaultPostStatusLive'))
+          .addOption(EnumPostStatus.Draft, t('settings_defaultPostStatusDraft'))
+          .addOption(EnumPostStatus.Live, t('settings_defaultPostStatusLive'))
           // .addOption(PostStatus.Future, 'future')
           .setValue(this.settings.defaultPostStatus)
           .onChange(async (value) => {
-            this.settings.defaultPostStatus = value as PostStatus;
+            this.settings.defaultPostStatus = value as EnumPostStatus;
             await this.saveSettings();
           });
       });
@@ -101,11 +101,11 @@ export class BloggerSettingTab extends PluginSettingTab {
       .setDesc(t('settings_mathJaxOutputTypeDesc'))
       .addDropdown((dropdown) => {
         dropdown
-          .addOption(MathJaxOutputType.TeX, t('settings_mathJaxOutputTypeTeX'))
-          .addOption(MathJaxOutputType.SVG, t('settings_mathJaxOutputTypeSVG'))
+          .addOption(EnumMathJaxOutputType.TeX, t('settings_mathJaxOutputTypeTeX'))
+          .addOption(EnumMathJaxOutputType.SVG, t('settings_mathJaxOutputTypeSVG'))
           .setValue(this.settings.mathJaxOutputType)
           .onChange(async (value) => {
-            this.settings.mathJaxOutputType = value as MathJaxOutputType;
+            this.settings.mathJaxOutputType = value as EnumMathJaxOutputType;
             mathJaxOutputTypeDesc = getMathJaxOutputTypeDesc(this.settings.mathJaxOutputType);
             await this.saveSettings();
             this.display();

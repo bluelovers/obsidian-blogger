@@ -1,6 +1,6 @@
 import { App, Modal, Setting } from 'obsidian';
 import { getGlobalI18n, TranslateKey } from './i18n';
-import { ConfirmCode } from './types/const';
+import { EnumConfirmCode } from './types/const';
 
 export interface ConfirmModalMessages {
   message: string;
@@ -11,7 +11,7 @@ export interface ConfirmModalMessages {
 export function openConfirmModal(
   messages: ConfirmModalMessages,
   app: App,
-): Promise<{ code: ConfirmCode }> {
+): Promise<{ code: EnumConfirmCode }> {
   return new Promise((resolve, reject) => {
     const modal = new ConfirmModal(messages, app, (code, modal) => {
       resolve({
@@ -30,7 +30,7 @@ class ConfirmModal extends Modal {
   constructor(
     private readonly messages: ConfirmModalMessages,
     app: App,
-    private readonly onAction: (code: ConfirmCode, modal: Modal) => void,
+    private readonly onAction: (code: EnumConfirmCode, modal: Modal) => void,
   ) {
     super(app);
   }
@@ -49,7 +49,7 @@ class ConfirmModal extends Modal {
     new Setting(contentEl)
       .addButton((button) =>
         button.setButtonText(this.messages.cancelText ?? t('confirmModal_cancel')).onClick(() => {
-          this.onAction(ConfirmCode.Cancel, this);
+          this.onAction(EnumConfirmCode.Cancel, this);
         }),
       )
       .addButton((button) =>
@@ -57,7 +57,7 @@ class ConfirmModal extends Modal {
           .setButtonText(this.messages.confirmText ?? t('confirmModal_confirm'))
           .setCta()
           .onClick(() => {
-            this.onAction(ConfirmCode.Confirm, this);
+            this.onAction(EnumConfirmCode.Confirm, this);
           }),
       );
   }

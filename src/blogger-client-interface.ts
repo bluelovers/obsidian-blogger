@@ -1,5 +1,5 @@
 import { SafeAny } from './types';
-import { BloggerClientReturnCode, PostStatus } from './types/const';
+import { EnumBloggerClientReturnCode, EnumPostStatus } from './types/const';
 
 interface _bloggerClientResult {
   /**
@@ -7,23 +7,23 @@ interface _bloggerClientResult {
    */
   response?: SafeAny;
 
-  code: BloggerClientReturnCode;
+  code: EnumBloggerClientReturnCode;
 }
 
 interface BloggerClientOkResult<T> extends _bloggerClientResult {
-  code: typeof BloggerClientReturnCode.OK;
+  code: EnumBloggerClientReturnCode.OK;
   data: T;
 }
 
 interface BloggerClientErrorResult extends _bloggerClientResult {
-  code: 'Error';
+  code: EnumBloggerClientReturnCode.Error;
   message: string;
 }
 
 export type BloggerClientResult<T> = BloggerClientOkResult<T> | BloggerClientErrorResult;
 
 export interface BloggerPostParams {
-  status: PostStatus;
+  status: EnumPostStatus;
   labels: string[];
 
   /**
@@ -57,7 +57,7 @@ export interface BloggerPublishParams {
 export interface BloggerPublishResult {
   postId: string;
   url: string;
-  status: PostStatus;
+  status: EnumPostStatus;
 }
 
 export interface BloggerMediaUploadResult {

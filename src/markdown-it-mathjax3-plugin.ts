@@ -9,10 +9,10 @@ import { mathjax } from 'mathjax-full/js/mathjax';
 import juice from 'juice';
 import { SafeAny } from './types';
 
-import { MathJaxOutputType } from './types/const';
+import { EnumMathJaxOutputType } from './types/const';
 
 interface MarkdownItMathJax3PluginOptions {
-  outputType: MathJaxOutputType;
+  outputType: EnumMathJaxOutputType;
 }
 
 interface ConvertOptions {
@@ -53,7 +53,7 @@ function renderMath(
   convertOptions: ConvertOptions,
   options: MarkdownItMathJax3PluginOptions,
 ): string {
-  if (options.outputType === MathJaxOutputType.SVG) {
+  if (options.outputType === EnumMathJaxOutputType.SVG) {
     const documentOptions = {
       InputJax: new TeX({ packages: AllPackages }),
       OutputJax: new SVG({ fontCache: 'none' }),

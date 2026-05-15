@@ -4,7 +4,7 @@ import { isString } from 'lodash-es';
 import { ERROR_NOTICE_TIMEOUT } from './consts';
 import { format } from 'date-fns';
 import { MatterData, SafeAny } from './types';
-import { BloggerClientReturnCode } from './types/const';
+import { EnumBloggerClientReturnCode } from './types/const';
 
 export function openWithBrowser(
   url: string,
@@ -58,7 +58,7 @@ export function showError<T>(error: unknown): BloggerClientResult<T> {
   }
   new Notice(errorMessage, ERROR_NOTICE_TIMEOUT);
   return {
-    code: BloggerClientReturnCode.Error,
+    code: EnumBloggerClientReturnCode.Error,
     message: errorMessage,
   };
 }

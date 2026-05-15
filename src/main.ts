@@ -16,7 +16,7 @@ import { getBloggerClient } from './blogger-client';
 import { getGlobalMarkdownParser, setupMarkdownParser } from './markdown-it-default';
 import { getGlobalI18n, setGlobalLang } from './i18n';
 import { MobileOAuth2Helper } from './blogger-oauth2-client';
-import { PostStatus } from './types/const';
+import { EnumPostStatus } from './types/const';
 
 const doClientPublish = (
   plugin: BloggerPlugin,
@@ -74,7 +74,7 @@ export default class BloggerPlugin extends Plugin {
         const defaultProfile = this.#settings?.profiles.find((it) => it.isDefault);
         if (defaultProfile) {
           const params: BloggerPostParams = {
-            status: this.#settings?.defaultPostStatus ?? PostStatus.Draft,
+            status: this.#settings?.defaultPostStatus ?? EnumPostStatus.Draft,
             labels: [],
             title: '',
             content: '',

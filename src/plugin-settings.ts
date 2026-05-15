@@ -2,7 +2,7 @@ import { LanguageWithAuto } from './i18n';
 import { BloggerProfile } from './blogger-profile';
 import { SafeAny } from './types';
 
-import { MathJaxOutputType, PostStatus } from './types/const';
+import { EnumMathJaxOutputType, EnumPostStatus } from './types/const';
 
 export const SettingsVersion = {
   V1: '1',
@@ -32,14 +32,14 @@ export type PluginSettings = {
   /**
    * Default post status.
    */
-  defaultPostStatus: PostStatus;
+  defaultPostStatus: EnumPostStatus;
 
   /**
    * If the page is opened with browser when published successfully.
    */
   openPublishedPageWithBrowser: boolean;
 
-  mathJaxOutputType: MathJaxOutputType;
+  mathJaxOutputType: EnumMathJaxOutputType;
 
   enableHtml: boolean;
 } & Partial<Oauth2ClientCredentials>;
@@ -57,9 +57,9 @@ export const DEFAULT_SETTINGS: PluginSettings = {
   lang: 'auto',
   profiles: [],
   showRibbonIcon: false,
-  defaultPostStatus: PostStatus.Draft,
+  defaultPostStatus: EnumPostStatus.Draft,
   openPublishedPageWithBrowser: false,
-  mathJaxOutputType: MathJaxOutputType.SVG,
+  mathJaxOutputType: EnumMathJaxOutputType.SVG,
   enableHtml: false,
 };
 

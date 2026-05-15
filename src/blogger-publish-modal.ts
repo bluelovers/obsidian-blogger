@@ -3,7 +3,7 @@ import { BloggerPostParams } from './blogger-client-interface';
 import { TranslateKey, getGlobalI18n } from './i18n';
 import { MatterData } from './types';
 import { PluginSettings } from './plugin-settings';
-import { PostStatus } from './types/const';
+import { EnumPostStatus } from './types/const';
 
 /**
  * Blogger publish modal.
@@ -51,11 +51,11 @@ export class BloggerPublishModal extends Modal {
       .setDesc(t('publishModal_postStatusDesc'))
       .addDropdown((dropdown) => {
         dropdown
-          .addOption(PostStatus.Draft, t('publishModal_postStatusDraft'))
-          .addOption(PostStatus.Live, t('publishModal_postStatusLive'))
+          .addOption(EnumPostStatus.Draft, t('publishModal_postStatusDraft'))
+          .addOption(EnumPostStatus.Live, t('publishModal_postStatusLive'))
           .setValue(this.settings.defaultPostStatus)
           .onChange((value) => {
-            params.status = value as PostStatus;
+            params.status = value as EnumPostStatus;
           });
       });
 

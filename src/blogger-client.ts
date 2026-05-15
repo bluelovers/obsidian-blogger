@@ -21,7 +21,7 @@ import { getGlobalI18n } from './i18n';
 import { getGlobalMarkdownParser } from './markdown-it-default';
 import { PluginSettings, isPluginSettingsWithOAuth2 } from './plugin-settings';
 import { FormItemNameMapper } from './utils/type-utils';
-import { BloggerClientReturnCode, ConfirmCode, PostStatus } from './types/const';
+import { EnumBloggerClientReturnCode, EnumConfirmCode, EnumPostStatus } from './types/const';
 
 export abstract class AbstractBloggerClient implements BloggerClient {
   /**
@@ -57,7 +57,7 @@ export abstract class AbstractBloggerClient implements BloggerClient {
         },
         this.app,
       );
-      if (confirm.code !== ConfirmCode.Cancel) {
+      if (confirm.code !== EnumConfirmCode.Cancel) {
         delete matterData.postId;
       }
     }
@@ -76,7 +76,7 @@ export abstract class AbstractBloggerClient implements BloggerClient {
       </div>`,
       postParams,
     );
-    if (result.code === BloggerClientReturnCode.Error) {
+    if (result.code === EnumBloggerClientReturnCode.Error) {
       throw new Error(
         getGlobalI18n().t('error_publishFailed', {
           message: result.message,
@@ -154,7 +154,7 @@ export abstract class AbstractBloggerClient implements BloggerClient {
                   postParams,
                   updateMatterData,
                 });
-                if (r.code === BloggerClientReturnCode.OK) {
+                if (r.code === EnumBloggerClientReturnCode.OK) {
                   publishModal.close();
                   resolve(r);
                 }
@@ -267,7 +267,7 @@ export class BloggerRestClient extends AbstractBloggerClient {
       method = this.client.httpPut;
     } else {
       url = getUrl(this.context.endpoints?.newPost, 'dummy/post?isDraft=<%= isDraft %>', {
-        isDraft: postParams.status === PostStatus.Draft,
+        isDraft: postParams.status === EnumPostStatus.Draft,
       });
       method = this.client.httpPost;
     }
@@ -297,7 +297,7 @@ export class BloggerRestClient extends AbstractBloggerClient {
         message = `${message} ${getGlobalI18n().t('error_postNotFound')}`;
       }
       return {
-        code: BloggerClientReturnCode.Error,
+        code: EnumBloggerClientReturnCode.Error,
         message,
         response: resp,
       };
@@ -305,13 +305,13 @@ export class BloggerRestClient extends AbstractBloggerClient {
     try {
       const result = this.context.responseParser.toBloggerPublishResult(postParams, resp);
       return {
-        code: BloggerClientReturnCode.OK,
+        code: EnumBloggerClientReturnCode.OK,
         data: result,
         response: resp,
       };
     } catch (e) {
       return {
-        code: BloggerClientReturnCode.Error,
+        code: EnumBloggerClientReturnCode.Error,
         message: getGlobalI18n().t('error_cannotParseResponse'),
         response: resp,
       };

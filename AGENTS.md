@@ -26,7 +26,7 @@ This file provides guidance to agents when working with code in this repository.
 - **`showError()` in `src/utils.ts`** — displays an Obsidian `Notice` and returns a `BloggerClientResult` error object. Do NOT throw after calling it.
 - **`doClientPublish()` in `src/main.ts`** — throws `Error` when profile is not found (line 41), which is inconsistent with the `showError()` pattern used elsewhere. This is a known rough edge.
 - **`processFile()` in `src/utils.ts`** — strips YAML frontmatter via regex (`/^---[\s\S]+?---/`) rather than using Obsidian's frontmatter API. This means non-standard frontmatter delimiters could break it.
-- **`BloggerPostParams`** — `status` accepts only `'draft'` or `'live'` (from `PostStatus` enum in `blogger-client-interface.ts`). Labels is always `[]` in the default publish command.
+- **`BloggerPostParams`** — `status` accepts only `'draft'` or `'live'` (from `EnumPostStatus` enum in `blogger-client-interface.ts`). Labels is always `[]` in the default publish command.
 
 ## Source File Map
 
@@ -34,7 +34,7 @@ This file provides guidance to agents when working with code in this repository.
 |------|---------|
 | `src/main.ts` | Plugin entry, commands, settings lifecycle |
 | `src/blogger-client.ts` | Core publishing logic, `getBloggerClient()` singleton |
-| `src/blogger-client-interface.ts` | `PostStatus` enum, `BloggerPostParams`, `BloggerClientResult` types |
+| `src/blogger-client-interface.ts` | `EnumPostStatus` enum, `BloggerPostParams`, `BloggerClientResult` types |
 | `src/blogger-oauth2-client.ts` | OAuth2 desktop + web flows, `MobileOAuth2Helper` |
 | `src/oauth2-client.ts` | `OAuth2Client` class, token refresh, code verifier/challenge |
 | `src/plugin-settings.ts` | `PluginSettings` type, `DEFAULT_SETTINGS`, `upgradeSettings()` |

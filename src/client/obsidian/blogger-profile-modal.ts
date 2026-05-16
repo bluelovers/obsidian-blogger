@@ -10,6 +10,7 @@ import { IAbstractRequestClientLike } from '../request/abstract-request-client';
 
 import { AbstractObsidianModal } from './abstract-obsidian-modal';
 import { showError } from '../../utils/obsidian/showError';
+import { EnumHttpMethod } from '../request/http-post';
 
 export const openProfileModal = (
   plugin: Plugin,
@@ -45,7 +46,7 @@ const fetchBlogId = async (
   })}`;
   const response = await requestClient.requestUrl({
     url: blogIdEndpoint,
-    method: 'GET',
+    method: EnumHttpMethod.GET,
     headers: {
       'content-type': 'application/json',
       'user-agent': 'obsidian.md',

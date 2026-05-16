@@ -26,6 +26,7 @@ import {
   _updateFrontMatterTagsByPostStatus,
 } from './data/tags-utils';
 import { showError } from './utils/obsidian/showError';
+import { getBloggerRestEndpoint, getUrl, IBloggerRestEndpoint } from './client/blogger/utils/url';
 
 export abstract class AbstractBloggerClient implements IBloggerClient {
   /**
@@ -202,13 +203,6 @@ export abstract class AbstractBloggerClient implements IBloggerClient {
   }
 }
 
-interface IBloggerRestEndpoint
-{
-  base: string | IUrlGetter;
-  newPost: string | IUrlGetter;
-  editPost: string | IUrlGetter;
-}
-
 export class BloggerRestClient extends AbstractBloggerClient {
   private readonly client: RestClient;
 
@@ -318,28 +312,6 @@ export class BloggerRestClient extends AbstractBloggerClient {
   }
 }
 
-type IUrlGetter = () => string;
-
-function getUrl(
-  url: string | IUrlGetter | undefined,
-  defaultValue: string,
-  params?: { [p: string]: string | number | boolean },
-): string {
-  let resultUrl: string;
-  if (isString(url)) {
-    resultUrl = url;
-  } else if (isFunction(url)) {
-    resultUrl = url();
-  } else {
-    resultUrl = defaultValue;
-  }
-  if (params) {
-    const compiled = template(resultUrl);
-    return compiled(params);
-  } else {
-    return resultUrl;
-  }
-}
 
 interface IBloggerRestClientContext
 {
@@ -371,13 +343,9 @@ export class BloggerRestClientGoogleOAuth2Context implements IBloggerRestClientC
 
   needLoginModal = false;
 
-  endpoints: IBloggerRestEndpoint = {
-    base: BLOGGER_API_ENDPOINT,
-    newPost: () => `/${this.blogId}/posts?isDraft=<%= isDraft %>`,
-    editPost: () => `/${this.blogId}/posts/<%= postId %>`,
-  };
+  endpoints: IBloggerRestEndpoint = getBloggerRestEndpoint(this.blogId);
 
-  constructor(private readonly blogId: string) {}
+  constructor(private readonly blogId: IBloggerProfile["blogId"]) {}
 
   formItemNameMapper(name: string, isArray: boolean): string {
     if (name === 'file' && !isArray) {

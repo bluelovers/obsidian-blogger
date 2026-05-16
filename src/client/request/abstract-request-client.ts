@@ -1,4 +1,6 @@
 import { RequestUrlParam, RequestUrlResponse, RequestUrlResponsePromise } from 'obsidian';
+import { IHttpHeaders } from '../../types/http';
+import { EnumHttpMethod } from './http-post';
 
 /**
  * 泛型化 HTTP 回應介面（內含解析後的 JSON 資料）
@@ -34,9 +36,10 @@ export interface IRequestUrlResponsePromise<T = any> extends Pick<RequestUrlResp
  * 目前為空擴展，保留未來擴充彈性。
  * Currently an empty extension, reserved for future flexibility.
  */
-export interface IRequestUrlParam extends RequestUrlParam
+export interface IRequestUrlParam extends Omit<RequestUrlParam, 'headers'>
 {
-
+	method: EnumHttpMethod;
+	headers?: IHttpHeaders;
 }
 
 /**

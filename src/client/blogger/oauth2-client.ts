@@ -9,6 +9,7 @@ import { getGlobalI18n } from '../../i18n/i18n';
 import { IOauth2ClientCredentials } from '../../plugin-settings';
 import { IObsidianRequest } from '../request/abstract-request-client';
 import { AbstractRequestClientWithConstructor } from '../request/request-client';
+import { EnumHttpMethod } from '../request/http-post';
 
 export type IOAuth2TokenProto = {
   accessToken: string;
@@ -137,7 +138,7 @@ export class OAuth2Client extends AbstractRequestClientWithConstructor
     const requestTime = Date.now();
     const response = await this.requestUrl({
       url: this.options.tokenEndpoint,
-      method: 'POST',
+      method: EnumHttpMethod.POST,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'User-Agent': 'obsidian.md',
@@ -176,7 +177,7 @@ export class OAuth2Client extends AbstractRequestClientWithConstructor
     const requestTime = Date.now();
     const response = await this.requestUrl({
       url: this.options.tokenEndpoint,
-      method: 'POST',
+      method: EnumHttpMethod.POST,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'User-Agent': 'obsidian.md',
@@ -215,7 +216,7 @@ export class OAuth2Client extends AbstractRequestClientWithConstructor
   validateToken = async (params: IValidateTokenParams): Promise<void> => {
     await this.requestUrl({
       url: `${this.options.validateTokenEndpoint}?access_token=${params.token}`,
-      method: 'GET',
+      method: EnumHttpMethod.GET,
       headers: {
         'Content-Type': 'application/json',
         'User-Agent': 'obsidian.md',

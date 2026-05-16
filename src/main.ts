@@ -18,7 +18,7 @@ import { getGlobalMarkdownParser, setupMarkdownParser } from './markdown-it-defa
 import { getGlobalI18n, setGlobalLang } from './i18n/i18n';
 import { MobileOAuth2Helper } from './blogger-oauth2-client';
 import { EnumPostStatus, EnumSettingsVersion } from './types/const';
-import { showBloggerPublishModal } from './utils/obsidian/show-blogger-publish-modal';
+import { openPublishModal } from './utils/obsidian/open-publish-modal';
 import { openConfirmModal } from './confirm-modal';
 
 const doClientPublish = async (
@@ -36,7 +36,7 @@ const doClientPublish = async (
   if (profile) {
     const ctx = createObsidianContext({
       app: plugin.app,
-      openPublishModal: showBloggerPublishModal,
+      openPublishModal,
       openConfirmModal,
     });
     const client = getBloggerClient(ctx, plugin.settings, plugin.saveSettings, profile);

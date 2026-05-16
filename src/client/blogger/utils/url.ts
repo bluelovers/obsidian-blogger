@@ -86,7 +86,7 @@ export function getBloggerRestEndpoint(blogId: IBloggerProfile["blogId"])
 		 * 所有文章端點皆以此為前綴，後接 `/{blogId}/posts/...`。
 		 * All post endpoints are prefixed with this, followed by `/{blogId}/posts/...`.
 		 */
-		base: BLOGGER_API_ENDPOINT ,
+		base: BLOGGER_API_ENDPOINT,
 
 		/**
 		 * 建立新文章

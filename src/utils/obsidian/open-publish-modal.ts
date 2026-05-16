@@ -1,6 +1,5 @@
 
 import { IPluginSettings } from '../../plugin-settings';
-import { App } from 'obsidian';
 import { BloggerPublishModal, IOnSubmit } from '../../blogger-publish-modal';
 import { IMatterData } from '../../types';
 import { IBloggerClientResult, IBloggerPublishResult } from '../../types/blogger-client-interface';
@@ -18,7 +17,7 @@ import { IObsidianContext } from './obsidian-context';
  * @param argv.matterData - 筆記的 Frontmatter 資料 / Frontmatter data of the note
  * @returns 包含發布結果的 Promise / Promise containing publish result
  */
-export function showBloggerPublishModal(argv: {
+export function openPublishModal(argv: {
 	ctx: IObsidianContext,
 	settings: IPluginSettings,
 	/**

@@ -5,7 +5,7 @@ import { tryCatch } from '../try';
 import { IBloggerClientResult } from '../../types/blogger-client-interface';
 import { isString } from 'lodash-es';
 import { ERROR_NOTICE_TIMEOUT } from '../../consts';
-import { showBloggerPublishModal } from './show-blogger-publish-modal';
+import { openPublishModal } from './open-publish-modal';
 import { openConfirmModal } from '../../confirm-modal';
 
 /**
@@ -80,7 +80,7 @@ export function showError<T>(error: unknown): IBloggerClientResult<T>
  */
 export function createObsidianContext(context: {
 	app?: App,
-	openPublishModal?: typeof showBloggerPublishModal,
+	openPublishModal?: typeof openPublishModal,
 	openConfirmModal?: typeof openConfirmModal
 })
 {

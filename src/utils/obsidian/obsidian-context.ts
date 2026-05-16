@@ -4,7 +4,6 @@ import { EnumLanguageIDAll } from '../../types/const';
 
 export function createObsidianContext(context: {
 	app?: App,
-	Notice?: typeof Notice,
 })
 {
 	context ??= {};
@@ -12,9 +11,13 @@ export function createObsidianContext(context: {
 		app: context.app!,
 		notice(message: string | DocumentFragment, duration?: number)
 		{
-			if (context.Notice)
+			try
 			{
-				new context.Notice!(message, duration);
+				return new (require('obsidian').Notice as typeof Notice)(message, duration);
+			}
+			catch (error)
+			{
+
 			}
 		},
 		get locale()
@@ -22,7 +25,7 @@ export function createObsidianContext(context: {
 			let lang: ILanguageID;
 			try
 			{
-				lang = require('obsidian').moment.locale().replace('-', '_') as ILanguageID;
+				lang = (require('obsidian').moment as typeof moment).locale().replace('-', '_') as ILanguageID;
 			}
 			catch (error)
 			{

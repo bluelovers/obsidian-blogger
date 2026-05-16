@@ -27,6 +27,7 @@ import {
 } from './data/tags-utils';
 import { showError } from './utils/obsidian/showError';
 import { getBloggerRestEndpoint, getUrl, IBloggerRestEndpoint } from './client/blogger/utils/url';
+import { IObsidianContext } from './utils/obsidian/obsidian-context';
 
 export abstract class AbstractBloggerClient implements IBloggerClient {
   /**
@@ -41,9 +42,9 @@ export abstract class AbstractBloggerClient implements IBloggerClient {
   ) {}
 
   abstract publish(
-    title: string,
-    content: string,
-    postParams: IBloggerPostParams,
+		title: string | undefined,
+		content: string | undefined,
+		postParams: Partial<IBloggerPostParams>,
   ): Promise<IBloggerClientResult<IBloggerPublishResult>>;
 
   private async checkExistingProfile(matterData: IMatterData) {
@@ -69,17 +70,17 @@ export abstract class AbstractBloggerClient implements IBloggerClient {
   }
 
   private async tryToPublish(params: {
-    postParams: IBloggerPostParams;
-    updateMatterData?: (matter: IMatterData) => void;
+		postParams: Partial<IBloggerPostParams>;
+		updateMatterData?: (matter: Partial<IMatterData>) => void;
   }): Promise<IBloggerClientResult<IBloggerPublishResult>> {
     const { postParams, updateMatterData } = params;
     const result = await this.publish(
       postParams.title ?? 'A post from Obsidian!',
       // FIXME: this modification should be done on the renderer side
       `<div class="obsidian-blogger-post">
-      ${getGlobalMarkdownParser().render(postParams.content)}
+      ${getGlobalMarkdownParser().render(postParams.content!)}
       </div>`,
-      postParams,
+			postParams as IBloggerPostParams,
     );
     if (result.code === EnumBloggerClientReturnCode.Error) {
       throw new Error(
@@ -154,7 +155,7 @@ export abstract class AbstractBloggerClient implements IBloggerClient {
             this.settings,
             hasPostId,
             async (
-              postParams: IBloggerPostParams,
+							postParams,
               updateMatterData: (matter: IMatterData) => void,
             ) => {
               postParams = this.readFromFrontMatter(title, matterData, postParams);
@@ -163,7 +164,7 @@ export abstract class AbstractBloggerClient implements IBloggerClient {
                 /** Status-only 路徑：僅 PATCH status 欄位 */
                 if (postParams.updateStatusOnly)
                 {
-                  const r = await this.publish('', '', postParams);
+									const r = await this.publish(void 0, void 0, postParams);
                   if (r.code === EnumBloggerClientReturnCode.Error)
                   {
                     throw new Error(r.message);
@@ -198,6 +199,7 @@ export abstract class AbstractBloggerClient implements IBloggerClient {
                 }
               }
             },
+						matterData,
           );
           publishModal.open();
         });
@@ -219,7 +221,7 @@ export abstract class AbstractBloggerClient implements IBloggerClient {
   private readFromFrontMatter(
     noteTitle: string,
     matterData: IMatterData,
-    params: IBloggerPostParams,
+		params: Partial<IBloggerPostParams>,
   ): IBloggerPostParams {
     const postParams = { ...params };
     postParams.title = noteTitle;
@@ -270,9 +272,9 @@ export class BloggerRestClient extends AbstractBloggerClient {
   }
 
   async publish(
-    title: string,
-    content: string,
-    postParams: IBloggerPostParams,
+		title: string | undefined,
+		content: string | undefined,
+		postParams: Partial<IBloggerPostParams>,
   ): Promise<IBloggerClientResult<IBloggerPublishResult>> {
     /** ========== Status-only PATCH 路徑 ========== */
     if (postParams.updateStatusOnly)
@@ -356,10 +358,10 @@ export class BloggerRestClient extends AbstractBloggerClient {
         blog: {
           id: this.profile.blogId,
         },
-        title,
-        content,
+				title: title!,
+				content: content!,
         labels: _handleTagsForBloggerPostApi(postParams.tags),
-        status: postParams.status,
+				status: postParams.status!,
       },
       {
         headers: await this.getHeaders(),

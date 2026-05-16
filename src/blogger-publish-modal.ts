@@ -5,6 +5,13 @@ import { IMatterData } from './types';
 import { IPluginSettings } from './plugin-settings';
 import { EnumPostStatus } from './types/const';
 import { ITranslateKey } from './i18n/langs';
+import { _getPostStatusFromTags, _togglePostStatus } from './data/tags-utils';
+import { IObsidianContext } from './utils/obsidian/obsidian-context';
+
+export type IOnSubmit = (
+	postParams: Partial<IBloggerPostParams>,
+	updateMatterData: (matter: Partial<IMatterData>) => void,
+) => void;
 
 /**
  * Blogger publish modal.
@@ -17,21 +24,19 @@ export class BloggerPublishModal extends Modal {
      * 筆記是否已有 postId（已發布過）
      * Whether the note already has a postId (previously published)
      */
-    private readonly hasPostId: boolean,
-    private readonly onSubmit: (
-      params: IBloggerPostParams,
-      updateMatterData: (matter: IMatterData) => void,
-    ) => void,
+		protected readonly hasPostId: boolean,
+		protected readonly onSubmit: IOnSubmit,
+		protected readonly matterData: IMatterData,
   ) {
     super(app);
   }
 
   onOpen() {
-    const params: IBloggerPostParams = {
-      status: this.settings.defaultPostStatus,
-      tags: [],
-      title: '',
-      content: '',
+		const params: Partial<IBloggerPostParams> = {
+			status: _getPostStatusFromTags(this.matterData.tags, this.settings.defaultPostStatus),
+		// tags: [],
+		// title: '',
+		// content: '',
     };
 
     this.display(params);
@@ -42,7 +47,8 @@ export class BloggerPublishModal extends Modal {
     contentEl.empty();
   }
 
-  private display(params: IBloggerPostParams): void {
+	protected display(params: Partial<IBloggerPostParams>): void
+	{
     const t = (key: ITranslateKey, vars?: Record<string, string>): string => {
       return getGlobalI18n().t(key, vars);
     };
@@ -52,6 +58,8 @@ export class BloggerPublishModal extends Modal {
     contentEl.empty();
     contentEl.createEl('h1', { text: t('publishModal_title') });
 
+		const defaultPostStatus = _togglePostStatus(params.status, this.settings.defaultPostStatus)!;
+
     new Setting(contentEl)
       .setName(t('publishModal_postStatus'))
       .setDesc(t('publishModal_postStatusDesc'))
@@ -59,7 +67,7 @@ export class BloggerPublishModal extends Modal {
         dropdown
           .addOption(EnumPostStatus.Draft, t('publishModal_postStatusDraft'))
           .addOption(EnumPostStatus.Live, t('publishModal_postStatusLive'))
-          .setValue(this.settings.defaultPostStatus)
+					.setValue(defaultPostStatus)
           .onChange((value) => {
             params.status = value as EnumPostStatus;
           });

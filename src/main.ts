@@ -33,7 +33,7 @@ const doClientPublish = (
   if (profile) {
     const client = getBloggerClient(plugin.app, plugin.settings, plugin.saveSettings, profile);
     if (client) {
-      client.publishPost(defaultPostParams).then();
+      await client.publishPost(defaultPostParams);
     }
   } else {
     const noSuchProfileMessage = getGlobalI18n().t('error_noSuchProfile', {
@@ -71,7 +71,8 @@ export default class BloggerPlugin extends Plugin {
     this.addCommand({
       id: 'defaultPublish',
       name: getGlobalI18n().t('command_publishWithDefault'),
-      editorCallback: () => {
+      editorCallback: async () =>
+      {
         const defaultProfile = this.#settings?.profiles.find((it) => it.isDefault);
         if (defaultProfile) {
           const params: IBloggerPostParams = {
@@ -80,7 +81,7 @@ export default class BloggerPlugin extends Plugin {
             title: '',
             content: '',
           };
-          doClientPublish(this, defaultProfile, params);
+          await doClientPublish(this, defaultProfile, params);
         } else {
           showError(getGlobalI18n().t('error_noDefaultProfile') ?? 'No default profile found.');
         }
@@ -135,10 +136,10 @@ export default class BloggerPlugin extends Plugin {
 
   private openProfileChooser = async () => {
     if (this.settings.profiles.length === 1) {
-      doClientPublish(this, this.settings.profiles[0]);
+      await doClientPublish(this, this.settings.profiles[0]);
     } else if (this.settings.profiles.length > 1) {
       const profile = await openProfileChooserModal(this.app, this.settings.profiles);
-      doClientPublish(this, profile);
+      await doClientPublish(this, profile);
     } else {
       showError(getGlobalI18n().t('error_noProfile'));
     }

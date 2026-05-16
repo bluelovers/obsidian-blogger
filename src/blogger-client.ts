@@ -6,7 +6,7 @@ import {
   IBloggerPublishResult,
 } from './types/blogger-client-interface';
 import { IBloggerPostApiReturn, RestClient } from './client/blogger/rest-client';
-import { isFunction, isString, template } from 'lodash-es';
+import { isFunction } from 'lodash-es';
 import { IBloggerProfile } from './blogger-profile';
 import { IMatterData, ISafeAny } from './types';
 import { BLOGGER_API_ENDPOINT } from './consts';
@@ -19,10 +19,10 @@ import { getGlobalI18n } from './i18n/i18n';
 import { getGlobalMarkdownParser } from './markdown-it-default';
 import { IPluginSettings, isPluginSettingsWithOAuth2 } from './plugin-settings';
 import { _hasError, IFormItemNameMapper } from './utils/type-utils';
-import { EnumBloggerClientReturnCode, EnumConfirmCode, EnumobsidianBloggerTags, EnumPostStatus } from './types/const';
+import { EnumBloggerClientReturnCode, EnumConfirmCode, EnumPostStatus } from './types/const';
 import {
-  _handleTagsForBloggerPostApi,
   _frontMatterToBloggerPostParams,
+  _handleTagsForBloggerPostApi,
   _updateFrontMatterTagsByPostStatus,
 } from './data/tags-utils';
 import { showError } from './utils/obsidian/showError';
@@ -147,10 +147,12 @@ export abstract class AbstractBloggerClient implements IBloggerClient {
           postParams,
         });
       } else {
+        const hasPostId = !!matterData.postId;
         result = await new Promise((resolve) => {
           const publishModal = new BloggerPublishModal(
             this.app,
             this.settings,
+            hasPostId,
             async (
               postParams: IBloggerPostParams,
               updateMatterData: (matter: IMatterData) => void,
@@ -158,6 +160,28 @@ export abstract class AbstractBloggerClient implements IBloggerClient {
               postParams = this.readFromFrontMatter(title, matterData, postParams);
               postParams.content = content;
               try {
+                /** Status-only 路徑：僅 PATCH status 欄位 */
+                if (postParams.updateStatusOnly)
+                {
+                  const r = await this.publish('', '', postParams);
+                  if (r.code === EnumBloggerClientReturnCode.Error)
+                  {
+                    throw new Error(r.message);
+                  }
+                  const file = this.app.workspace.getActiveFile();
+                  if (file)
+                  {
+                    await this.app.fileManager.processFrontMatter(file, (fm: IMatterData) =>
+                    {
+                      fm.tags = _updateFrontMatterTagsByPostStatus(fm, r.data!.status);
+                    });
+                  }
+                  new Notice(getGlobalI18n().t('message_postStatusUpdated'));
+                  publishModal.close();
+                  resolve(r);
+                  return;
+                }
+                /** 正常發布/更新路徑 */
                 const r = await this.tryToPublish({
                   postParams,
                   updateMatterData,
@@ -250,16 +274,78 @@ export class BloggerRestClient extends AbstractBloggerClient {
     content: string,
     postParams: IBloggerPostParams,
   ): Promise<IBloggerClientResult<IBloggerPublishResult>> {
+    /** ========== Status-only PATCH 路徑 ========== */
+    if (postParams.updateStatusOnly)
+    {
+      if (!postParams.postId)
+      {
+        return {
+          code: EnumBloggerClientReturnCode.Error,
+          message: getGlobalI18n().t('error_noPostId'),
+          response: undefined,
+        };
+      }
+      const isDraft = postParams.status === EnumPostStatus.Draft;
+      const url = getUrl(this.context.endpoints?.patchPost, 'dummy/patch/<%= postId %>?isDraft=<%= isDraft %>', {
+        postId: postParams.postId,
+        isDraft,
+      });
+      const resp = await this.client.httpPatch(
+        url,
+        { status: postParams.status },
+        { headers: await this.getHeaders() },
+      );
+      if (_hasError(resp))
+      {
+        const error = resp.error;
+        let message = getGlobalI18n().t('error_requestFailed', {
+          code: error.code,
+          message: error.message,
+        });
+        if (error.code === 404)
+        {
+          message = `${message} ${getGlobalI18n().t('error_postNotExistRemotely')}`;
+        }
+        return {
+          code: EnumBloggerClientReturnCode.Error,
+          message,
+          response: resp,
+        };
+      }
+      try
+      {
+        const result = this.context.responseParser.toBloggerPublishResult(
+          { postId: postParams.postId },
+          resp,
+        );
+        return {
+          code: EnumBloggerClientReturnCode.OK,
+          data: result,
+          response: resp,
+        };
+      } catch (e)
+      {
+        return {
+          code: EnumBloggerClientReturnCode.Error,
+          message: getGlobalI18n().t('error_cannotParseResponse'),
+          response: resp,
+        };
+      }
+    }
+
+    /** ========== 正常發布/更新路徑（PUT / POST）========== */
     let url: string;
     let method: typeof this.client.httpPut;
+    const isDraft = postParams.status === EnumPostStatus.Draft;
     if (postParams.postId) {
-      url = getUrl(this.context.endpoints?.editPost, 'dummy/update/<%= postId %>', {
+      url = getUrl(this.context.endpoints?.editPost, 'dummy/update/<%= postId %>?isDraft=<%= isDraft %>', {
         postId: postParams.postId,
+        isDraft,
       });
       method = this.client.httpPut.bind(this.client);
     } else {
       url = getUrl(this.context.endpoints?.newPost, 'dummy/post?isDraft=<%= isDraft %>', {
-        isDraft: postParams.status === EnumPostStatus.Draft,
+        isDraft,
       });
       method = this.client.httpPost.bind(this.client);
     }
@@ -286,8 +372,9 @@ export class BloggerRestClient extends AbstractBloggerClient {
         message: error.message,
       });
       // Detect typical error cases
-      if (method === this.client.httpPut.bind(this.client) && error.code === 404) {
-        message = `${message} ${getGlobalI18n().t('error_postNotFound')}`;
+      if (postParams.postId && error.code === 404)
+      {
+        message = `${message} ${getGlobalI18n().t('error_postNotExistRemotely')}`;
       }
       return {
         code: EnumBloggerClientReturnCode.Error,
@@ -312,14 +399,40 @@ export class BloggerRestClient extends AbstractBloggerClient {
   }
 }
 
-
+/**
+ * Blogger REST 客戶端上下文介面
+ * Blogger REST client context interface
+ *
+ * 定義 BloggerRestClient 所需的依賴注入合約：
+ * Defines the dependency injection contract required by BloggerRestClient:
+ *
+ * - responseParser：API 回應的解析器（toBloggerPublishResult / toBloggerMediaUploadResult）
+ *   API response parser
+ * - endpoints：端點集合（可選，用於 URL 建構）
+ *   Endpoint set (optional, for URL construction)
+ * - needLoginModal：是否需要登入提示
+ *   Whether a login prompt is needed
+ * - formItemNameMapper：表單欄位名稱映射器（用於 multipart 上傳）
+ *   Form field name mapper (for multipart uploads)
+ *
+ * @see BloggerRestClient — 消費此介面的 REST 客戶端 / The REST client consuming this interface
+ * @see BloggerRestClientGoogleOAuth2Context — 使用 Google OAuth2 的實作 / Google OAuth2 implementation
+ */
 interface IBloggerRestClientContext
 {
   name: string;
 
   responseParser: {
+    /**
+     * 將 Blogger API 回傳轉換為 IBloggerPublishResult
+     * Convert Blogger API response to IBloggerPublishResult
+     *
+     * @param postParams - 僅需 postId 欄位，用於 ID 一致性檢查
+     *                     Only postId is needed for defensive ID consistency check
+     * @param response - Blogger API 原始回應 / Raw Blogger API response
+     */
     toBloggerPublishResult: (
-      postParams: IBloggerPostParams,
+      postParams: Pick<IBloggerPostParams, 'postId'>,
       response: ISafeAny,
     ) => IBloggerPublishResult;
     /**
@@ -356,7 +469,7 @@ export class BloggerRestClientGoogleOAuth2Context implements IBloggerRestClientC
 
   responseParser = {
     toBloggerPublishResult: (
-      postParams: IBloggerPostParams,
+      postParams: Pick<IBloggerPostParams, 'postId'>,
       response: IBloggerPostApiReturn,
     ): IBloggerPublishResult => {
       if (response.id) {
@@ -368,7 +481,7 @@ export class BloggerRestClientGoogleOAuth2Context implements IBloggerRestClientC
         return {
           postId: response.id,
           url: response.url,
-          status: response.status,
+          status: response.status ?? EnumPostStatus.Live,
         };
       }
       throw new Error('xx');

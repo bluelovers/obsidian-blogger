@@ -36,6 +36,7 @@ export type IMatterData = {
 	 * 與原版 obsidian-blogger 相容
 	 * 並且如果此屬性存在，就會忽略 tags
 	 *
+	 * @deprecated 從 1.0.0 開始請使用 tags 代替
 	 * @see https://github.com/privet-kitty/obsidian-blogger
 	 */
 	labels?: string[];

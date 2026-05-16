@@ -13,6 +13,11 @@ export class BloggerPublishModal extends Modal {
   constructor(
     readonly app: App,
     private readonly settings: IPluginSettings,
+    /**
+     * 筆記是否已有 postId（已發布過）
+     * Whether the note already has a postId (previously published)
+     */
+    private readonly hasPostId: boolean,
     private readonly onSubmit: (
       params: IBloggerPostParams,
       updateMatterData: (matter: IMatterData) => void,
@@ -59,6 +64,22 @@ export class BloggerPublishModal extends Modal {
             params.status = value as EnumPostStatus;
           });
       });
+
+    /** 僅當筆記已有 postId（已發布過）時顯示「僅更新狀態」選項 */
+    if (this.hasPostId)
+    {
+      new Setting(contentEl)
+        .setName(t('publishModal_updateStatusOnly'))
+        .addToggle((toggle) =>
+        {
+          toggle
+            .setValue(false)
+            .onChange((value) =>
+            {
+              params.updateStatusOnly = value;
+            });
+        });
+    }
 
     new Setting(contentEl).addButton((button) =>
       button

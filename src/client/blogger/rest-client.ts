@@ -4,11 +4,17 @@ import { IFormItemNameMapper, FormItems } from '../../utils/type-utils';
 import { EnumPostStatus } from '../../types/const';
 import { AbstractRequestClientWithConstructor } from '../request/request-client';
 import { IObsidianRequest } from '../request/abstract-request-client';
-import { _getEndpoint, _handleHeaders, _handleRestClientHref, _httpPost, _requestUrl, EnumHttpMethod } from '../request/http-post';
+import { _getEndpoint, _handleRestClientHref, _httpPost, EnumHttpMethod } from '../request/http-post';
 
+/**
+ * REST 客戶端建構選項介面
+ * REST client constructor options interface
+ *
+ * @property url - Blogger API 基礎端點 URL（來自 IBloggerRestEndpoint.base）/ Blogger API base endpoint URL
+ */
 interface IRestOptions
 {
-  /** Blogger API 端點 URL / Blogger API endpoint URL */
+  /** Blogger API 基礎端點 URL / Blogger API base endpoint URL */
   url: URL;
 }
 
@@ -16,19 +22,42 @@ interface IRestOptions
  * Blogger API 請求主體介面
  * Blogger API request body interface
  *
- * @see https://developers.google.com/blogger/docs/3.0/using?hl=zh-tw Blogger API 3.0
- * @see https://developers.google.com/blogger/docs/2.0/json/using?hl=zh-tw Blogger JSON API 2.0 (已於 2024-09-30 停止支援 / deprecated since 2024-09-30)
+ * 對應 Blogger API v3 Posts.insert / Posts.update 的 JSON 請求主體結構。
+ * 使用 kind 區分資源類型（固定為 "blogger#post"）。
+ * Maps to the JSON request body for Blogger API v3 Posts.insert / Posts.update.
+ * Uses `kind` to identify the resource type (always "blogger#post").
+ *
+ * @see https://developers.google.com/blogger/docs/3.0/reference/posts/insert Blogger API v3 Posts.insert
+ * @see https://developers.google.com/blogger/docs/3.0/reference/posts/update Blogger API v3 Posts.update
+ * @see https://developers.google.com/blogger/docs/3.0/using?hl=zh-tw Blogger API v3 使用指南
  */
 export interface IBloggerPostApiBody
 {
-  /** 資源類型（固定值）/ Resource kind (constant value) */
+  /**
+   * 資源類型（固定值）
+   * Resource kind (constant value)
+   *
+   * Blogger API 使用 kind 欄位來識別 JSON 資源類型。
+   * The kind field identifies the JSON resource type in the Blogger API.
+   */
   kind: 'blogger#post',
 
-  /** 部落格資訊 / Blog information */
+  /**
+   * 部落格資訊
+   * Blog information
+   *
+   * 包含所屬部落格的 ID，用於 API 路由與驗證。
+   * Contains the owning blog's ID for API routing and validation.
+   */
   blog: {
     /**
-     * 部落格 ID
-     * Blog ID
+     * 部落格 ID（樣板字面型別 `${number}`）
+     * Blog ID (template literal type `${number}`)
+     *
+     * Blogger API 使用純數字字串作為 ID 格式。
+     * 樣板字面型別確保型別安全並與 IBloggerProfile 保持一致。
+     * Blogger API uses plain numeric strings for IDs.
+     * Template literal type ensures type safety and consistency with IBloggerProfile.
      *
      * @example "8070105920543249955"
      */
@@ -38,19 +67,40 @@ export interface IBloggerPostApiBody
   /** 文章標題 / Post title */
   title: string;
 
-  /** 文章內容（HTML 格式）/ Post content (HTML format) */
+  /**
+   * 文章內容（HTML 格式）
+   * Post content (HTML format)
+   *
+   * Blogger API 接受 HTML 格式的文章主體。
+   * 本專案先以 markdown-it 將 Markdown 轉譯為 HTML 後再送出。
+   * The Blogger API accepts HTML-formatted post bodies.
+   * This project converts Markdown to HTML via markdown-it before submitting.
+   */
   content: string;
 
   /**
    * 文章標籤列表
    * Post labels
    *
-   * 官方 API 文件未說明此屬性，但實際可用於設定標籤。
-   * Not documented in the official API, but works for setting labels.
+   * 對應 Blogger API 的 labels 欄位，用於文章分類與搜尋。
+   * 內部管理標籤（EnumobsidianBloggerTags）在送出前會被過濾移除。
+   * Maps to the Blogger API labels field for post categorization and search.
+   * Internal management tags (EnumobsidianBloggerTags) are filtered out before sending.
    */
   labels: string[];
 
-  /** 文章狀態 / Post status */
+  /**
+   * 文章狀態
+   * Post status
+   *
+   * 控制文章的發布狀態：
+   *   EnumPostStatus.Draft  → 草稿（不會公開顯示）
+   *   EnumPostStatus.Live   → 已發布（公開可見）
+   *   EnumPostStatus.Scheduled → 已排程
+   *   EnumPostStatus.SoftTrashed → 軟刪除
+   *
+   * Controls the post's publication status.
+   */
   status: EnumPostStatus;
 }
 
@@ -58,50 +108,94 @@ export interface IBloggerPostApiBody
  * Blogger API 回傳主體介面
  * Blogger API response body interface
  *
- * 使用引號包裹的屬性名稱以對應 Blogger API 的 JSON 回應欄位。
- * Uses quoted property names to match Blogger API JSON response fields.
+ * 對應 Blogger API v3 Posts 資源（GET/POST/PUT/PATCH 回應）的 JSON 結構。
+ * 使用引號包裹的屬性名稱以對應 Blogger API 的 JSON 回應欄位名稱（非駝峰式）。
+ * Maps to the JSON structure of Blogger API v3 Posts resource responses.
+ * Uses quoted property names to match the Blogger API's JSON response field names.
+ *
+ * 注意事項 / Notes:
+ * - 繼承 IBloggerPostApiBody 但不包含 labels（回應中未回傳此欄位）
+ *   Extends IBloggerPostApiBody but omits labels (API responses omit this field)
+ * - status 欄位為可選，其存在性取決於端點與查詢參數（見下方 status 說明）
+ *   status is optional; its presence depends on the endpoint and query parameters (see below)
+ *
+ * @see https://developers.google.com/blogger/docs/3.0/reference/posts#resource Blogger API v3 Posts resource
  */
 export interface IBloggerPostApiReturn extends Omit<IBloggerPostApiBody, 'labels' | 'status'>
 {
   /**
-   * 文章 ID
-   * Post ID
+   * 文章 ID（樣板字面型別 `${number}`）
+   * Post ID (template literal type `${number}`)
+   *
+   * Blogger API 專屬的唯一文章識別碼，建立後不可變更。
+   * 儲存於 frontmatter 的 postId 欄位，用於後續編輯與狀態切換。
+   * Blogger API's unique post identifier, immutable after creation.
+   * Stored in frontmatter's postId field for subsequent editing and status toggling.
    *
    * @example "6819100329896798058"
    */
   "id": `${number}`,
+
   /**
    * 發布時間（ISO 8601 格式）
    * Published time (ISO 8601 format)
    *
+   * 文章首次發布的時間戳。DRAFT 文章若從未發布過，此時間可能等於建立時間。
+   * The timestamp when the post was first published. For never-published DRAFT posts,
+   * this may equal the creation time.
+   *
    * @example "2012-05-20T20:08:00-07:00"
    */
   "published": string,
+
   /**
    * 更新時間（ISO 8601 格式）
    * Updated time (ISO 8601 format)
    *
+   * 文章最後一次修改的時間戳（包含狀態變更、內容編輯等）。
+   * The timestamp of the last modification (status changes, content edits, etc.).
+   *
    * @example "2012-05-20T20:08:35-07:00"
    */
   "updated": string,
+
   /**
    * 文章公開 URL
    * Public post URL
    *
+   * LIVE 文章的公開訪問網址。
+   * DRAFT 文章也可能有此欄位，但無法公開存取。
+   * The public URL for LIVE posts. DRAFT posts may also have this field
+   * but the URL is not publicly accessible.
+   *
    * @example "http://brettmorgan-test2.blogspot.com/2012/05/new-post.html"
    */
   "url": string,
+
   /**
-   * API 資源連結
+   * API 資源連結（self link）
    * API resource self-link
+   *
+   * 此文章在 Blogger API 中的完整資源 URL。
+   * 可用於直接透過 API 再次查詢此文章。
+   * The full resource URL for this post within the Blogger API.
+   * Can be used for subsequent API queries.
    *
    * @example "https://www.googleapis.com/blogger/v3/blogs/8070105920543249955/posts/6819100329896798058"
    */
   "selfLink": string,
 
-  /** 作者資訊 / Author information */
+  /**
+   * 作者資訊
+   * Author information
+   *
+   * 包含作者的 Google 帳號相關資訊。
+   * 注意：此處的 url 為個人檔案 URL，非文章 URL。
+   * Contains information about the author's Google account.
+   * Note: url here is the profile URL, not the post URL.
+   */
   "author": {
-    /** 作者 ID / Author ID */
+    /** 作者 ID（樣板字面型別 `${number}`）/ Author ID */
     "id": `${number}`,
     /** 作者顯示名稱 / Author display name */
     "displayName": string,
@@ -123,18 +217,27 @@ export interface IBloggerPostApiReturn extends Omit<IBloggerPostApiBody, 'labels
       "url": string
     }
   },
-  /** 回覆資訊 / Reply information */
+
+  /**
+   * 回覆（留言）資訊
+   * Reply (comment) information
+   *
+   * 包含此文章的回覆總數與回覆 API 連結。
+   * 此欄位僅提供計數與連結，不含回覆內容本身。
+   * Contains total reply count and replies API link.
+   * This field only provides counts and links, not the actual reply content.
+   */
   "replies": {
     /**
-     * 回覆總數
-     * Total reply count
+     * 回覆總數（樣板字面型別 `${number}`）
+     * Total reply count (template literal type `${number}`)
      *
      * @example "0"
      */
     "totalItems": `${number}`,
     /**
      * 回覆 API 連結
-     * Replies API link
+     * Replies API self-link
      *
      * @example "https://www.googleapis.com/blogger/v3/blogs/8070105920543249955/posts/6819100329896798058/comments"
      */
@@ -145,11 +248,30 @@ export interface IBloggerPostApiReturn extends Omit<IBloggerPostApiBody, 'labels
    * 文章狀態
    * Post status
    *
-   * @todo 官方 API 文件未說明此回傳欄位，但本專案程式碼表示存在。
-   * @todo This field is not documented in the official API, but the codebase indicates it exists.
-   * 尚未實際監測回傳 API 是否有此欄位 / Actual API response has not been verified for this field.
+   * ═══════════════════════════════════════════════════════════
+   * 實測行為 / Empirical behavior (verified 2026-05-16)
+   * ═══════════════════════════════════════════════════════════
+   *
+   * 此欄位是否出現，取決於端點與查詢參數：
+   * Whether this field appears depends on the endpoint and query parameters:
+   *
+   * ┌─────────────────────┬─────────────┬──────────────────┐
+   * │ 端點 / Endpoint      │ DRAFT       │ LIVE             │
+   * ├─────────────────────┼─────────────┼──────────────────┤
+   * │ GET + view=AUTHOR   │ ✅ "DRAFT"  │ ❌ 無此欄位       │
+   * │ GET + 無 view       │ ❌ 404      │ ❌ 無此欄位       │
+   * │ publishPost         │ ✅ "LIVE"   │ —                │
+   * │ revertPost          │ —           │ ✅ "DRAFT"       │
+   * │ newPost / editPost  │ ✅ 有       │ ✅ 有             │
+   * └─────────────────────┴─────────────┴──────────────────┘
+   *
+   * 應用層預設值：response.status ?? EnumPostStatus.Live（見 blogger-client.ts）
+   * Application default: response.status ?? EnumPostStatus.Live (see blogger-client.ts)
+   *
+   * @todo 官方 API 文件未說明此欄位的可選性及條件行為。
+   * @todo The official API documentation does not explain the optionality or conditional behavior.
    */
-  status: EnumPostStatus,
+  status?: EnumPostStatus,
 }
 
 /**
@@ -196,7 +318,15 @@ export class RestClient extends AbstractRequestClientWithConstructor
    * 發送 HTTP GET 請求
    * Send an HTTP GET request
    *
-   * @param path - API 路徑 / API path
+   * ⚠️ 對 DRAFT 文章使用 GET 時，需在端點路徑中加入 view=AUTHOR 參數，
+   *    否則 Blogger API 會回傳 404。
+   * ⚠️ When GETting DRAFT posts, include view=AUTHOR in the endpoint path,
+   *    otherwise Blogger API returns 404.
+   *
+   * 無主體請求，委派給 _httpPost（body 參數為 undefined）。
+   * Body-less request, delegates to _httpPost (body omitted).
+   *
+   * @param path - API 路徑（含查詢參數）/ API path (with query parameters)
    * @param options - 可選的請求標頭 / Optional request headers
    */
   async httpGet(
@@ -206,14 +336,7 @@ export class RestClient extends AbstractRequestClientWithConstructor
     },
   ): Promise<IBloggerPostApiReturn>
   {
-    const endpoint = this.getEndpoint(path);
-    return _requestUrl(this, {
-      endpoint,
-      method: EnumHttpMethod.GET,
-      headers: _handleHeaders(options, {
-        'content-type': 'application/json',
-      }),
-    });
+    return _httpPost(EnumHttpMethod.GET, path, this, undefined, options);
   }
 
   /**
@@ -233,7 +356,7 @@ export class RestClient extends AbstractRequestClientWithConstructor
     },
   ): Promise<IBloggerPostApiReturn>
   {
-    return _httpPost(EnumHttpMethod.POST, path, body, options, this);
+    return _httpPost(EnumHttpMethod.POST, path, this, body, options);
   }
 
   /**
@@ -253,7 +376,7 @@ export class RestClient extends AbstractRequestClientWithConstructor
     },
   ): Promise<IBloggerPostApiReturn>
   {
-    return _httpPost(EnumHttpMethod.PUT, path, body, options, this);
+    return _httpPost(EnumHttpMethod.PUT, path, this, body, options);
   }
 
   /**
@@ -273,6 +396,46 @@ export class RestClient extends AbstractRequestClientWithConstructor
     },
   ): Promise<IBloggerPostApiReturn>
   {
-    return _httpPost(EnumHttpMethod.PATCH, path, body as IBloggerPostApiBody, options, this);
+    return _httpPost(EnumHttpMethod.PATCH, path, this, body as IBloggerPostApiBody, options);
+  }
+
+  /**
+   * 發送 HTTP POST 請求（無主體 — 用於 publish / revert 等動作端點）
+   * Send an HTTP POST request without body — for action endpoints (publish / revert)
+   *
+   * 無主體請求，委派給 _httpPost（body 參數為 undefined）。
+   * Body-less request, delegates to _httpPost (body omitted).
+   *
+   * @param path - API 路徑 / API path
+   * @param options - 可選的請求標頭 / Optional request headers
+   */
+  async httpPublish(
+    path: string,
+    options?: {
+      headers?: Record<string, string>;
+    },
+  ): Promise<IBloggerPostApiReturn>
+  {
+    return _httpPost(EnumHttpMethod.POST, path, this, undefined, options);
+  }
+
+  /**
+   * 發送 HTTP POST 請求（無主體 — 用於 revert 動作端點）
+   * Send an HTTP POST request without body — for revert action endpoint
+   *
+   * 無主體請求，委派給 _httpPost（body 參數為 undefined）。
+   * Body-less request, delegates to _httpPost (body omitted).
+   *
+   * @param path - API 路徑 / API path
+   * @param options - 可選的請求標頭 / Optional request headers
+   */
+  async httpRevert(
+    path: string,
+    options?: {
+      headers?: Record<string, string>;
+    },
+  ): Promise<IBloggerPostApiReturn>
+  {
+    return _httpPost(EnumHttpMethod.POST, path, this, undefined, options);
   }
 }

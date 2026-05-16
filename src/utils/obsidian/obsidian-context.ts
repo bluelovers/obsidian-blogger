@@ -5,6 +5,8 @@ import { tryCatch } from '../try';
 import { IBloggerClientResult } from '../../types/blogger-client-interface';
 import { isString } from 'lodash-es';
 import { ERROR_NOTICE_TIMEOUT } from '../../consts';
+import { showBloggerPublishModal } from './show-blogger-publish-modal';
+import { openConfirmModal } from '../../confirm-modal';
 
 /**
  * 顯示 Obsidian 通知
@@ -72,13 +74,17 @@ export function showError<T>(error: unknown): IBloggerClientResult<T>
  *
  * @param context - 上下文參數物件 / Context parameters object
  * @param context.app - Obsidian 應用程式實例（可選）/ Obsidian App instance (optional)
+ * @param context.openPublishModal - 開啟發布對話框函式（可選）/ Function to open publish modal (optional)
+ * @param context.openConfirmModal - 開啟確認對話框函式（可選）/ Function to open confirm modal (optional)
  * @returns 建立的上下文物件 / Created context object
  */
 export function createObsidianContext(context: {
 	app?: App,
+	openPublishModal?: typeof showBloggerPublishModal,
+	openConfirmModal?: typeof openConfirmModal
 })
 {
-	context ??= {};
+	context ??= {} as any;
 	return {
 		app: context.app!,
 
@@ -86,12 +92,19 @@ export function createObsidianContext(context: {
 
 		showNotice,
 		showError,
+
+		openPublishModal: context.openPublishModal!,
+		openConfirmModal: context.openConfirmModal!,
 	};
 }
 
 /**
  * Obsidian 上下文型別
  * Obsidian context type
+ *
+ * @todo
+ * 漸進式將 邏輯中的 `app: App` 重構為 `ctx: IObsidianContext`
+ * 然後以 `ctx.app` 調用原有的 `app`
  */
 export type IObsidianContext = ReturnType<typeof createObsidianContext>;
 

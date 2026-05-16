@@ -9,12 +9,8 @@ import { IBloggerPostApiReturn, RestClient } from './client/blogger/rest-client'
 import { isFunction } from 'lodash-es';
 import { IBloggerProfile } from './blogger-profile';
 import { IMatterData, ISafeAny } from './types';
-import { BLOGGER_API_ENDPOINT } from './consts';
 import { getGoogleOAuth2Client } from './client/blogger/oauth2-client';
-import { App, Notice } from 'obsidian';
-import { BloggerPublishModal } from './blogger-publish-modal';
 import { openWithBrowser, processFile } from './utils';
-import { openConfirmModal } from './confirm-modal';
 import { getGlobalI18n } from './i18n/i18n';
 import { getGlobalMarkdownParser } from './markdown-it-default';
 import { IPluginSettings, isPluginSettingsWithOAuth2 } from './plugin-settings';
@@ -25,7 +21,7 @@ import {
   _handleTagsForBloggerPostApi,
   _updateFrontMatterTagsByPostStatus,
 } from './data/tags-utils';
-import { showError } from './utils/obsidian/obsidian-context';
+import { IObsidianContext } from './utils/obsidian/obsidian-context';
 import { getBloggerRestEndpoint, getUrl, IBloggerRestEndpoint } from './client/blogger/utils/url';
 
 export abstract class AbstractBloggerClient implements IBloggerClient {
@@ -35,7 +31,7 @@ export abstract class AbstractBloggerClient implements IBloggerClient {
   name = 'AbstractBloggerClient';
 
   protected constructor(
-    protected readonly app: App,
+    protected readonly ctx: IObsidianContext,
     protected readonly settings: IPluginSettings,
     protected readonly profile: IBloggerProfile,
   ) {}
@@ -46,11 +42,12 @@ export abstract class AbstractBloggerClient implements IBloggerClient {
 		postParams: Partial<IBloggerPostParams>,
   ): Promise<IBloggerClientResult<IBloggerPublishResult>>;
 
-  private async checkExistingProfile(matterData: IMatterData) {
+  protected async checkExistingProfile(matterData: IMatterData)
+  {
     const { profileName } = matterData;
     const isProfileNameMismatch = profileName && profileName !== this.profile.name;
     if (isProfileNameMismatch) {
-      const confirm = await openConfirmModal(
+      const confirm = await this.ctx.openConfirmModal(
         {
           message: getGlobalI18n().t('error_profileNotMatch'),
           cancelText: getGlobalI18n().t('profileNotMatch_useOld', {
@@ -60,7 +57,7 @@ export abstract class AbstractBloggerClient implements IBloggerClient {
             profileName: this.profile.name,
           }),
         },
-        this.app,
+        this.ctx.app,
       );
       if (confirm.code !== EnumConfirmCode.Cancel) {
         delete matterData.postId;
@@ -88,15 +85,16 @@ export abstract class AbstractBloggerClient implements IBloggerClient {
         }),
       );
     } else {
-      new Notice(getGlobalI18n().t('message_publishSuccessfully'));
+      this.ctx.showNotice(getGlobalI18n().t('message_publishSuccessfully'));
       // post id will be returned if creating, true if editing
       const postId = result.data.postId;
       if (postId) {
         // const modified = matter.stringify(postParams.content, matterData, matterOptions);
         // this.updateFrontMatter(modified);
-        const file = this.app.workspace.getActiveFile();
+        const file = this.ctx.app.workspace.getActiveFile();
         if (file) {
-          await this.app.fileManager.processFrontMatter(file, (fm: IMatterData) => {
+          await this.ctx.app.fileManager.processFrontMatter(file, (fm: IMatterData) =>
+          {
             fm.profileName = this.profile.name;
             fm.postId = postId;
 
@@ -124,14 +122,14 @@ export abstract class AbstractBloggerClient implements IBloggerClient {
         throw new Error(getGlobalI18n().t('error_noEndpoint'));
       }
       // const { activeEditor } = this.plugin.app.workspace;
-      const file = this.app.workspace.getActiveFile();
+      const file = this.ctx.app.workspace.getActiveFile();
       if (file === null) {
         throw new Error(getGlobalI18n().t('error_noActiveFile'));
       }
 
       // read note title, content and matter data
       const title = file.basename;
-      const { content, matter: matterData } = await processFile(file, this.app);
+      const { content, matter: matterData } = await processFile(file, this.ctx.app);
 
       // check if profile selected is matched to the one in note property,
       // if not, ask whether to update or not
@@ -148,15 +146,17 @@ export abstract class AbstractBloggerClient implements IBloggerClient {
         });
       } else {
         const hasPostId = !!matterData.postId;
-        result = await new Promise((resolve) => {
-          const publishModal = new BloggerPublishModal(
-            this.app,
-            this.settings,
-            hasPostId,
-            async (
-							postParams,
-              updateMatterData: (matter: IMatterData) => void,
-            ) => {
+        result = await this.ctx.openPublishModal({
+          ctx: this.ctx,
+          settings: this.settings,
+          hasPostId,
+          onSubmit: async (
+            postParams,
+            updateMatterData: (matter: IMatterData) => void,
+            publishModal,
+            resolve,
+          ) =>
+          {
               postParams = this.readFromFrontMatter(title, matterData, postParams);
               postParams.content = content;
               try {
@@ -168,17 +168,17 @@ export abstract class AbstractBloggerClient implements IBloggerClient {
                   {
                     throw new Error(r.message);
                   }
-                  const file = this.app.workspace.getActiveFile();
+                  const file = this.ctx.app.workspace.getActiveFile();
                   if (file)
                   {
-                    await this.app.fileManager.processFrontMatter(file, (fm: IMatterData) =>
+                    await this.ctx.app.fileManager.processFrontMatter(file, (fm: IMatterData) =>
                     {
                       fm.tags = _updateFrontMatterTagsByPostStatus(fm, r.data!.status);
                     });
                   }
-                  new Notice(getGlobalI18n().t('message_postStatusUpdated'));
+                  this.ctx.showNotice(getGlobalI18n().t('message_postStatusUpdated'));
                   publishModal.close();
-                  resolve(r);
+                  resolve!(r);
                   return;
                 }
                 /** 正常發布/更新路徑 */
@@ -188,19 +188,17 @@ export abstract class AbstractBloggerClient implements IBloggerClient {
                 });
                 if (r.code === EnumBloggerClientReturnCode.OK) {
                   publishModal.close();
-                  resolve(r);
+                  resolve!(r);
                 }
               } catch (error) {
                 if (error instanceof Error) {
-                  return showError(error);
+                  return this.ctx.showError(error);
                 } else {
                   throw error;
                 }
               }
-            },
-						matterData,
-          );
-          publishModal.open();
+          },
+          matterData,
         });
       }
       if (result) {
@@ -210,7 +208,7 @@ export abstract class AbstractBloggerClient implements IBloggerClient {
       }
     } catch (error) {
       if (error instanceof Error) {
-        return showError(error);
+        return this.ctx.showError(error);
       } else {
         throw error;
       }
@@ -232,7 +230,7 @@ export class BloggerRestClient extends AbstractBloggerClient {
   private readonly client: RestClient;
 
   constructor(
-    readonly app: App,
+    readonly ctx: IObsidianContext,
     readonly settings: IPluginSettings,
     // FIXME: Since only what we need is to refresh the token, there should be a
     // better way than passing `saveSettings` here.
@@ -240,7 +238,7 @@ export class BloggerRestClient extends AbstractBloggerClient {
     readonly profile: IBloggerProfile,
     private readonly context: IBloggerRestClientContext,
   ) {
-    super(app, settings, profile);
+    super(ctx, settings, profile);
     this.name = 'BloggerRestClient';
     this.client = new RestClient({
       url: new URL(getUrl(this.context.endpoints?.base, profile.endpoint)),
@@ -502,25 +500,25 @@ export class BloggerRestClientGoogleOAuth2Context implements IBloggerRestClientC
 }
 
 export function getBloggerClient(
-  app: App,
+  ctx: IObsidianContext,
   settings: IPluginSettings,
   saveSettings: () => Promise<void>,
   profile: IBloggerProfile,
 ): IBloggerClient | null {
   if (!profile.endpoint || profile.endpoint.length === 0) {
-    showError(getGlobalI18n().t('error_noEndpoint'));
+    ctx.showError(getGlobalI18n().t('error_noEndpoint'));
     return null;
   }
   if (!profile.googleOAuth2Token) {
-    showError(getGlobalI18n().t('error_invalidGoogleToken'));
+    ctx.showError(getGlobalI18n().t('error_invalidGoogleToken'));
     return null;
   }
   if (!profile.blogId) {
-    showError(getGlobalI18n().t('error_noBlogId'));
+    ctx.showError(getGlobalI18n().t('error_noBlogId'));
     return null;
   }
   return new BloggerRestClient(
-    app,
+    ctx,
     settings,
     saveSettings,
     profile,

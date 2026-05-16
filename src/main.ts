@@ -10,7 +10,7 @@ import {
   upgradeSettings,
   IPluginSettings,
 } from './plugin-settings';
-import { showError } from './utils/obsidian/obsidian-context';
+import { createObsidianContext, showError } from './utils/obsidian/obsidian-context';
 import { isString } from 'lodash-es';
 import { IBloggerProfile } from './blogger-profile';
 import { getBloggerClient } from './blogger-client';
@@ -18,12 +18,15 @@ import { getGlobalMarkdownParser, setupMarkdownParser } from './markdown-it-defa
 import { getGlobalI18n, setGlobalLang } from './i18n/i18n';
 import { MobileOAuth2Helper } from './blogger-oauth2-client';
 import { EnumPostStatus, EnumSettingsVersion } from './types/const';
+import { showBloggerPublishModal } from './utils/obsidian/show-blogger-publish-modal';
+import { openConfirmModal } from './confirm-modal';
 
-const doClientPublish = (
+const doClientPublish = async (
   plugin: BloggerPlugin,
   profileOrName: IBloggerProfile | string,
   defaultPostParams?: IBloggerPostParams,
-): void => {
+): Promise<void> =>
+{
   let profile: IBloggerProfile | undefined;
   if (isString(profileOrName)) {
     profile = plugin.settings.profiles.find((it) => it.name === profileOrName);
@@ -31,7 +34,12 @@ const doClientPublish = (
     profile = profileOrName;
   }
   if (profile) {
-    const client = getBloggerClient(plugin.app, plugin.settings, plugin.saveSettings, profile);
+    const ctx = createObsidianContext({
+      app: plugin.app,
+      openPublishModal: showBloggerPublishModal,
+      openConfirmModal,
+    });
+    const client = getBloggerClient(ctx, plugin.settings, plugin.saveSettings, profile);
     if (client) {
       await client.publishPost(defaultPostParams);
     }

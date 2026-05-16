@@ -11,7 +11,7 @@ import { EnumobsidianBloggerTags, EnumPostStatus } from '../types/const';
  * @param postParams - 目標 Blogger 發文參數物件 / Target blogger post params object
  * @returns 已填入資料的 postParams / Populated post params
  */
-export function _frontMatterToBloggerPostParams(matterData: IMatterData, postParams: IBloggerPostParams)
+export function _frontMatterToBloggerPostParams(matterData: IMatterData, postParams: Partial<IBloggerPostParams>)
 {
 	/** 標題對映 / Map title */
 	if (matterData.title)
@@ -37,7 +37,7 @@ export function _frontMatterToBloggerPostParams(matterData: IMatterData, postPar
 	 */
 	postParams.profileName = matterData.profileName ?? BLOGGER_DEFAULT_PROFILE_NAME;
 
-	return postParams;
+	return postParams as IBloggerPostParams;
 }
 
 /**
@@ -138,3 +138,41 @@ export function _updateFrontMatterTagsByPostStatus(fm: IMatterData, status: Enum
 	return fm.tags;
 }
 
+export function _getPostStatusFromTags(tags: IMatterData["tags"], defaultPostStatus?: EnumPostStatus)
+{
+	if (tags)
+	{
+		if (tags.includes(EnumobsidianBloggerTags.Draft))
+		{
+			return EnumPostStatus.Draft;
+		}
+		else if (tags.includes(EnumobsidianBloggerTags.Published))
+		{
+			return EnumPostStatus.Live;
+		}
+		else if (tags.includes(EnumobsidianBloggerTags.Scheduled))
+		{
+			return EnumPostStatus.Scheduled;
+		}
+		else if (tags.includes(EnumobsidianBloggerTags.SoftTrashed))
+		{
+			return EnumPostStatus.SoftTrashed;
+		}
+	}
+
+	return defaultPostStatus;
+}
+
+export function _togglePostStatus(status?: EnumPostStatus, defaultPostStatus?: EnumPostStatus)
+{
+	if (status === EnumPostStatus.Draft)
+	{
+		return EnumPostStatus.Live;
+	}
+	else if (status === EnumPostStatus.Live)
+	{
+		return EnumPostStatus.Draft;
+	}
+
+	return defaultPostStatus;
+}

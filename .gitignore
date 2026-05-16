@@ -116,3 +116,4 @@ main.js
 # obsidian
 data.json
 *.patch
+test/temp/

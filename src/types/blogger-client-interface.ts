@@ -86,19 +86,6 @@ export interface IBloggerPostParamsCore
 	 * Blogger profile name
 	 */
 	profileName?: string;
-
-	/**
-	 * 僅更新狀態模式（跳過內容上傳）
-	 * Update status only mode (skip content upload)
-	 *
-	 * 啟用時 publish() 會使用輕量 PATCH 請求僅修改 status 欄位，
-	 * 而非重新上傳完整文章內容。
-	 * 若文章尚未發布（無 postId），则仍會 fallback 至正常發布流程。
-	 * When enabled, publish() uses a lightweight PATCH request to modify
-	 * only the status field instead of re-uploading full post content.
-	 * Falls back to normal publish when postId does not exist.
-	 */
-	updateStatusOnly?: boolean;
 }
 
 /**
@@ -112,6 +99,19 @@ export interface IBloggerPostParams extends IBloggerPostParamsCore
 
 	/** 文章內容（HTML 格式）/ Post content (HTML format) */
 	content: string;
+
+	/**
+	 * 僅更新狀態模式（跳過內容上傳）
+	 * Update status only mode (skip content upload)
+	 *
+	 * 啟用時 publish() 會使用輕量 PATCH 請求僅修改 status 欄位，
+	 * 而非重新上傳完整文章內容。
+	 * 若文章尚未發布（無 postId），则仍會 fallback 至正常發布流程。
+	 * When enabled, publish() uses a lightweight PATCH request to modify
+	 * only the status field instead of re-uploading full post content.
+	 * Falls back to normal publish when postId does not exist.
+	 */
+	updateStatusOnly?: boolean;
 }
 
 /**

@@ -20,7 +20,9 @@
   "scripts": {
     "dev": "node --run build:esbuild -- watch",
     "pretest": "echo node --run test:typecheck",
+    "test": "echo test",
     "test:typecheck": "tsc -noEmit -skipLibCheck",
+    "test:local": "tsx test/toggle-post-status/test-restclient.ts",
     "prebuild": "node --run test:typecheck",
     "build": "node --run build:esbuild -- production",
     "build:esbuild": "node esbuild.config.mjs",

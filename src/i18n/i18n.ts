@@ -2,6 +2,7 @@ import { ILanguageID, ITranslateKey, LANGUAGES } from './langs';
 import { moment } from 'obsidian';
 import { template } from 'lodash-es';
 import { EnumLanguageIDAll } from '../types/const';
+import { createObsidianContext } from '../utils/obsidian/obsidian-context';
 
 /**
  * 多語言國際化類別
@@ -71,16 +72,8 @@ export class I18n
 	 */
 	#get(key: ITranslateKey): string
 	{
-		let lang: ILanguageID;
-		if (this.lang === EnumLanguageIDAll.auto && moment.locale().replace('-', '_') in LANGUAGES)
-		{
-			lang = moment.locale().replace('-', '_') as ILanguageID;
-		}
-		else
-		{
-			lang = EnumLanguageIDAll.en;
-		}
-		return LANGUAGES[lang][key] || LANGUAGES[EnumLanguageIDAll.en][key] || key;
+		const locale = createObsidianContext({}).locale;
+		return LANGUAGES[locale]?.[key] || LANGUAGES[EnumLanguageIDAll.en][key] || key;
 	}
 }
 

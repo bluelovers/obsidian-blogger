@@ -3,11 +3,13 @@ import { getGlobalI18n } from '../../i18n/i18n';
 import { IBloggerProfile } from '../../blogger-profile';
 import { BLOGGER_API_ENDPOINT } from '../../consts';
 import { IFreshInternalOAuth2Token, OAuth2Client } from '../blogger/oauth2-client';
-import { generateQueryString, isValidBloggerUrl, showError } from '../../utils';
+import { generateQueryString, isValidBloggerUrl } from '../../utils';
 import { reauthorizeGoogleToken } from '../../blogger-oauth2-client';
 import { ITranslateKey } from '../../i18n/langs';
 import { IAbstractRequestClientLike } from '../request/abstract-request-client';
-import { AbstractObsidianModal } from '../request/obsidian-request';
+
+import { AbstractObsidianModal } from './abstract-obsidian-modal';
+import { showError } from '../../utils/obsidian/showError';
 
 export const openProfileModal = (
   plugin: Plugin,

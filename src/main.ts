@@ -8,7 +8,7 @@ import {
   upgradeSettings,
   IPluginSettings,
 } from './plugin-settings';
-import { showError } from './utils';
+import { showError } from './utils/obsidian/showError';
 import { isString } from 'lodash-es';
 import { IBloggerProfile } from './blogger-profile';
 import { getBloggerClient } from './blogger-client';

@@ -13,7 +13,7 @@ import { BLOGGER_API_ENDPOINT } from './consts';
 import { getGoogleOAuth2Client } from './client/blogger/oauth2-client';
 import { App, Notice } from 'obsidian';
 import { BloggerPublishModal } from './blogger-publish-modal';
-import { openWithBrowser, processFile, showError } from './utils';
+import { openWithBrowser, processFile } from './utils';
 import { openConfirmModal } from './confirm-modal';
 import { getGlobalI18n } from './i18n/i18n';
 import { getGlobalMarkdownParser } from './markdown-it-default';
@@ -25,6 +25,7 @@ import {
   _frontMatterToBloggerPostParams,
   _updateFrontMatterTagsByPostStatus,
 } from './data/tags-utils';
+import { showError } from './utils/obsidian/showError';
 
 export abstract class AbstractBloggerClient implements IBloggerClient {
   /**

@@ -4,9 +4,9 @@ import { getGlobalI18n } from './i18n/i18n';
 import { openProfileModal } from './client/obsidian/blogger-profile-modal';
 import { isNil } from 'lodash-es';
 import { IPluginSettings, isPluginSettingsWithOAuth2 } from './plugin-settings';
-import { showError } from './utils';
 import { getGoogleOAuth2Client } from './client/blogger/oauth2-client';
 import { ITranslateKey } from './i18n/langs';
+import { showError } from './utils/obsidian/showError';
 
 /**
  * Blogger profiles manage modal.

@@ -6,7 +6,7 @@ import { isNil } from 'lodash-es';
 import { IPluginSettings, isPluginSettingsWithOAuth2 } from './plugin-settings';
 import { getGoogleOAuth2Client } from './client/blogger/oauth2-client';
 import { ITranslateKey } from './i18n/langs';
-import { showError } from './utils/obsidian/showError';
+import { showError } from './utils/obsidian/obsidian-context';
 
 /**
  * Blogger profiles manage modal.

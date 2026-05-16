@@ -25,9 +25,8 @@ import {
   _handleTagsForBloggerPostApi,
   _updateFrontMatterTagsByPostStatus,
 } from './data/tags-utils';
-import { showError } from './utils/obsidian/showError';
+import { showError } from './utils/obsidian/obsidian-context';
 import { getBloggerRestEndpoint, getUrl, IBloggerRestEndpoint } from './client/blogger/utils/url';
-import { IObsidianContext } from './utils/obsidian/obsidian-context';
 
 export abstract class AbstractBloggerClient implements IBloggerClient {
   /**

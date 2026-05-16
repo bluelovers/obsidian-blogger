@@ -9,7 +9,7 @@ import { ITranslateKey } from '../../i18n/langs';
 import { IAbstractRequestClientLike } from '../request/abstract-request-client';
 
 import { AbstractObsidianModal } from './abstract-obsidian-modal';
-import { showError } from '../../utils/obsidian/showError';
+import { showError } from '../../utils/obsidian/obsidian-context';
 import { EnumHttpMethod } from '../request/http-post';
 
 export const openProfileModal = (

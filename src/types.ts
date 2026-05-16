@@ -6,6 +6,8 @@ import { IBloggerPostParamsCore } from './types/blogger-client-interface';
  *
  * 用於無法或不適合使用具體型別的邊界場景。
  * Used in edge cases where a concrete type is infeasible or inappropriate.
+ *
+ * @deprecated
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ISafeAny = any;

@@ -1,15 +1,15 @@
 import { EnumHttpMethod } from '../../../client/request/http-post';
 import { IBloggerProfile } from '../../../blogger-profile';
-import { EnumBloggerRestEndpoint, getUrl, IBloggerRestEndpoint } from './url';
-import { IBloggerPostParamsCore } from 'src/types/blogger-client-interface';
-import { ITSPickExtra, ITSRequireAtLeastOne } from 'ts-type';
-import { EnumPostStatus } from '../../../types/const';
-import { IBloggerPostApiBody, RestClient } from '../rest-client';
-import { IHttpHeaders } from 'src/types/http';
+import { EnumBloggerRestEndpoint, EnumBloggerViewMode, getUrl, IBloggerRestEndpoint } from './url';
+import { ITSRequireAtLeastOne } from 'ts-type';
+import { IBloggerPostApiBody, IBloggerPostApiReturn, RestClient } from '../rest-client';
+import { IHttpHeaders } from '../../../types/http';
+import { EnumPostStatus } from 'src/types/const';
 
 export interface IEndpointQuery
 {
 	postId?: IBloggerProfile["blogId"];
+
 	[p: string]: string | number | boolean | undefined;
 }
 
@@ -34,13 +34,47 @@ interface _IEndpointImpl
 	response: unknown;
 }
 
+interface _IEndpointImplWithoutBody extends _IEndpointImpl
+{
+	body?: undefined;
+}
+
+/**
+ * 建立新文章 / Create a new post
+ *
+ * POST /{blogId}/posts?isDraft=<%= isDraft %>
+ */
+export interface IBloggerRestEndpointNewPost extends _IEndpointImpl
+{
+	endpointID: EnumBloggerRestEndpoint.newPost;
+	method: EnumHttpMethod.POST;
+	body: IBloggerPostApiBody;
+
+	response: IBloggerPostApiReturn;
+}
+
+/**
+ * 完整更新（取代）已有文章 / Fully update (replace) an existing post
+ *
+ * PUT /{blogId}/posts/<%= postId %>
+ */
 export interface IBloggerRestEndpointPostEdit extends _IEndpointImpl
 {
 	endpointID: EnumBloggerRestEndpoint.editPost;
 	method: EnumHttpMethod.PUT;
+
 	query: IEndpointQueryWithPostId;
+
+	body: IBloggerPostApiBody;
+
+	response: IBloggerPostApiReturn;
 }
 
+/**
+ * 部分更新文章 / Partially update an existing post
+ *
+ * PATCH /{blogId}/posts/<%= postId %>
+ */
 export interface IBloggerRestEndpointPostPatch extends _IEndpointImpl
 {
 	endpointID: EnumBloggerRestEndpoint.patchPost;
@@ -49,14 +83,70 @@ export interface IBloggerRestEndpointPostPatch extends _IEndpointImpl
 	query: IEndpointQueryWithPostId;
 
 	body: ITSRequireAtLeastOne<Partial<IBloggerPostApiBody>>;
+
+	response: IBloggerPostApiReturn;
 }
 
 /**
- * @todo 需要繼續完成擴充各個 endpoint
+ * 取得單一文章 / Get a single post
+ *
+ * GET /{blogId}/posts/<%= postId %>
  */
-export type TBloggerRestEndpointAll = IBloggerRestEndpointPostEdit | IBloggerRestEndpointPostPatch;
+export interface IBloggerRestEndpointGetPost extends _IEndpointImplWithoutBody
+{
+	endpointID: EnumBloggerRestEndpoint.getPost;
+	method: EnumHttpMethod.GET;
+	query: IEndpointQueryWithPostId & {
+		view: EnumBloggerViewMode;
+		maxComments?: number;
+	};
 
-export type IBloggerRestEndpointHelperDetect<K extends EnumBloggerRestEndpoint> = Extract<TBloggerRestEndpointAll, { endpointID: K }>;
+	response: IBloggerPostApiReturn;
+}
+
+/**
+ * 將文章更改發布為可見（DRAFT → LIVE）/ Publish a post (DRAFT → LIVE)
+ *
+ * POST /{blogId}/posts/<%= postId %>/publish
+ */
+export interface IBloggerRestEndpointPublishPost extends _IEndpointImplWithoutBody
+{
+	endpointID: EnumBloggerRestEndpoint.publishPost;
+	method: EnumHttpMethod.POST;
+	query: IEndpointQueryWithPostId;
+
+	response: IBloggerPostApiReturn;
+}
+
+/**
+ * 將文章更改恢復為草稿（LIVE → DRAFT）/ Revert a post (LIVE → DRAFT)
+ *
+ * POST /{blogId}/posts/<%= postId %>/revert
+ */
+export interface IBloggerRestEndpointRevertPost extends _IEndpointImplWithoutBody
+{
+	endpointID: EnumBloggerRestEndpoint.revertPost;
+	method: EnumHttpMethod.POST;
+	query: IEndpointQueryWithPostId;
+
+	response: IBloggerPostApiReturn;
+}
+
+/**
+ * 所有 Blogger REST 端點的聯合型別
+ * Union type for all Blogger REST endpoints
+ */
+export type TBloggerRestEndpointAll = IBloggerRestEndpointNewPost
+	| IBloggerRestEndpointPostEdit
+	| IBloggerRestEndpointPostPatch
+	| IBloggerRestEndpointGetPost
+	| IBloggerRestEndpointPublishPost
+	| IBloggerRestEndpointRevertPost
+	;
+
+export type IBloggerRestEndpointHelperDetect<K extends EnumBloggerRestEndpoint> = Extract<TBloggerRestEndpointAll, {
+	endpointID: K
+}>;
 
 /**
  * @internal
@@ -79,35 +169,42 @@ function getEndpointMethod<K extends EnumBloggerRestEndpoint>(
 {
 	switch (endpointID)
 	{
+		case EnumBloggerRestEndpoint.newPost:
+		case EnumBloggerRestEndpoint.publishPost:
+		case EnumBloggerRestEndpoint.revertPost:
+			return EnumHttpMethod.POST as IBloggerRestEndpointHelperDetect<K>["method"];
 		case EnumBloggerRestEndpoint.editPost:
-		{
 			return EnumHttpMethod.PUT as IBloggerRestEndpointHelperDetect<K>["method"];
-		}
 		case EnumBloggerRestEndpoint.patchPost:
-		{
 			return EnumHttpMethod.PATCH as IBloggerRestEndpointHelperDetect<K>["method"];
-		}
+		case EnumBloggerRestEndpoint.getPost:
+			return EnumHttpMethod.GET as IBloggerRestEndpointHelperDetect<K>["method"];
 	}
 
 	throw new RangeError(`Unknown endpoint ID: ${endpointID}`);
 }
 
 /**
- * @todo 此函數尚未完成實作，請勿使用
- * @deprecated 此函數尚未完成實作，請勿使用
+ * 發送請求至指定的 Blogger REST 端點
+ * Send a request to the specified Blogger REST endpoint
+ *
+ * 基於 endpointID 自動選擇正確的 HTTP 方法與 URL 模板。
+ * 型別系統確保 query 與 body 參數與端點定義一致。
+ * Automatically selects the correct HTTP method and URL template based on endpointID.
+ * The type system ensures query and body parameters match the endpoint definition.
  */
-export async function requestUrlEndpoint<K extends EnumBloggerRestEndpoint, T extends IBloggerRestEndpointHelperDetect<K> = IBloggerRestEndpointHelperDetect<K>>(
+export async function requestUrlEndpoint<K extends EnumBloggerRestEndpoint>(
 	client: RestClient,
 	endpoints: Pick<IBloggerRestEndpoint, K>,
 	endpointID: K,
 	requestInit: {
 		headers: IHttpHeaders,
-	} & Pick<T, 'query' | 'body'>
+	} & Pick<IBloggerRestEndpointHelperDetect<K>, 'query' | 'body'>,
 )
 {
 	const method = getEndpointMethod(endpointID);
 
-	const url = getUrlEndpoint(endpoints, endpointID, requestInit.query);
+	const url = getUrlEndpoint(endpoints, endpointID, requestInit.query as IBloggerRestEndpointHelperDetect<K>["query"]);
 
 	const resp = await client.requestHttpMethod(method, url, requestInit.body as any, {
 		headers: requestInit.headers,
@@ -118,9 +215,43 @@ export async function requestUrlEndpoint<K extends EnumBloggerRestEndpoint, T ex
 
 /** =========== 確認實作的類型是否正確 =========== */
 
+/*
+getUrlEndpoint({} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.newPost, {});
 getUrlEndpoint({} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.editPost, { postId: "123" });
+getUrlEndpoint({} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.patchPost, { postId: "123" });
+getUrlEndpoint({} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.getPost, { postId: "123", view: EnumBloggerViewMode.AUTHOR });
+getUrlEndpoint({} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.publishPost, { postId: "123" });
+getUrlEndpoint({} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.revertPost, { postId: "123" });
+
+requestUrlEndpoint({} as RestClient, {} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.newPost, {
+	headers: {},
+	body: {} as any,
+});
 
 requestUrlEndpoint({} as RestClient, {} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.editPost, {
 	headers: {},
 	query: { postId: "123" },
+	body: {} as any,
 });
+
+requestUrlEndpoint({} as RestClient, {} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.patchPost, {
+	headers: {},
+	query: { postId: "123" },
+	body: { status: EnumPostStatus.Live },
+});
+
+requestUrlEndpoint({} as RestClient, {} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.getPost, {
+	headers: {},
+	query: { postId: "123", view: EnumBloggerViewMode.AUTHOR },
+});
+
+requestUrlEndpoint({} as RestClient, {} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.publishPost, {
+	headers: {},
+	query: { postId: "123" },
+});
+
+requestUrlEndpoint({} as RestClient, {} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.revertPost, {
+	headers: {},
+	query: { postId: "123" },
+});
+*/

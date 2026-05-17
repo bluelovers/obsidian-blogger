@@ -30,10 +30,13 @@ export type IUrlGetter = () => string;
  * @param params - 可選的範本變數 / Optional template variables
  * @returns 解析後的完整 URL / Resolved URL string
  */
-export function getUrl(
+export function getUrlCore(
 	url: string | IUrlGetter | undefined,
 	defaultValue: string,
-	params?: { [p: string]: string | number | boolean },
+	params?: {
+		postId?: IBloggerProfile["blogId"];
+		[p: string]: string | number | boolean | undefined;
+	},
 ): string
 {
 	let resultUrl: string;
@@ -54,10 +57,25 @@ export function getUrl(
 		const compiled = template(resultUrl);
 		return compiled(params);
 	}
+	else if (!resultUrl?.length)
+	{
+		throw new TypeError('URL is empty');
+	}
 	else
 	{
 		return resultUrl;
 	}
+}
+
+export function getUrl(
+	url: string | IUrlGetter | undefined,
+	params?: {
+		postId?: IBloggerProfile["blogId"];
+		[p: string]: string | number | boolean | undefined;
+	},
+): string
+{
+	return getUrlCore(url, void 0 as any, params);
 }
 
 /**

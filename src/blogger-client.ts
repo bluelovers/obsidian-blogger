@@ -13,7 +13,7 @@ import { _hasError } from './utils/type-utils';
 import { EnumBloggerClientReturnCode, EnumPostStatus } from './types/const';
 import { _handleTagsForBloggerPostApi } from './data/tags-utils';
 import { IObsidianContext } from './utils/obsidian/obsidian-context';
-import { getUrl } from './client/blogger/utils/url';
+import { getUrl, getUrlCore } from './client/blogger/utils/url';
 import { BloggerRestClientGoogleOAuth2Context } from './client/blogger/blogger-rest-client-google-o-auth2-context';
 import { IBloggerRestClientContext } from './client/blogger/types';
 import { AbstractBloggerClient } from './client/blogger/abstract-blogger-client';
@@ -57,7 +57,7 @@ export class BloggerRestClient extends AbstractBloggerClient
 		super(ctx, settings, profile);
 		this.name = 'BloggerRestClient';
 		this.client = new RestClient({
-			url: new URL(getUrl(this.context.endpoints?.base, profile.endpoint)),
+			url: new URL(getUrlCore(this.context.endpoints?.base, profile.endpoint)),
 		});
 		this.coreApiClient = new BloggerCoreApiClient(
 			this.client,

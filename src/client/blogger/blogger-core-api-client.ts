@@ -140,18 +140,7 @@ export class BloggerCoreApiClient
 					response: undefined,
 				};
 			}
-			const isDraft = postParams.status === EnumPostStatus.Draft;
-			const url = getUrl(this.context.endpoints?.patchPost, 'dummy/patch/<%= postId %>?isDraft=<%= isDraft %>', {
-				postId: postParams.postId,
-				isDraft,
-			});
-			const resp = await this.client.httpPatch(
-				url,
-				{ status: postParams.status },
-				{ headers: await this.getHeaders() },
-			);
-
-			return this._handlePublishResponse(resp, { postId: postParams.postId }, true);
+			return this.updatePostStatusOnly(postParams.postId, postParams.status!);
 		}
 
 		/** ========== 正常發布/更新路徑（PUT / POST）========== */
@@ -164,7 +153,7 @@ export class BloggerCoreApiClient
 		 */
 		if (postParams.postId)
 		{
-			url = getUrl(this.context.endpoints?.editPost, 'dummy/update/<%= postId %>?isDraft=<%= isDraft %>', {
+			url = getUrl(this.context.endpoints?.editPost, {
 				postId: postParams.postId,
 				isDraft,
 			});
@@ -176,7 +165,7 @@ export class BloggerCoreApiClient
 		 */
 		else
 		{
-			url = getUrl(this.context.endpoints?.newPost, 'dummy/post?isDraft=<%= isDraft %>', {
+			url = getUrl(this.context.endpoints?.newPost, {
 				isDraft,
 			});
 			method = this.client.httpPost.bind(this.client);
@@ -199,5 +188,102 @@ export class BloggerCoreApiClient
 		);
 
 		return this._handlePublishResponse(resp, postParams, !!postParams.postId);
+	}
+
+	/**
+	 * 取得指定文章
+	 * Get specific post
+	 *
+	 * ⚠️ 若文章為 DRAFT，需傳入 view='AUTHOR' 否則會回傳 404。
+	 * ⚠️ If the post is DRAFT, view='AUTHOR' must be passed, otherwise it returns 404.
+	 *
+	 * @param postId - 文章 ID / Post ID
+	 * @param view - 檢視模式 / View mode
+	 * @returns 包含文章資訊的 Promise / Promise containing post information
+	 */
+	async getPost(postId: IBloggerProfile["blogId"], view: string = 'AUTHOR'): Promise<IBloggerClientResult<IBloggerPublishResult>>
+	{
+		const url = getUrl(this.context.endpoints?.getPost, {
+			postId,
+			view,
+		});
+		const resp = await this.client.httpGet(url, { headers: await this.getHeaders() });
+		return this._handlePublishResponse(resp, { postId }, true);
+	}
+
+	/**
+	 * 發布草稿文章 (狀態切換至 LIVE)
+	 * Publish a draft post (toggle status to LIVE)
+	 *
+	 * 呼叫 Blogger API 原生的 publish 端點。
+	 * Calls Blogger API native publish endpoint.
+	 *
+	 * @param postId - 文章 ID / Post ID
+	 * @returns 包含發布結果的 Promise / Promise containing publish result
+	 */
+	async publishPostAction(postId: IBloggerProfile["blogId"]): Promise<IBloggerClientResult<IBloggerPublishResult>>
+	{
+		const url = getUrl(this.context.endpoints?.publishPost, {
+			postId,
+		});
+		const resp = await this.client.httpPublish(url, { headers: await this.getHeaders() });
+		return this._handlePublishResponse(resp, { postId }, true);
+	}
+
+	/**
+	 * 復原公開文章為草稿 (狀態切換至 DRAFT)
+	 * Revert a live post to draft (toggle status to DRAFT)
+	 *
+	 * 呼叫 Blogger API 原生的 revert 端點。
+	 * Calls Blogger API native revert endpoint.
+	 *
+	 * @param postId - 文章 ID / Post ID
+	 * @returns 包含發布結果的 Promise / Promise containing publish result
+	 */
+	async revertPostAction(postId: IBloggerProfile["blogId"]): Promise<IBloggerClientResult<IBloggerPublishResult>>
+	{
+		const url = getUrl(this.context.endpoints?.revertPost, {
+			postId,
+		});
+		const resp = await this.client.httpRevert(url, { headers: await this.getHeaders() });
+		return this._handlePublishResponse(resp, { postId }, true);
+	}
+
+	/**
+	 * 自動處理文章狀態切換
+	 * Automatically handle post status toggle
+	 *
+	 * 根據目標狀態（Draft 或 Live），自動判斷目前的文章狀態並呼叫對應的 publish / revert 端點。
+	 * Automatically detects current status and calls the corresponding publish/revert endpoint based on target status.
+	 *
+	 * @param postId - 文章 ID / Post ID
+	 * @param targetStatus - 目標文章狀態 / Target post status
+	 * @returns 包含發布結果的 Promise / Promise containing publish result
+	 */
+	async updatePostStatusOnly(postId: IBloggerProfile["blogId"], targetStatus: EnumPostStatus): Promise<IBloggerClientResult<IBloggerPublishResult>>
+	{
+		const getResp = await this.getPost(postId, 'AUTHOR');
+		if (getResp.code !== EnumBloggerClientReturnCode.OK)
+		{
+			return getResp; // 返回獲取失敗錯誤 / Return fetch error
+		}
+
+		// 判斷目前狀態 / Determine current status
+		const currentStatus = getResp.data?.status ?? EnumPostStatus.Live;
+
+		if (currentStatus === targetStatus)
+		{
+			// 狀態已一致，直接返回成功 / Status matches, return OK directly
+			return getResp;
+		}
+
+		if (targetStatus === EnumPostStatus.Live)
+		{
+			return this.publishPostAction(postId);
+		}
+		else
+		{
+			return this.revertPostAction(postId);
+		}
 	}
 }

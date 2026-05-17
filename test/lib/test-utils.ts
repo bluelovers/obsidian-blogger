@@ -16,6 +16,7 @@ import { IBloggerProfile } from '../../src/blogger-profile';
 import { __PLUGIN_DATA_JSON, __ROOT } from '../__root';
 import { loadSettingsFromJsonSync } from '../../src/plugin/settings-load-json';
 import { findDefaultProfile } from '../../src/plugin/settings';
+import { GOOGLE_OAUTH2_TOKEN_ENDPOINT } from '../../src/consts';
 
 /** ==================== 常數 / Constants ==================== */
 
@@ -57,7 +58,7 @@ export async function loadCredentials(): Promise<ICredentials>
 	{
 		console.log('  🔄 Token expired, refreshing...');
 
-		const resp = await fetch('https://oauth2.googleapis.com/token', {
+		const resp = await fetch(GOOGLE_OAUTH2_TOKEN_ENDPOINT, {
 			method: 'POST',
 			headers: { 'content-type': 'application/x-www-form-urlencoded' },
 			body: new URLSearchParams({

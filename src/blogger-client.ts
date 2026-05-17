@@ -77,7 +77,7 @@ export class BloggerRestClient extends AbstractBloggerClient
 	 * @returns 包含 Bearer Token 的標頭物件 / Headers object containing Bearer Token
 	 * @throws 若無有效的 Google Token 則拋出錯誤 / Throws error if no valid Google token
 	 */
-	async getHeaders(): Promise<IHttpHeaders>
+	async getHeaders()
 	{
 		const token = this.profile.googleOAuth2Token;
 		/**
@@ -96,7 +96,7 @@ export class BloggerRestClient extends AbstractBloggerClient
 		{
 			throw new Error(getGlobalI18n().t('error_noOAuth2ClientCredentials'));
 		}
-		const fresh_token = await getGoogleOAuth2Client(this.settings)
+		const fresh_token = await getGoogleOAuth2Client(this.settings, this.ctx)
 			.ensureFreshToken(token)
 			.catch(() =>
 			{
@@ -149,12 +149,12 @@ export class BloggerRestClient extends AbstractBloggerClient
  * @param profile - Blogger 設定檔 / Blogger profile
  * @returns 建立的客戶端實例，若設定檔無效則回傳 null / Created client instance, or null if profile is invalid
  */
-export function getBloggerClient(
+export function handleBloggerClientOptions(
 	ctx: IObsidianContext,
 	settings: IPluginSettings,
 	saveSettings: () => Promise<void>,
 	profile: IBloggerProfile,
-): IBloggerClient | null
+)
 {
 	/**
 	 * 驗證 Blogger 網址端點是否設定
@@ -183,6 +183,27 @@ export function getBloggerClient(
 		ctx.showError(getGlobalI18n().t('error_noBlogId'));
 		return null;
 	}
+	return {
+		ctx,
+		settings,
+		saveSettings,
+		profile,
+		context: new BloggerRestClientGoogleOAuth2Context(profile.blogId),
+	};
+}
+
+export function getBloggerClient(
+	ctx: IObsidianContext,
+	settings: IPluginSettings,
+	saveSettings: () => Promise<void>,
+	profile: IBloggerProfile,
+): IBloggerClient | null
+{
+
+	const core = handleBloggerClientOptions(ctx, settings, saveSettings, profile);
+
+	if (!core) return null;
+
 	return new BloggerRestClient(
 		ctx,
 		settings,

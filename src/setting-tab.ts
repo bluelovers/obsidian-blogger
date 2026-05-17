@@ -6,13 +6,13 @@ import { getGlobalMarkdownParser, setupMarkdownParser } from './markdown-it-defa
 
 import { EnumMathJaxOutputType, EnumPostStatus } from './types/const';
 import { ITranslateKey } from './i18n/langs';
+import BloggerPlugin from './main';
 
 export class BloggerSettingTab extends PluginSettingTab {
   constructor(
-    readonly app: App,
+    readonly plugin: BloggerPlugin,
     protected readonly settings: IPluginSettings,
     protected readonly saveSettings: () => Promise<void>,
-    readonly plugin: Plugin,
   ) {
     super(plugin.app, plugin);
   }

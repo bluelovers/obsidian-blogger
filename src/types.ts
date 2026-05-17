@@ -62,3 +62,6 @@ export interface IMedia
 	content: ArrayBuffer;
 }
 
+export type IURLInput = string | URL;
+
+export type IURLParams = Record<string, undefined | number | string> | URLSearchParams;

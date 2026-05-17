@@ -178,7 +178,7 @@ async function main(): Promise<void>
 	 * Blogger API supports view=AUTHOR parameter, allowing
 	 * authenticated users to fetch their own DRAFT posts via GET.
 	 */
-	const getPathTryDraft = getUrl(endpoints.getPost, '', { postId: DRAFT_POST_ID, view: 'AUTHOR' });
+	const getPathTryDraft = getUrl(endpoints.getPost, { postId: DRAFT_POST_ID, view: 'AUTHOR' });
 	const getResp: IBloggerPostApiReturn = await client.httpGet(getPathTryDraft, auth);
 	saveApiResponse('01-get-before', { method: 'httpGet', path: getPathTryDraft, auth }, getResp);
 
@@ -263,7 +263,7 @@ async function main(): Promise<void>
 	console.log('\n📋 Step 2: 執行狀態切換');
 
 	const toggleEndpoint = wasDraft ? endpoints.publishPost : endpoints.revertPost;
-	const togglePath = getUrl(toggleEndpoint, '', { postId: DRAFT_POST_ID });
+	const togglePath = getUrl(toggleEndpoint, { postId: DRAFT_POST_ID });
 	const toggleResp: IBloggerPostApiReturn = wasDraft
 		? await client.httpPublish(togglePath, auth)
 		: await client.httpRevert(togglePath, auth);
@@ -314,7 +314,7 @@ async function main(): Promise<void>
 	 * view=AUTHOR is the standard Blogger API parameter that allows
 	 * fetching both LIVE and DRAFT posts, avoiding the DRAFT 404 issue.
 	 */
-	const verifyPath = getUrl(endpoints.getPost, '', {
+	const verifyPath = getUrl(endpoints.getPost, {
 		postId: DRAFT_POST_ID,
 		view: 'AUTHOR',
 	});
@@ -365,7 +365,7 @@ async function main(): Promise<void>
 	 *   wasDraft=false (原 LIVE)  → Step 2 執行 revert → Step 4 執行 publish
 	 */
 	const restoreEndpoint = wasDraft ? endpoints.revertPost : endpoints.publishPost;
-	const restorePath = getUrl(restoreEndpoint, '', { postId: DRAFT_POST_ID });
+	const restorePath = getUrl(restoreEndpoint, { postId: DRAFT_POST_ID });
 	const restoreResp: IBloggerPostApiReturn = wasDraft
 		? await client.httpRevert(restorePath, auth)
 		: await client.httpPublish(restorePath, auth);

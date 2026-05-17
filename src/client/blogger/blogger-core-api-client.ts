@@ -13,6 +13,7 @@ import { EnumBloggerClientReturnCode, EnumPostStatus } from '../../types/const';
 import { _handleTagsForBloggerPostApi } from '../../data/tags-utils';
 import { IHttpHeaders } from '../../types/http';
 import { IBloggerProfile } from '../../blogger-profile';
+import { ITSPickExtra } from 'ts-type';
 
 /**
  * Blogger 核心 API 客戶端
@@ -36,7 +37,7 @@ export class BloggerCoreApiClient
 		public readonly client: RestClient,
 		public readonly context: IBloggerRestClientContext,
 		public readonly blogId: IBloggerProfile["blogId"],
-		public readonly getHeaders: () => Promise<IHttpHeaders>,
+		public readonly getHeaders: () => Promise<ITSPickExtra<IHttpHeaders, "authorization">>,
 	)
 	{}
 

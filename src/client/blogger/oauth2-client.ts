@@ -1,4 +1,4 @@
-import { generateQueryString, openWithBrowser } from '../../utils';
+import { generateLink, generateQueryString } from '../../utils';
 import {
 	GOOGLE_OAUTH2_AUTHORIZE_ENDPOINT,
 	GOOGLE_OAUTH2_TOKEN_ENDPOINT,
@@ -7,9 +7,10 @@ import {
 import { IBrand } from '../../types';
 import { getGlobalI18n } from '../../i18n/i18n';
 import { IOauth2ClientCredentials } from '../../plugin-settings';
-import { IObsidianRequest } from '../request/abstract-request-client';
 import { AbstractRequestClientWithConstructor } from '../request/request-client';
 import { EnumHttpMethod } from '../request/http-post';
+import { ITSPickExtra } from 'ts-type';
+import { IObsidianContext } from '../../utils/obsidian/obsidian-context';
 
 /**
  * OAuth2 Token 原型（僅包含最基本的 token 資訊）
@@ -227,6 +228,7 @@ export type IOAuth2Options = {
  */
 export const getGoogleOAuth2Client = (
 	oAuth2ClientCredentials: IOauth2ClientCredentials,
+	ctx: IObsidianContext,
 ): OAuth2Client =>
 {
 	return new OAuth2Client({
@@ -234,7 +236,7 @@ export const getGoogleOAuth2Client = (
 		tokenEndpoint: GOOGLE_OAUTH2_TOKEN_ENDPOINT,
 		authorizeEndpoint: GOOGLE_OAUTH2_AUTHORIZE_ENDPOINT,
 		validateTokenEndpoint: GOOGLE_OAUTH2_VALIDATE_TOKEN_ENDPOINT,
-	});
+	}, ctx);
 };
 
 /**
@@ -261,9 +263,9 @@ export const getGoogleOAuth2Client = (
  */
 export class OAuth2Client extends AbstractRequestClientWithConstructor
 {
-	constructor(protected readonly options: IOAuth2Options, obsidianRequest?: IObsidianRequest)
+	constructor(protected readonly options: IOAuth2Options, protected readonly ctx: ITSPickExtra<IObsidianContext, 'obsidianRequest' | 'openWithBrowser'>)
 	{
-		super(obsidianRequest);
+		super(ctx?.obsidianRequest);
 	}
 
 	/**
@@ -381,7 +383,8 @@ export class OAuth2Client extends AbstractRequestClientWithConstructor
 			query.code_challenge_method = codeChallenge?.[0];
 			query.code_challenge = codeChallenge?.[1];
 		}
-		openWithBrowser(this.options.authorizeEndpoint, query);
+		const url = generateLink(this.options.authorizeEndpoint, query);
+		this.ctx?.openWithBrowser?.(url);
 	};
 
 	/**

@@ -7,10 +7,6 @@ settings:
 importers:
 
   .:
-    dependencies:
-      ts-type:
-        specifier: ^3.0.13
-        version: 3.0.13(ts-toolbelt@9.6.0)
     devDependencies:
       '@types/js-yaml':
         specifier: ^4.0.9
@@ -63,6 +59,9 @@ importers:
       obsidian:
         specifier: latest
         version: 1.12.3(@codemirror/state@6.5.0)(@codemirror/view@6.38.6)
+      ts-type:
+        specifier: ^3.0.13
+        version: 3.0.13(ts-toolbelt@9.6.0)
       tslib:
         specifier: 2.8.1
         version: 2.8.1

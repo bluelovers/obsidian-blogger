@@ -6,8 +6,9 @@ import { isNil } from 'lodash-es';
 import { IPluginSettings, isPluginSettingsWithOAuth2 } from './plugin-settings';
 import { getGoogleOAuth2Client } from './client/blogger/oauth2-client';
 import { ITranslateKey } from './i18n/langs';
-import { showError } from './utils/obsidian/obsidian-context';
+import { IObsidianContext, showError } from './utils/obsidian/obsidian-context';
 import { addNewProfile, removeProfile, setDefaultProfile } from './plugin/settings';
+import BloggerPlugin from './main';
 
 /**
  * Blogger profiles manage modal.
@@ -15,7 +16,7 @@ import { addNewProfile, removeProfile, setDefaultProfile } from './plugin/settin
 export class BloggerProfileManageModal extends Modal {
   protected readonly profiles: IBloggerProfile[];
   constructor(
-    readonly plugin: Plugin,
+    readonly plugin: BloggerPlugin,
     readonly settings: IPluginSettings,
     protected readonly saveSettings: () => Promise<void>,
   ) {
@@ -55,7 +56,7 @@ export class BloggerProfileManageModal extends Modal {
             const { profile: newProfile, atIndex } = await openProfileModal(
               this.plugin,
               profile,
-              getGoogleOAuth2Client(this.settings),
+              getGoogleOAuth2Client(this.settings, this.plugin.ctx),
               index,
             );
             if (!isNil(atIndex) && atIndex > -1) {
@@ -109,7 +110,7 @@ export class BloggerProfileManageModal extends Modal {
             const { profile } = await openProfileModal(
               this.plugin,
               {},
-              getGoogleOAuth2Client(this.settings),
+              getGoogleOAuth2Client(this.settings, this.plugin.ctx),
             );
 
             addNewProfile({

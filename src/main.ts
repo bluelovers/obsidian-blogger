@@ -10,7 +10,7 @@ import {
   upgradeSettings,
   IPluginSettings,
 } from './plugin-settings';
-import { createObsidianContext, showError } from './utils/obsidian/obsidian-context';
+import { createObsidianContext, IObsidianContext, showError } from './utils/obsidian/obsidian-context';
 import { isString } from 'lodash-es';
 import { IBloggerProfile } from './blogger-profile';
 import { getBloggerClient } from './blogger-client';
@@ -21,6 +21,7 @@ import { EnumPostStatus, EnumSettingsVersion } from './types/const';
 import { openPublishModal } from './utils/obsidian/open-publish-modal';
 import { openConfirmModal } from './confirm-modal';
 import { findDefaultProfile, handleSettingsUpgrade } from './plugin/settings';
+import { createObsidianContextMain } from './utils/obsidian/obsidian-context-main';
 
 const doClientPublish = async (
   plugin: BloggerPlugin,
@@ -35,12 +36,7 @@ const doClientPublish = async (
     profile = profileOrName;
   }
   if (profile) {
-    const ctx = createObsidianContext({
-      app: plugin.app,
-      openPublishModal,
-      openConfirmModal,
-    });
-    const client = getBloggerClient(ctx, plugin.settings, plugin.saveSettings, profile);
+    const client = getBloggerClient(plugin.ctx, plugin.settings, plugin.saveSettings, profile);
     if (client) {
       await client.publishPost(defaultPostParams);
     }
@@ -58,6 +54,16 @@ export default class BloggerPlugin extends Plugin {
   get settings() {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return this.#settings!;
+  }
+
+  #ctx: IObsidianContext = null!;
+  get ctx()
+  {
+    if (!this.#ctx)
+    {
+      this.#ctx = createObsidianContextMain(this.app);
+    }
+    return this.#ctx;
   }
 
   protected ribbonBloggerIcon: HTMLElement | null = null;
@@ -105,7 +111,7 @@ export default class BloggerPlugin extends Plugin {
       },
     });
 
-    this.addSettingTab(new BloggerSettingTab(this.app, this.settings, this.saveSettings, this));
+    this.addSettingTab(new BloggerSettingTab(this, this.settings, this.saveSettings));
   };
 
   onunload = () => {};

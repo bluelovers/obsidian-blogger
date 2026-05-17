@@ -1,20 +1,10 @@
 import { App, TFile } from 'obsidian';
 import { format } from 'date-fns';
-import { IMatterData, ISafeAny } from './types';
+import { IMatterData, ISafeAny, IURLInput, IURLParams } from './types';
 
-/**
- * 使用瀏覽器開啟網址
- * Open URL with browser
- *
- * @param url - 要開啟的網址 / URL to open
- * @param queryParams - URL 查詢參數 / URL query parameters
- */
-export function openWithBrowser(
-	url: string,
-	queryParams: Record<string, undefined | number | string> = {},
-): void
+export function generateLink(url: IURLInput, queryParams: IURLParams = {})
 {
-	window.open(`${url}?${generateQueryString(queryParams)}`);
+	return `${url}?${generateQueryString(queryParams)}`.replace(/[\?&]$/, '');
 }
 
 /**
@@ -24,13 +14,15 @@ export function openWithBrowser(
  * @param params - 查詢參數物件 / Query parameters object
  * @returns 格式化後的查詢字串 / Formatted query string
  */
-export function generateQueryString(params: Record<string, undefined | number | string>): string
+export function generateQueryString(params: IURLParams): string
 {
+	if (params instanceof URLSearchParams)
+	{
+		return params.toString();
+	}
+
 	return new URLSearchParams(
-		Object.fromEntries(Object.entries(params).filter(([k, v]) => v !== undefined)) as Record<
-			string,
-			string
-		>,
+		Object.entries(params).filter(([k, v]) => v !== undefined) as [string, string][],
 	).toString();
 }
 

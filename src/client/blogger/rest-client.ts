@@ -13,7 +13,9 @@ import { ITSPickExtra } from 'ts-type';
 interface IRestOptions
 {
 	/** Blogger API 基礎端點 URL / Blogger API base endpoint URL */
-	url: URL;
+	url: URL | {
+		href: string,
+	};
 }
 
 /**

@@ -35,6 +35,7 @@ import {
 	ITestResult,
 } from '../lib/test-utils';
 import { __TEST_TEMP } from '../__root';
+import { extractStatus } from '../../src/client/blogger/utils/post-utils';
 
 /** ==================== 工具函數 / Utilities ==================== */
 
@@ -61,24 +62,6 @@ function saveApiResponse(
 	const filePath = path.join(dir, `${step}.json`);
 	fs.writeFileSync(filePath, JSON.stringify(content, null, 2), 'utf-8');
 	console.log(`    📁 Cache saved: ${filePath}`);
-}
-
-/**
- * 從 API 回應中安全提取文章狀態。
- * Safely extract post status from an API response.
- */
-function extractStatus(resp: IBloggerClientResult<IBloggerPublishResult>): EnumPostStatus
-{
-	if (resp.code !== EnumBloggerClientReturnCode.OK || !resp.data)
-	{
-		return EnumPostStatus.Draft; // default fallback if error
-	}
-	const s = resp.data.status;
-	if (s === EnumPostStatus.Draft) return EnumPostStatus.Draft;
-	if (s === EnumPostStatus.Live) return EnumPostStatus.Live;
-
-	// 若無 status，因為 getPost 對 LIVE 不回傳 status，預設為 LIVE
-	return EnumPostStatus.Live;
 }
 
 /** ==================== Main ==================== */

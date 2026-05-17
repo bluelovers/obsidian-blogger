@@ -13,7 +13,7 @@ import { EnumBloggerClientReturnCode, EnumConfirmCode } from '../../types/const'
 import { getGlobalMarkdownParser } from '../../markdown-it-default';
 import { _frontMatterToBloggerPostParams, _updateFrontMatterTagsByPostStatus } from '../../data/tags-utils';
 import { isFunction } from 'lodash-es';
-import { openWithBrowser, processFile } from '../../utils';
+import { processFile } from '../../utils';
 
 /**
  * 抽象 Blogger 客戶端類別
@@ -175,7 +175,7 @@ export abstract class AbstractBloggerClient implements IBloggerClient
 				 */
 				if (this.settings.openPublishedPageWithBrowser)
 				{
-					openWithBrowser(result.data.url);
+					this.ctx.openWithBrowser?.(result.data.url);
 				}
 			}
 		}

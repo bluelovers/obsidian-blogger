@@ -1,7 +1,7 @@
-import { BloggerCoreApiClient } from 'src/client/blogger/blogger-core-api-client';
-import { BloggerRestClientGoogleOAuth2Context } from 'src/client/blogger/blogger-rest-client-google-o-auth2-context';
-import { RestClient } from 'src/client/blogger/rest-client';
-import { BLOGGER_API_ENDPOINT } from 'src/consts';
+import { BloggerCoreApiClient } from '../../src/client/blogger/blogger-core-api-client';
+import { BloggerRestClientGoogleOAuth2Context } from '../../src/client/blogger/blogger-rest-client-google-o-auth2-context';
+import { RestClient } from '../../src/client/blogger/rest-client';
+import { BLOGGER_API_ENDPOINT } from '../../src/consts';
 import { nodeRequest } from './node-request';
 import { loadCredentials, DRAFT_POST_ID } from './test-utils';
 

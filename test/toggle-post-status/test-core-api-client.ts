@@ -36,6 +36,7 @@ import {
 } from '../lib/test-utils';
 import { __TEST_TEMP } from '../__root';
 import { extractStatus } from '../../src/client/blogger/utils/post-utils';
+import { createBloggerCoreApiClient } from '../lib/blogger-core-api-client';
 
 /** ==================== 工具函數 / Utilities ==================== */
 
@@ -75,25 +76,7 @@ async function main(): Promise<void>
 	console.log('  BloggerCoreApiClient E2E — Publish / Revert Toggle');
 	console.log('============================================================');
 
-	// ===== 1. 載入憑證 =====
-	const creds = await loadCredentials();
-	console.log(`  Blog ID: ${creds.blogId}`);
-	console.log(`  Target:  POST ${DRAFT_POST_ID}  (未命名3333)`);
-
-	// ===== 2. 建立客戶端 =====
-	const restClient = new RestClient(
-		{ url: new URL(BLOGGER_API_ENDPOINT) },
-		nodeRequest,
-	);
-
-	const context = new BloggerRestClientGoogleOAuth2Context(creds.blogId);
-
-	const coreClient = new BloggerCoreApiClient(
-		restClient,
-		context,
-		creds.blogId,
-		async () => ({ authorization: `Bearer ${creds.accessToken}` })
-	);
+	const coreClient = await createBloggerCoreApiClient();
 
 	// ===== Step 1: GET 確認文章當前狀態 =====
 	console.log('\n📋 Step 1: GET 確認文章當前狀態');

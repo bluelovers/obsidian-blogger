@@ -107,6 +107,73 @@ export class BloggerRestClient extends AbstractBloggerClient
 	}
 
 	/**
+	 * 處理發布/更新的 API 回應
+	 * Handle API response for publish/update
+	 *
+	 * @param resp - API 回應物件 / API response object
+	 * @param parserParams - 傳遞給解析器的參數 / Parameters passed to parser
+	 * @param checkPostExist - 是否檢查文章存在 (404) / Whether to check post existence (404)
+	 * @returns 包含發布結果的 Promise / Promise containing publish result
+	 */
+	protected _handlePublishResponse(
+		resp: any,
+		parserParams: Partial<IBloggerPostParams>,
+		checkPostExist: boolean,
+	): IBloggerClientResult<IBloggerPublishResult>
+	{
+		/**
+		 * 判斷請求是否發生錯誤
+		 * Check if request encountered an error
+		 */
+		if (_hasError(resp))
+		{
+			const error = resp.error;
+			let message = getGlobalI18n().t('error_requestFailed', {
+				code: error.code,
+				message: error.message,
+			});
+			/**
+			 * 針對更新操作時的 404 錯誤，給予明確的「文章不存在」提示
+			 * Provide an explicit "post not exist" hint for 404 error during update operation
+			 */
+			if (checkPostExist && error.code === 404)
+			{
+				message = `${message} ${getGlobalI18n().t('error_postNotExistRemotely')}`;
+			}
+			return {
+				code: EnumBloggerClientReturnCode.Error,
+				message,
+				response: resp,
+			};
+		}
+		/**
+		 * 嘗試解析 API 回應，若成功則回傳處理結果
+		 * Attempt to parse API response, return processed result if successful
+		 */
+		try
+		{
+			const result = this.context.responseParser.toBloggerPublishResult(parserParams, resp);
+			return {
+				code: EnumBloggerClientReturnCode.OK,
+				data: result,
+				response: resp,
+			};
+		}
+		/**
+		 * 捕獲解析回應時的例外，轉為解析失敗錯誤
+		 * Catch exceptions during response parsing, convert to parse failed error
+		 */
+		catch (e)
+		{
+			return {
+				code: EnumBloggerClientReturnCode.Error,
+				message: getGlobalI18n().t('error_cannotParseResponse'),
+				response: resp,
+			};
+		}
+	}
+
+	/**
 	 * 發布或更新文章到 Blogger
 	 * Publish or update post to Blogger
 	 *
@@ -149,59 +216,8 @@ export class BloggerRestClient extends AbstractBloggerClient
 				{ status: postParams.status },
 				{ headers: await this.getHeaders() },
 			);
-			/**
-			 * 判斷 PATCH 請求是否發生錯誤
-			 * Check if PATCH request encountered an error
-			 */
-			if (_hasError(resp))
-			{
-				const error = resp.error;
-				let message = getGlobalI18n().t('error_requestFailed', {
-					code: error.code,
-					message: error.message,
-				});
-				/**
-				 * 處理 404 錯誤，通常代表遠端文章不存在
-				 * Handle 404 error, which usually means the remote post does not exist
-				 */
-				if (error.code === 404)
-				{
-					message = `${message} ${getGlobalI18n().t('error_postNotExistRemotely')}`;
-				}
-				return {
-					code: EnumBloggerClientReturnCode.Error,
-					message,
-					response: resp,
-				};
-			}
-			/**
-			 * 嘗試解析 API 回應，若成功則回傳處理結果
-			 * Attempt to parse API response, return processed result if successful
-			 */
-			try
-			{
-				const result = this.context.responseParser.toBloggerPublishResult(
-					{ postId: postParams.postId },
-					resp,
-				);
-				return {
-					code: EnumBloggerClientReturnCode.OK,
-					data: result,
-					response: resp,
-				};
-			}
-			/**
-			 * 捕獲解析回應時的例外，轉為解析失敗錯誤
-			 * Catch exceptions during response parsing, convert to parse failed error
-			 */
-			catch (e)
-			{
-				return {
-					code: EnumBloggerClientReturnCode.Error,
-					message: getGlobalI18n().t('error_cannotParseResponse'),
-					response: resp,
-				};
-			}
+
+			return this._handlePublishResponse(resp, { postId: postParams.postId }, true);
 		}
 
 		/** ========== 正常發布/更新路徑（PUT / POST）========== */
@@ -247,57 +263,8 @@ export class BloggerRestClient extends AbstractBloggerClient
 				headers: await this.getHeaders(),
 			},
 		);
-		/**
-		 * 判斷 PUT/POST 請求是否發生錯誤
-		 * Check if PUT/POST request encountered an error
-		 */
-		if (_hasError(resp))
-		{
-			const error = resp.error
-			let message = getGlobalI18n().t('error_requestFailed', {
-				code: error.code,
-				message: error.message,
-			});
-			// Detect typical error cases
-			/**
-			 * 針對更新操作時的 404 錯誤，給予明確的「文章不存在」提示
-			 * Provide an explicit "post not exist" hint for 404 error during update operation
-			 */
-			if (postParams.postId && error.code === 404)
-			{
-				message = `${message} ${getGlobalI18n().t('error_postNotExistRemotely')}`;
-			}
-			return {
-				code: EnumBloggerClientReturnCode.Error,
-				message,
-				response: resp,
-			};
-		}
-		/**
-		 * 嘗試解析正常發布路徑的 API 回應
-		 * Attempt to parse API response of the normal publish path
-		 */
-		try
-		{
-			const result = this.context.responseParser.toBloggerPublishResult(postParams, resp);
-			return {
-				code: EnumBloggerClientReturnCode.OK,
-				data: result,
-				response: resp,
-			};
-		}
-		/**
-		 * 捕獲發布結果解析時的例外錯誤
-		 * Catch exception errors during publish result parsing
-		 */
-		catch (e)
-		{
-			return {
-				code: EnumBloggerClientReturnCode.Error,
-				message: getGlobalI18n().t('error_cannotParseResponse'),
-				response: resp,
-			};
-		}
+
+		return this._handlePublishResponse(resp, postParams, !!postParams.postId);
 	}
 }
 

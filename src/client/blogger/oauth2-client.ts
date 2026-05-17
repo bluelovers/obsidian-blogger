@@ -267,6 +267,62 @@ export class OAuth2Client extends AbstractRequestClientWithConstructor
 	}
 
 	/**
+	 * 處理 Token 請求與解析回應
+	 * Handle Token request and parse response
+	 *
+	 * @param body - 請求主體物件 / Request body object
+	 * @param fallbackRefreshToken - 退回使用的 refresh token（若回應中未包含）/ Fallback refresh token (if not in response)
+	 * @returns 新鮮的內部 Token / Fresh internal token
+	 */
+	protected async _requestAndParseToken(
+		body: Record<string, string>,
+		fallbackRefreshToken?: string,
+	): Promise<IFreshInternalOAuth2Token>
+	{
+		const requestTime = Date.now();
+		const response = await this.requestUrl({
+			url: this.options.tokenEndpoint,
+			method: EnumHttpMethod.POST,
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+				'User-Agent': 'obsidian.md',
+			},
+			body: generateQueryString(body),
+		});
+		const resp = response.json;
+		const expiresIn = Number(resp.expires_in);
+		/**
+		 * 計算絕對到期時間（減 60 秒緩衝）
+		 * Calculate absolute expiry (minus 60-second buffer)
+		 *
+		 * expiresIn 為 Google 回傳的相對秒數。
+		 * 減 60 秒確保在 token 真正到期前觸發 refresh，避免邊界狀況。
+		 * expiresIn is the relative seconds from Google.
+		 * 60-second buffer ensures refresh triggers before actual expiry, preventing edge cases.
+		 */
+		const expiresAt = requestTime + Math.max(0, expiresIn - 60) * 1000;
+		const res = {
+			accessToken: resp.access_token,
+			tokenType: resp.token_type,
+			expiresIn,
+			expiresAt,
+			/**
+			 * Google 有時不會回傳新的 refresh_token。
+			 * 此時保留舊的 fallbackRefreshToken。
+			 * Google sometimes omits refresh_token in the response.
+			 * In that case, retain the old fallbackRefreshToken.
+			 */
+			refreshToken: resp.refresh_token ?? fallbackRefreshToken,
+			scope: resp.scope,
+		};
+		if (!isFreshInternalOAuth2Token(res as IInternalOAuth2Token))
+		{
+			throw new Error(getGlobalI18n().t('error_invalidGoogleToken'));
+		}
+		return res as IFreshInternalOAuth2Token;
+	}
+
+	/**
 	 * 取得授權碼（開啟瀏覽器前往 Google 授權頁面）
 	 * Get authorization code (opens browser to Google authorization page)
 	 *
@@ -362,41 +418,8 @@ export class OAuth2Client extends AbstractRequestClientWithConstructor
 			redirect_uri: params.redirectUri,
 			code_verifier: params.codeVerifier,
 		};
-		const requestTime = Date.now();
-		const response = await this.requestUrl({
-			url: this.options.tokenEndpoint,
-			method: EnumHttpMethod.POST,
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-				'User-Agent': 'obsidian.md',
-			},
-			body: generateQueryString(body),
-		});
-		const resp = response.json;
-		const expiresIn = Number(resp.expires_in);
-		/**
-		 * 計算絕對到期時間（減 60 秒緩衝）
-		 * Calculate absolute expiry (minus 60-second buffer)
-		 *
-		 * expiresIn 為 Google 回傳的相對秒數。
-		 * 減 60 秒確保在 token 真正到期前觸發 refresh，避免邊界狀況。
-		 * expiresIn is the relative seconds from Google.
-		 * 60-second buffer ensures refresh triggers before actual expiry, preventing edge cases.
-		 */
-		const expiresAt = requestTime + Math.max(0, expiresIn - 60) * 1000;
-		const res = {
-			accessToken: resp.access_token,
-			tokenType: resp.token_type,
-			expiresIn,
-			expiresAt,
-			refreshToken: resp.refresh_token,
-			scope: resp.scope,
-		};
-		if (!isFreshInternalOAuth2Token(res))
-		{
-			throw new Error(getGlobalI18n().t('error_invalidGoogleToken'));
-		}
-		return res;
+
+		return this._requestAndParseToken(body);
 	};
 
 	/**
@@ -425,38 +448,8 @@ export class OAuth2Client extends AbstractRequestClientWithConstructor
 			client_secret: this.options.clientSecret,
 			refresh_token: params.refresh_token,
 		};
-		const requestTime = Date.now();
-		const response = await this.requestUrl({
-			url: this.options.tokenEndpoint,
-			method: EnumHttpMethod.POST,
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-				'User-Agent': 'obsidian.md',
-			},
-			body: generateQueryString(body),
-		});
-		const resp = response.json;
-		const expiresIn = Number(resp.expires_in);
-		const expiresAt = requestTime + Math.max(0, expiresIn - 60) * 1000;
-		const res = {
-			accessToken: resp.access_token,
-			tokenType: resp.token_type,
-			expiresIn,
-			expiresAt,
-			/**
-			 * Google 有時不會回傳新的 refresh_token。
-			 * 此時保留舊的 refresh_token 而非設為 undefined。
-			 * Google sometimes omits refresh_token in the response.
-			 * In that case, retain the old one instead of setting it to undefined.
-			 */
-			refreshToken: resp.refresh_token ?? params.refresh_token,
-			scope: resp.scope,
-		};
-		if (!isFreshInternalOAuth2Token(res))
-		{
-			throw new Error(getGlobalI18n().t('error_invalidGoogleToken'));
-		}
-		return res;
+
+		return this._requestAndParseToken(body, params.refresh_token);
 	};
 
 	/**

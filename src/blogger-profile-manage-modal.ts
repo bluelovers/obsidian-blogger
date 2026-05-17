@@ -7,6 +7,7 @@ import { IPluginSettings, isPluginSettingsWithOAuth2 } from './plugin-settings';
 import { getGoogleOAuth2Client } from './client/blogger/oauth2-client';
 import { ITranslateKey } from './i18n/langs';
 import { showError } from './utils/obsidian/obsidian-context';
+import { addNewProfile, removeProfile, setDefaultProfile } from './plugin/settings';
 
 /**
  * Blogger profiles manage modal.
@@ -34,7 +35,11 @@ export class BloggerProfileManageModal extends Modal {
         if (!profile.isDefault) {
           setting.addButton((button) =>
             button.setButtonText(t('profilesManageModal_setDefault')).onClick(async () => {
-              this.profiles.forEach((it) => (it.isDefault = false));
+
+              setDefaultProfile({
+                profiles: this.profiles,
+              });
+
               profile.isDefault = true;
               renderProfiles();
               await this.saveSettings();
@@ -54,10 +59,15 @@ export class BloggerProfileManageModal extends Modal {
               index,
             );
             if (!isNil(atIndex) && atIndex > -1) {
-              if (newProfile.isDefault) {
-                this.profiles.forEach((it) => (it.isDefault = false));
-              }
               this.profiles[atIndex] = newProfile;
+
+              if (newProfile.isDefault)
+              {
+                setDefaultProfile({
+                  profiles: this.profiles,
+                }, atIndex);
+              }
+
               renderProfiles();
               await this.saveSettings();
             }
@@ -68,12 +78,11 @@ export class BloggerProfileManageModal extends Modal {
             .setIcon('lucide-trash')
             .setTooltip(t('profilesManageModal_deleteTooltip'))
             .onClick(async () => {
-              this.profiles.splice(index, 1);
-              if (profile.isDefault) {
-                if (this.profiles.length > 0) {
-                  this.profiles[0].isDefault = true;
-                }
-              }
+
+              removeProfile({
+                profiles: this.profiles,
+              }, index);
+
               renderProfiles();
               await this.saveSettings();
             }),
@@ -102,14 +111,11 @@ export class BloggerProfileManageModal extends Modal {
               {},
               getGoogleOAuth2Client(this.settings),
             );
-            // if no profile, make the first one default
-            if (this.profiles.length === 0) {
-              profile.isDefault = true;
-            }
-            if (profile.isDefault) {
-              this.profiles.forEach((it) => (it.isDefault = false));
-            }
-            this.profiles.push(profile);
+
+            addNewProfile({
+              profiles: this.profiles,
+            }, profile);
+
             renderProfiles();
             await this.saveSettings();
           }),

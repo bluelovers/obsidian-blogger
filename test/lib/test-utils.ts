@@ -13,7 +13,9 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as process from 'node:process';
 import { IBloggerProfile } from '../../src/blogger-profile';
-import { __ROOT } from '../__root';
+import { __PLUGIN_DATA_JSON, __ROOT } from '../__root';
+import { loadSettingsFromJsonSync } from '../../src/plugin/settings-load-json';
+import { findDefaultProfile } from '../../src/plugin/settings';
 
 /** ==================== 常數 / Constants ==================== */
 
@@ -44,11 +46,10 @@ export interface ICredentials
  */
 export async function loadCredentials(): Promise<ICredentials>
 {
-	const dataPath = path.resolve(__ROOT, 'data.json');
-	const raw = fs.readFileSync(dataPath, 'utf-8');
-	const data = JSON.parse(raw);
+	const dataPath = __PLUGIN_DATA_JSON;
+	const data = loadSettingsFromJsonSync(dataPath);
 
-	const profile = data.profiles[0];
+	const profile = findDefaultProfile(data)!;
 	const token = profile.googleOAuth2Token;
 
 	/** 若權杖過期，自動 refresh（僅記憶體，不寫回 data.json） */

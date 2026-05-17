@@ -1,5 +1,4 @@
 import { IBloggerProfile } from './blogger-profile';
-import { ISafeAny } from './types';
 
 import { EnumLanguageIDAll, EnumMathJaxOutputType, EnumPostStatus, EnumSettingsVersion } from './types/const';
 
@@ -92,10 +91,18 @@ export const DEFAULT_SETTINGS: IPluginSettings = {
  * @note 目前僅有一個版本，此函式為預留的遷移機制
  * @note Currently only one version exists; this function is a stub for future migrations
  */
-export async function upgradeSettings(
-	existingSettings: ISafeAny,
+export async function upgradeSettings<T extends IPluginSettings>(
+	existingSettings: T,
 	to: EnumSettingsVersion,
-): Promise<{ needUpgrade: boolean; settings: IPluginSettings }>
+)
+{
+	return upgradeSettingsSync(existingSettings, to);
+}
+
+export function upgradeSettingsSync<T extends IPluginSettings>(
+	existingSettings: T,
+	to: EnumSettingsVersion,
+)
 {
 	return {
 		needUpgrade: false,

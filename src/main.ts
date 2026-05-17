@@ -20,6 +20,7 @@ import { MobileOAuth2Helper } from './blogger-oauth2-client';
 import { EnumPostStatus, EnumSettingsVersion } from './types/const';
 import { openPublishModal } from './utils/obsidian/open-publish-modal';
 import { openConfirmModal } from './confirm-modal';
+import { findDefaultProfile, handleSettingsUpgrade } from './plugin/settings';
 
 const doClientPublish = async (
   plugin: BloggerPlugin,
@@ -81,7 +82,7 @@ export default class BloggerPlugin extends Plugin {
       name: getGlobalI18n().t('command_publishWithDefault'),
       editorCallback: async () =>
       {
-        const defaultProfile = this.#settings?.profiles.find((it) => it.isDefault);
+        const defaultProfile = findDefaultProfile(this.#settings!);
         if (defaultProfile) {
           const params: IBloggerPostParams = {
             status: this.#settings?.defaultPostStatus ?? EnumPostStatus.Draft,
@@ -110,8 +111,7 @@ export default class BloggerPlugin extends Plugin {
   onunload = () => {};
 
   loadSettings = async () => {
-    this.#settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-    const { needUpgrade, settings } = await upgradeSettings(this.#settings, EnumSettingsVersion.V1);
+    const { needUpgrade, settings } = await handleSettingsUpgrade(await this.loadData());
     this.#settings = settings;
     if (needUpgrade) {
       await this.saveSettings();

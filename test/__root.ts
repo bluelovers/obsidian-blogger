@@ -15,3 +15,10 @@ export const isWin = process.platform === "win32";
 export const __TEST_ROOT = join(__ROOT, "test");
 export const __TEST_FIXTURES = join(__TEST_ROOT, "fixtures");
 export const __TEST_TEMP = join(__TEST_ROOT, "temp");
+
+/**
+ * 外掛資料檔案路徑 / Plugin data file path
+ *
+ * @example data.json
+ */
+export const __PLUGIN_DATA_JSON = join(__ROOT, "data.json");

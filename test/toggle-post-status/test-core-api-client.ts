@@ -37,6 +37,7 @@ import {
 import { __TEST_TEMP } from '../__root';
 import { extractStatus } from '../../src/client/blogger/utils/post-utils';
 import { createBloggerCoreApiClient } from '../lib/blogger-core-api-client';
+import { EnumBloggerViewMode } from '../../src/client/blogger/utils/url';
 
 /** ==================== 工具函數 / Utilities ==================== */
 
@@ -81,7 +82,7 @@ async function main(): Promise<void>
 	// ===== Step 1: GET 確認文章當前狀態 =====
 	console.log('\n📋 Step 1: GET 確認文章當前狀態');
 
-	const getResp = await coreClient.getPost(DRAFT_POST_ID, 'AUTHOR');
+	const getResp = await coreClient.getPost(DRAFT_POST_ID);
 	saveApiResponse('01-get-before', 'getPost', getResp);
 
 	let originalStatus: EnumPostStatus;
@@ -139,7 +140,7 @@ async function main(): Promise<void>
 	// ===== Step 3: GET 確認狀態已持久化 =====
 	console.log('\n📋 Step 3: GET 確認狀態已持久化');
 
-	const verifyResp = await coreClient.getPost(DRAFT_POST_ID, 'AUTHOR');
+	const verifyResp = await coreClient.getPost(DRAFT_POST_ID);
 	saveApiResponse('03-get-verify', 'getPost', verifyResp);
 
 	{

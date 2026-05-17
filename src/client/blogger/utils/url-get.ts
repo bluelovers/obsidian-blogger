@@ -48,6 +48,10 @@ export interface IBloggerRestEndpointNewPost extends _IEndpointImpl
 {
 	endpointID: EnumBloggerRestEndpoint.newPost;
 	method: EnumHttpMethod.POST;
+
+	query: {
+		isDraft: boolean;
+	};
 	body: IBloggerPostApiBody;
 
 	response: IBloggerPostApiReturn;
@@ -109,9 +113,9 @@ export interface IBloggerRestEndpointGetPost extends _IEndpointImplWithoutBody
  *
  * POST /{blogId}/posts/<%= postId %>/publish
  */
-export interface IBloggerRestEndpointPublishPost extends _IEndpointImplWithoutBody
+export interface IBloggerRestEndpointSetPostStatusLive extends _IEndpointImplWithoutBody
 {
-	endpointID: EnumBloggerRestEndpoint.publishPost;
+	endpointID: EnumBloggerRestEndpoint.setPostStatusLive;
 	method: EnumHttpMethod.POST;
 	query: IEndpointQueryWithPostId;
 
@@ -123,13 +127,96 @@ export interface IBloggerRestEndpointPublishPost extends _IEndpointImplWithoutBo
  *
  * POST /{blogId}/posts/<%= postId %>/revert
  */
-export interface IBloggerRestEndpointRevertPost extends _IEndpointImplWithoutBody
+export interface IBloggerRestEndpointSetPostStatusDraft extends _IEndpointImplWithoutBody
 {
-	endpointID: EnumBloggerRestEndpoint.revertPost;
+	endpointID: EnumBloggerRestEndpoint.setPostStatusDraft;
 	method: EnumHttpMethod.POST;
 	query: IEndpointQueryWithPostId;
 
 	response: IBloggerPostApiReturn;
+}
+
+/**
+ * 透過路徑取得文章 / Get post by path
+ *
+ * GET /blogs/{blogId}/posts/byPath?path={path}
+ */
+export interface IBloggerRestEndpointGetByPath extends _IEndpointImplWithoutBody
+{
+	endpointID: EnumBloggerRestEndpoint.getByPath;
+	method: EnumHttpMethod.GET;
+	query: IBloggerRestEndpointGetPost["query"] & {
+		path: string;
+	};
+
+	response: IBloggerPostApiReturn;
+}
+
+/**
+ * 列出文章 / List posts
+ *
+ * GET /blogs/{blogId}/posts
+ *
+ * @see https://developers.google.com/blogger/docs/3.0/reference/posts/list?hl=zh-tw
+ */
+export interface IBloggerRestEndpointPostList extends _IEndpointImplWithoutBody
+{
+	endpointID: EnumBloggerRestEndpoint.listPosts;
+	method: EnumHttpMethod.GET;
+	query: {
+		/**
+		 * 要擷取的最新貼文日期，格式為 date-time，並採用 RFC 3339 格式。
+		 */
+		endDate?: string;
+
+		/**
+		 * 要擷取的最舊貼文日期，格式為 date-time，並採用 RFC 3339 格式。
+		 */
+		startDate?: string;
+
+		status?: EnumPostStatus.Draft | EnumPostStatus.Live | EnumPostStatus.Scheduled;
+
+		view: EnumBloggerViewMode;
+
+		/**
+		 * 是否要納入貼文內文 (預設為 true)。
+		 * 如果不需要貼文內文，請將此值設為 false，以盡量減少流量。
+		 * (預設值：true)
+		 *
+		 * @default true
+		 */
+		fetchBodies?: boolean;
+
+		/**
+		 * 是否包含每則貼文的圖片網址中繼資料。
+		 */
+		fetchImages?: boolean;
+
+		/**
+		 * 以半形逗號分隔的標籤清單，用於搜尋。
+		 */
+		labels?: string;
+
+		/**
+		 * 要擷取的貼文數量上限。
+		 */
+		maxResults?: number;
+
+		/**
+		 * 套用至結果的排序順序。
+		 *
+		 * 可接受的值如下：
+		 * 「published」：依貼文發布日期排序
+		 * 「updated」：依貼文上次更新的日期排序
+		 */
+		orderBy?: 'published' | 'updated';
+	};
+
+	response: {
+		kind: "blogger#postList";
+		nextPageToken: string;
+		items: IBloggerPostApiReturn[];
+	};
 }
 
 /**
@@ -140,8 +227,10 @@ export type TBloggerRestEndpointAll = IBloggerRestEndpointNewPost
 	| IBloggerRestEndpointPostEdit
 	| IBloggerRestEndpointPostPatch
 	| IBloggerRestEndpointGetPost
-	| IBloggerRestEndpointPublishPost
-	| IBloggerRestEndpointRevertPost
+	| IBloggerRestEndpointSetPostStatusLive
+	| IBloggerRestEndpointSetPostStatusDraft
+	| IBloggerRestEndpointGetByPath
+	| IBloggerRestEndpointPostList
 	;
 
 export type IBloggerRestEndpointHelperDetect<K extends EnumBloggerRestEndpoint> = Extract<TBloggerRestEndpointAll, {
@@ -170,8 +259,8 @@ function getEndpointMethod<K extends EnumBloggerRestEndpoint>(
 	switch (endpointID)
 	{
 		case EnumBloggerRestEndpoint.newPost:
-		case EnumBloggerRestEndpoint.publishPost:
-		case EnumBloggerRestEndpoint.revertPost:
+		case EnumBloggerRestEndpoint.setPostStatusLive:
+		case EnumBloggerRestEndpoint.setPostStatusDraft:
 			return EnumHttpMethod.POST as IBloggerRestEndpointHelperDetect<K>["method"];
 		case EnumBloggerRestEndpoint.editPost:
 			return EnumHttpMethod.PUT as IBloggerRestEndpointHelperDetect<K>["method"];

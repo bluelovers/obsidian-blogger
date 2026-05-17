@@ -6,7 +6,7 @@ import {
 } from '../../types/blogger-client-interface';
 import { IBloggerPostApiReturn, RestClient } from './rest-client';
 import { IBloggerRestClientContext } from './types';
-import { EnumBloggerRestEndpoint, getUrl } from './utils/url';
+import { EnumBloggerRestEndpoint, EnumBloggerViewMode, getUrl } from './utils/url';
 import { getGlobalI18n } from '../../i18n/i18n';
 import { _hasError } from '../../utils/type-utils';
 import { EnumBloggerClientReturnCode, EnumPostStatus } from '../../types/const';
@@ -202,7 +202,7 @@ export class BloggerCoreApiClient
 	 * @param view - 檢視模式 / View mode
 	 * @returns 包含文章資訊的 Promise / Promise containing post information
 	 */
-	async getPost(postId: IBloggerProfile["blogId"], view: string = 'AUTHOR'): Promise<IBloggerClientResult<IBloggerPublishResult>>
+	async getPost(postId: IBloggerProfile["blogId"], view: EnumBloggerViewMode = EnumBloggerViewMode.AUTHOR): Promise<IBloggerClientResult<IBloggerPublishResult>>
 	{
 		const url = getUrl(this.context.endpoints[EnumBloggerRestEndpoint.getPost], {
 			postId,
@@ -224,7 +224,7 @@ export class BloggerCoreApiClient
 	 */
 	async publishPostAction(postId: IBloggerProfile["blogId"]): Promise<IBloggerClientResult<IBloggerPublishResult>>
 	{
-		const url = getUrl(this.context.endpoints[EnumBloggerRestEndpoint.publishPost], {
+		const url = getUrl(this.context.endpoints[EnumBloggerRestEndpoint.setPostStatusLive], {
 			postId,
 		});
 		const resp = await this.client.httpPublish(url, { headers: await this.getHeaders() });
@@ -243,7 +243,7 @@ export class BloggerCoreApiClient
 	 */
 	async revertPostAction(postId: IBloggerProfile["blogId"]): Promise<IBloggerClientResult<IBloggerPublishResult>>
 	{
-		const url = getUrl(this.context.endpoints[EnumBloggerRestEndpoint.revertPost], {
+		const url = getUrl(this.context.endpoints[EnumBloggerRestEndpoint.setPostStatusDraft], {
 			postId,
 		});
 		const resp = await this.client.httpRevert(url, { headers: await this.getHeaders() });

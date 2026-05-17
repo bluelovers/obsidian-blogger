@@ -262,7 +262,7 @@ async function main(): Promise<void>
 	// ===== Step 2: 執行狀態切換 =====
 	console.log('\n📋 Step 2: 執行狀態切換');
 
-	const toggleEndpoint = wasDraft ? endpoints[EnumBloggerRestEndpoint.publishPost] : endpoints[EnumBloggerRestEndpoint.revertPost];
+	const toggleEndpoint = wasDraft ? endpoints[EnumBloggerRestEndpoint.setPostStatusLive] : endpoints[EnumBloggerRestEndpoint.setPostStatusDraft];
 	const togglePath = getUrl(toggleEndpoint, { postId: DRAFT_POST_ID });
 	const toggleResp: IBloggerPostApiReturn = wasDraft
 		? await client.httpPublish(togglePath, auth)
@@ -364,7 +364,7 @@ async function main(): Promise<void>
 	 *   wasDraft=true  (原 DRAFT) → Step 2 執行 publish → Step 4 執行 revert
 	 *   wasDraft=false (原 LIVE)  → Step 2 執行 revert → Step 4 執行 publish
 	 */
-	const restoreEndpoint = wasDraft ? endpoints[EnumBloggerRestEndpoint.revertPost] : endpoints[EnumBloggerRestEndpoint.publishPost];
+	const restoreEndpoint = wasDraft ? endpoints[EnumBloggerRestEndpoint.setPostStatusDraft] : endpoints[EnumBloggerRestEndpoint.setPostStatusLive];
 	const restorePath = getUrl(restoreEndpoint, { postId: DRAFT_POST_ID });
 	const restoreResp: IBloggerPostApiReturn = wasDraft
 		? await client.httpRevert(restorePath, auth)

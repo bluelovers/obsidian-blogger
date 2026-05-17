@@ -134,7 +134,7 @@ export interface IBloggerPostApiReturn extends Omit<IBloggerPostApiBody, 'labels
 	 *
 	 * @example "6819100329896798058"
 	 */
-	"id": `${number}`,
+	id: `${number}`,
 
 	/**
 	 * 發布時間（ISO 8601 格式）
@@ -146,7 +146,7 @@ export interface IBloggerPostApiReturn extends Omit<IBloggerPostApiBody, 'labels
 	 *
 	 * @example "2012-05-20T20:08:00-07:00"
 	 */
-	"published": string,
+	published: string,
 
 	/**
 	 * 更新時間（ISO 8601 格式）
@@ -157,7 +157,7 @@ export interface IBloggerPostApiReturn extends Omit<IBloggerPostApiBody, 'labels
 	 *
 	 * @example "2012-05-20T20:08:35-07:00"
 	 */
-	"updated": string,
+	updated: string,
 
 	/**
 	 * 文章公開 URL
@@ -170,7 +170,7 @@ export interface IBloggerPostApiReturn extends Omit<IBloggerPostApiBody, 'labels
 	 *
 	 * @example "http://brettmorgan-test2.blogspot.com/2012/05/new-post.html"
 	 */
-	"url": string,
+	url: string,
 
 	/**
 	 * API 資源連結（self link）
@@ -183,7 +183,7 @@ export interface IBloggerPostApiReturn extends Omit<IBloggerPostApiBody, 'labels
 	 *
 	 * @example "https://www.googleapis.com/blogger/v3/blogs/8070105920543249955/posts/6819100329896798058"
 	 */
-	"selfLink": string,
+	selfLink: string,
 
 	/**
 	 * 作者資訊
@@ -194,27 +194,27 @@ export interface IBloggerPostApiReturn extends Omit<IBloggerPostApiBody, 'labels
 	 * Contains information about the author's Google account.
 	 * Note: url here is the profile URL, not the post URL.
 	 */
-	"author": {
+	author: {
 		/** 作者 ID（樣板字面型別 `${number}`）/ Author ID */
-		"id": `${number}`,
+		id: `${number}`,
 		/** 作者顯示名稱 / Author display name */
-		"displayName": string,
+		displayName: string,
 		/**
 		 * 作者個人檔案 URL
 		 * Author profile URL
 		 *
 		 * @example "http://www.blogger.com/profile/16258312240222542576"
 		 */
-		"url": string,
+		url: string,
 		/** 作者頭像 / Author avatar */
-		"image": {
+		image: {
 			/**
 			 * 頭像圖片 URL
 			 * Avatar image URL
 			 *
 			 * @example "https://resources.blogblog.com/img/b16-rounded.gif"
 			 */
-			"url": string
+			url: string
 		}
 	},
 
@@ -227,21 +227,21 @@ export interface IBloggerPostApiReturn extends Omit<IBloggerPostApiBody, 'labels
 	 * Contains total reply count and replies API link.
 	 * This field only provides counts and links, not the actual reply content.
 	 */
-	"replies": {
+	replies: {
 		/**
 		 * 回覆總數（樣板字面型別 `${number}`）
 		 * Total reply count (template literal type `${number}`)
 		 *
 		 * @example "0"
 		 */
-		"totalItems": `${number}`,
+		totalItems: `${number}`,
 		/**
 		 * 回覆 API 連結
 		 * Replies API self-link
 		 *
 		 * @example "https://www.googleapis.com/blogger/v3/blogs/8070105920543249955/posts/6819100329896798058/comments"
 		 */
-		"selfLink": string
+		selfLink: string
 	}
 
 	/**

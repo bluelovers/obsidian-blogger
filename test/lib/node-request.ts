@@ -62,9 +62,9 @@ export async function _nodeRequest<T = any>(
 		: request;
 
 	// Build fetch() options
-	const fetchOptions: RequestInit & { headers: Record<string, string> } = {
+	const fetchOptions: RequestInit & { headers: IHttpHeaders } = {
 		method: params.method,
-		headers: params.headers as Record<string, string> ?? {},
+		headers: params.headers ?? {} as any,
 	};
 
 	// body: string | ArrayBuffer → 依 Obsidian requestUrl 規格

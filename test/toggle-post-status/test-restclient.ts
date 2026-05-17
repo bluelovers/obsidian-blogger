@@ -34,6 +34,8 @@ import {
 	ITestResult,
 } from '../lib/test-utils';
 import { __TEST_TEMP } from '../__root';
+import { ITSPickExtra } from 'ts-type';
+import { IHttpHeaders } from '../../src/types/http';
 
 /** ==================== 型別定義 / Type Definitions ==================== */
 
@@ -51,7 +53,7 @@ interface IApiRequestLog
 	path: string;
 
 	/** 認證資訊 / Auth info */
-	auth?: { headers: { authorization: string } };
+	auth?: { headers: ITSPickExtra<IHttpHeaders, 'authorization'> };
 }
 
 /** ==================== 工具函數 / Utilities ==================== */
@@ -156,7 +158,7 @@ async function main(): Promise<void>
 		nodeRequest,
 	);
 
-	const auth = { headers: { authorization: `Bearer ${creds.accessToken}` } };
+	const auth = { headers: { authorization: `Bearer ${creds.accessToken}` } } satisfies IApiRequestLog["auth"];
 
 	/**
 	 * 透過 getBloggerRestEndpoint() 建構所有端點路徑，禁止手動拼接網址。

@@ -7,6 +7,7 @@ import { isString } from 'lodash-es';
 import { ERROR_NOTICE_TIMEOUT } from '../../consts';
 import { openPublishModal } from './open-publish-modal';
 import { openConfirmModal } from '../../confirm-modal';
+import { IMatterData } from '../../types';
 
 /**
  * 顯示 Obsidian 通知
@@ -76,12 +77,19 @@ export function showError<T>(error: unknown): IBloggerClientResult<T>
  * @param context.app - Obsidian 應用程式實例（可選）/ Obsidian App instance (optional)
  * @param context.openPublishModal - 開啟發布對話框函式（可選）/ Function to open publish modal (optional)
  * @param context.openConfirmModal - 開啟確認對話框函式（可選）/ Function to open confirm modal (optional)
+ * @param context.getCurrentNoteData - 取得當前筆記資料（可選）/ Function to get current note data (optional)
+ * @param context.updateNoteFrontmatter - 更新筆記 Frontmatter（可選）/ Function to update note frontmatter (optional)
  * @returns 建立的上下文物件 / Created context object
  */
 export function createObsidianContext(context: {
 	app?: App,
+	
 	openPublishModal?: typeof openPublishModal,
-	openConfirmModal?: typeof openConfirmModal
+	openConfirmModal?: typeof openConfirmModal,
+
+	getCurrentNoteData?: () => Promise<{ title: string, content: string, matter: IMatterData } | null>,
+	updateNoteFrontmatter?: (matterData: Partial<IMatterData>) => Promise<void>,
+
 })
 {
 	context ??= {} as any;
@@ -95,6 +103,9 @@ export function createObsidianContext(context: {
 
 		openPublishModal: context.openPublishModal!,
 		openConfirmModal: context.openConfirmModal!,
+
+		getCurrentNoteData: context.getCurrentNoteData!,
+		updateNoteFrontmatter: context.updateNoteFrontmatter!,
 	};
 }
 
@@ -107,4 +118,3 @@ export function createObsidianContext(context: {
  * 然後以 `ctx.app` 調用原有的 `app`
  */
 export type IObsidianContext = ReturnType<typeof createObsidianContext>;
-

@@ -1,10 +1,8 @@
-import { getBoundary } from '../../utils';
-import { ISafeAny } from '../../types';
-import { IFormItemNameMapper, FormItems } from '../../utils/type-utils';
 import { EnumPostStatus } from '../../types/const';
 import { AbstractRequestClientWithConstructor } from '../request/request-client';
 import { IObsidianRequest } from '../request/abstract-request-client';
-import { _getEndpoint, _handleRestClientHref, _httpPost, EnumHttpMethod } from '../request/http-post';
+import { _getEndpoint, _handleRestClientHref, _httpPost, EnumHttpMethod, IHttpOptions } from '../request/http-post';
+import { ITSPickExtra } from 'ts-type';
 
 /**
  * REST 客戶端建構選項介面
@@ -331,9 +329,10 @@ export class RestClient extends AbstractRequestClientWithConstructor
 	 */
 	async httpGet(
 		path: string,
-		options?: {
-			headers: Record<string, string>;
-		},
+		/**
+		 * 不確定之前阪本是忘記 `headers?:` 還是故意讓 headers 必須填寫
+		 */
+		options?: ITSPickExtra<IHttpOptions, 'headers'>,
 	): Promise<IBloggerPostApiReturn>
 	{
 		return _httpPost(EnumHttpMethod.GET, path, this, undefined, options);
@@ -350,10 +349,7 @@ export class RestClient extends AbstractRequestClientWithConstructor
 	async httpPost(
 		path: string,
 		body: IBloggerPostApiBody,
-		options: {
-			headers?: Record<string, string>;
-			formItemNameMapper?: IFormItemNameMapper;
-		},
+		options: IHttpOptions,
 	): Promise<IBloggerPostApiReturn>
 	{
 		return _httpPost(EnumHttpMethod.POST, path, this, body, options);
@@ -370,10 +366,7 @@ export class RestClient extends AbstractRequestClientWithConstructor
 	async httpPut(
 		path: string,
 		body: IBloggerPostApiBody,
-		options: {
-			headers?: Record<string, string>;
-			formItemNameMapper?: IFormItemNameMapper;
-		},
+		options: IHttpOptions,
 	): Promise<IBloggerPostApiReturn>
 	{
 		return _httpPost(EnumHttpMethod.PUT, path, this, body, options);
@@ -390,10 +383,7 @@ export class RestClient extends AbstractRequestClientWithConstructor
 	async httpPatch(
 		path: string,
 		body: Partial<IBloggerPostApiBody>,
-		options: {
-			headers?: Record<string, string>;
-			formItemNameMapper?: IFormItemNameMapper;
-		},
+		options: IHttpOptions,
 	): Promise<IBloggerPostApiReturn>
 	{
 		return _httpPost(EnumHttpMethod.PATCH, path, this, body as IBloggerPostApiBody, options);
@@ -411,9 +401,7 @@ export class RestClient extends AbstractRequestClientWithConstructor
 	 */
 	async httpPublish(
 		path: string,
-		options?: {
-			headers?: Record<string, string>;
-		},
+		options?: IHttpOptions,
 	): Promise<IBloggerPostApiReturn>
 	{
 		return _httpPost(EnumHttpMethod.POST, path, this, undefined, options);
@@ -431,9 +419,7 @@ export class RestClient extends AbstractRequestClientWithConstructor
 	 */
 	async httpRevert(
 		path: string,
-		options?: {
-			headers?: Record<string, string>;
-		},
+		options?: IHttpOptions,
 	): Promise<IBloggerPostApiReturn>
 	{
 		return _httpPost(EnumHttpMethod.POST, path, this, undefined, options);

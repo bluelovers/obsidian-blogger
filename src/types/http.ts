@@ -11,4 +11,9 @@ export interface IHttpHeaders extends Record<string, string | undefined>
 	'content-type'?: string;
 	/** 使用者代理字串 / User agent string */
 	'user-agent'?: string;
+
+	'Content-Type'?: string;
+	'User-Agent'?: string;
+
+	authorization?: string;
 }

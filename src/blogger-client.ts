@@ -18,6 +18,10 @@ import { BloggerRestClientGoogleOAuth2Context } from './client/blogger/blogger-r
 import { IBloggerRestClientContext } from './client/blogger/types';
 import { AbstractBloggerClient } from './client/blogger/abstract-blogger-client';
 
+import { BloggerCoreApiClient } from './client/blogger/blogger-core-api-client';
+import { IHttpHeaders } from './types/http';
+import { ITSPickExtra } from 'ts-type';
+
 /**
  * Blogger REST 客戶端類別
  * Blogger REST client class
@@ -28,6 +32,7 @@ import { AbstractBloggerClient } from './client/blogger/abstract-blogger-client'
 export class BloggerRestClient extends AbstractBloggerClient
 {
 	protected readonly client: RestClient;
+	protected readonly coreApiClient: BloggerCoreApiClient;
 
 	/**
 	 * 建立 Blogger REST 客戶端實例
@@ -54,6 +59,12 @@ export class BloggerRestClient extends AbstractBloggerClient
 		this.client = new RestClient({
 			url: new URL(getUrl(this.context.endpoints?.base, profile.endpoint)),
 		});
+		this.coreApiClient = new BloggerCoreApiClient(
+			this.client,
+			this.context,
+			this.profile.blogId,
+			() => this.getHeaders()
+		);
 	}
 
 	/**
@@ -66,7 +77,7 @@ export class BloggerRestClient extends AbstractBloggerClient
 	 * @returns 包含 Bearer Token 的標頭物件 / Headers object containing Bearer Token
 	 * @throws 若無有效的 Google Token 則拋出錯誤 / Throws error if no valid Google token
 	 */
-	async getHeaders(): Promise<Record<string, string>>
+	async getHeaders(): Promise<IHttpHeaders>
 	{
 		const token = this.profile.googleOAuth2Token;
 		/**
@@ -100,85 +111,18 @@ export class BloggerRestClient extends AbstractBloggerClient
 			this.profile.googleOAuth2Token = fresh_token;
 			await this.saveSettings();
 		}
-		const headers: Record<string, string> = {
+		const headers: ITSPickExtra<IHttpHeaders, 'authorization'> = {
 			authorization: `Bearer ${fresh_token.accessToken}`,
 		};
 		return headers;
 	}
 
 	/**
-	 * 處理發布/更新的 API 回應
-	 * Handle API response for publish/update
-	 *
-	 * @param resp - API 回應物件 / API response object
-	 * @param parserParams - 傳遞給解析器的參數 / Parameters passed to parser
-	 * @param checkPostExist - 是否檢查文章存在 (404) / Whether to check post existence (404)
-	 * @returns 包含發布結果的 Promise / Promise containing publish result
-	 */
-	protected _handlePublishResponse(
-		resp: any,
-		parserParams: Partial<IBloggerPostParams>,
-		checkPostExist: boolean,
-	): IBloggerClientResult<IBloggerPublishResult>
-	{
-		/**
-		 * 判斷請求是否發生錯誤
-		 * Check if request encountered an error
-		 */
-		if (_hasError(resp))
-		{
-			const error = resp.error;
-			let message = getGlobalI18n().t('error_requestFailed', {
-				code: error.code,
-				message: error.message,
-			});
-			/**
-			 * 針對更新操作時的 404 錯誤，給予明確的「文章不存在」提示
-			 * Provide an explicit "post not exist" hint for 404 error during update operation
-			 */
-			if (checkPostExist && error.code === 404)
-			{
-				message = `${message} ${getGlobalI18n().t('error_postNotExistRemotely')}`;
-			}
-			return {
-				code: EnumBloggerClientReturnCode.Error,
-				message,
-				response: resp,
-			};
-		}
-		/**
-		 * 嘗試解析 API 回應，若成功則回傳處理結果
-		 * Attempt to parse API response, return processed result if successful
-		 */
-		try
-		{
-			const result = this.context.responseParser.toBloggerPublishResult(parserParams, resp);
-			return {
-				code: EnumBloggerClientReturnCode.OK,
-				data: result,
-				response: resp,
-			};
-		}
-		/**
-		 * 捕獲解析回應時的例外，轉為解析失敗錯誤
-		 * Catch exceptions during response parsing, convert to parse failed error
-		 */
-		catch (e)
-		{
-			return {
-				code: EnumBloggerClientReturnCode.Error,
-				message: getGlobalI18n().t('error_cannotParseResponse'),
-				response: resp,
-			};
-		}
-	}
-
-	/**
 	 * 發布或更新文章到 Blogger
 	 * Publish or update post to Blogger
 	 *
-	 * 處理三種路徑：僅更新狀態、更新現有文章 (PUT) 及建立新文章 (POST)。
-	 * Handles three paths: update status only, update existing post (PUT), and create new post (POST).
+	 * 委派給純粹的核心 API 客戶端處理。
+	 * Delegates to pure core API client.
 	 *
 	 * @param title - 文章標題 / Post title
 	 * @param content - 文章內容 / Post content
@@ -191,80 +135,7 @@ export class BloggerRestClient extends AbstractBloggerClient
 		postParams: Partial<IBloggerPostParams>,
 	): Promise<IBloggerClientResult<IBloggerPublishResult>>
 	{
-		/** ========== Status-only PATCH 路徑 ========== */
-		/**
-		 * 判斷是否執行僅更新狀態（Status-only）的操作路徑
-		 * Check if executing the Status-only operation path
-		 */
-		if (postParams.updateStatusOnly)
-		{
-			if (!postParams.postId)
-			{
-				return {
-					code: EnumBloggerClientReturnCode.Error,
-					message: getGlobalI18n().t('error_noPostId'),
-					response: undefined,
-				};
-			}
-			const isDraft = postParams.status === EnumPostStatus.Draft;
-			const url = getUrl(this.context.endpoints?.patchPost, 'dummy/patch/<%= postId %>?isDraft=<%= isDraft %>', {
-				postId: postParams.postId,
-				isDraft,
-			});
-			const resp = await this.client.httpPatch(
-				url,
-				{ status: postParams.status },
-				{ headers: await this.getHeaders() },
-			);
-
-			return this._handlePublishResponse(resp, { postId: postParams.postId }, true);
-		}
-
-		/** ========== 正常發布/更新路徑（PUT / POST）========== */
-		let url: string;
-		let method: typeof this.client.httpPut;
-		const isDraft = postParams.status === EnumPostStatus.Draft;
-		/**
-		 * 若參數中已有 postId，代表是更新現有文章（PUT 請求）
-		 * If postId exists in params, it means updating an existing post (PUT request)
-		 */
-		if (postParams.postId)
-		{
-			url = getUrl(this.context.endpoints?.editPost, 'dummy/update/<%= postId %>?isDraft=<%= isDraft %>', {
-				postId: postParams.postId,
-				isDraft,
-			});
-			method = this.client.httpPut.bind(this.client);
-		}
-		/**
-		 * 若參數中無 postId，代表是建立新文章（POST 請求）
-		 * If postId does not exist in params, it means creating a new post (POST request)
-		 */
-		else
-		{
-			url = getUrl(this.context.endpoints?.newPost, 'dummy/post?isDraft=<%= isDraft %>', {
-				isDraft,
-			});
-			method = this.client.httpPost.bind(this.client);
-		}
-		const resp = await method(
-			url,
-			{
-				kind: 'blogger#post',
-				blog: {
-					id: this.profile.blogId,
-				},
-				title: title!,
-				content: content!,
-				labels: _handleTagsForBloggerPostApi(postParams.tags),
-				status: postParams.status!,
-			},
-			{
-				headers: await this.getHeaders(),
-			},
-		);
-
-		return this._handlePublishResponse(resp, postParams, !!postParams.postId);
+		return this.coreApiClient.publish(title, content, postParams);
 	}
 }
 

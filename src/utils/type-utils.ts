@@ -1,3 +1,4 @@
+import { IBloggerPublishResultError } from '../types/blogger-client-interface';
 import { IMedia, ISafeAny } from '../types';
 import { isArray, isString } from 'lodash-es';
 
@@ -205,9 +206,7 @@ export function _isError<T extends Error>(error: unknown): error is IErrorWithCo
  * @param resp - 回應物件 / Response object
  * @returns 是否包含 error 屬性 / Whether it has an error property
  */
-export function _hasError<T extends Error>(resp: unknown): resp is {
-	error: IErrorWithCode<T>
-}
+export function _hasError<T extends Error>(resp: unknown): resp is IBloggerPublishResultError<T>
 {
 	return (resp as any).error !== undefined
 }

@@ -1,3 +1,4 @@
+import { IErrorWithCode } from '../utils/type-utils';
 import { ISafeAny } from '../types';
 import { EnumBloggerClientReturnCode, EnumobsidianBloggerTags, EnumPostStatus } from './const';
 
@@ -5,10 +6,10 @@ import { EnumBloggerClientReturnCode, EnumobsidianBloggerTags, EnumPostStatus } 
  * Blogger 客戶端結果基底介面（內部使用）
  * Base blogger client result interface (internal)
  */
-interface _IBloggerClientResult
+interface _IBloggerClientResult<R extends ISafeAny = ISafeAny>
 {
 	/** Blogger 伺服器原始回應 / Raw response from Blogger server */
-	response?: ISafeAny;
+	response?: R;
 
 	/** 回傳碼 / Return code */
 	code: EnumBloggerClientReturnCode;
@@ -20,7 +21,7 @@ interface _IBloggerClientResult
  *
  * @template T - 成功時攜帶的資料類型 / Data type on success
  */
-interface IBloggerClientOkResult<T> extends _IBloggerClientResult
+interface IBloggerClientOkResult<T, R extends ISafeAny = ISafeAny> extends _IBloggerClientResult<R>
 {
 	code: EnumBloggerClientReturnCode.OK;
 	/** 成功結果資料 / Success result data */
@@ -31,7 +32,7 @@ interface IBloggerClientOkResult<T> extends _IBloggerClientResult
  * Blogger 客戶端錯誤結果介面（內部使用）
  * Blogger client error result interface (internal)
  */
-interface IBloggerClientErrorResult extends _IBloggerClientResult
+interface IBloggerClientErrorResult<R extends ISafeAny = ISafeAny> extends _IBloggerClientResult<R>
 {
 	code: EnumBloggerClientReturnCode.Error;
 	/** 錯誤訊息 / Error message */
@@ -46,8 +47,9 @@ interface IBloggerClientErrorResult extends _IBloggerClientResult
  * Uses a discriminated union to differentiate success and error results.
  *
  * @template T - 成功時攜帶的資料類型 / Data type on success
+ * @template R - Blogger 伺服器原始回應類型 / Raw response type from Blogger server
  */
-export type IBloggerClientResult<T> = IBloggerClientOkResult<T> | IBloggerClientErrorResult;
+export type IBloggerClientResult<T, R extends ISafeAny = ISafeAny> = IBloggerClientOkResult<T, R> | IBloggerClientErrorResult<R>;
 
 /**
  * Blogger 發文參數核心介面
@@ -146,6 +148,11 @@ interface _IBloggerPublishResult
 export interface IBloggerPublishResult extends Pick<IBloggerPostParams, 'postId' | 'status'>, _IBloggerPublishResult
 {
 
+}
+
+export interface IBloggerPublishResultError<T extends Error = Error>
+{
+	error: IErrorWithCode<T>
 }
 
 /**

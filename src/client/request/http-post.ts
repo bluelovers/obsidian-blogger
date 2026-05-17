@@ -1,6 +1,6 @@
 import { ISafeAny } from '../../types';
 import { getBoundary } from '../../utils';
-import { IFormItemNameMapper, FormItems } from '../../utils/type-utils';
+import { FormItems, IFormItemNameMapper } from '../../utils/type-utils';
 import { IBloggerPostApiBody, IBloggerPostApiReturn } from '../blogger/rest-client';
 import { IAbstractRequestClientLike } from './abstract-request-client';
 import { IHttpHeaders } from '../../types/http';
@@ -84,9 +84,7 @@ export function _getEndpoint(href: string, path: string): string
  * @param predefinedHeaders - 預定義的標頭（由 _httpPost 或 requestUrl 內部設定）/ Predefined headers (set internally)
  * @returns 合併後的標頭物件 / Merged headers object
  */
-export function _handleHeaders(options?: {
-	headers?: IHttpHeaders;
-}, predefinedHeaders?: IHttpHeaders): IHttpHeaders
+export function _handleHeaders(options?: IHttpOptions, predefinedHeaders?: IHttpHeaders): IHttpHeaders
 {
 	return {
 		'user-agent': 'obsidian.md',
@@ -144,10 +142,7 @@ export async function _httpPost(
 	path: string,
 	requestClient: IRestClientLike,
 	body?: IBloggerPostApiBody,
-	options?: {
-		headers?: IHttpHeaders;
-		formItemNameMapper?: IFormItemNameMapper;
-	},
+	options?: IHttpOptions,
 ): Promise<IBloggerPostApiReturn>
 {
 	const endpoint = requestClient.getEndpoint(path);
@@ -236,4 +231,10 @@ export async function _requestUrl(requestClient: IRestClientLike, requestOpts: {
 		throw: requestOpts.throw ?? false,
 	});
 	return response.json;
+}
+
+export interface IHttpOptions
+{
+	headers?: IHttpHeaders;
+	formItemNameMapper?: IFormItemNameMapper;
 }

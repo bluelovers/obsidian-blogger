@@ -23,7 +23,7 @@ export class BloggerRestClientGoogleOAuth2Context implements IBloggerRestClientC
 
 	needLoginModal = false;
 
-	endpoints: IBloggerRestEndpoint = getBloggerRestEndpoint(this.blogId);
+	endpoints = getBloggerRestEndpoint(this.blogId);
 
 	/**
 	 * 建立 Google OAuth2 上下文環境實例

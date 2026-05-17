@@ -55,7 +55,7 @@ export interface IBloggerRestClientContext
 		toBloggerMediaUploadResult: (response: ISafeAny) => IBloggerMediaUploadResult;
 	};
 
-	endpoints?: Partial<IBloggerRestEndpoint>;
+	endpoints: Partial<IBloggerRestEndpoint>;
 
 	needLoginModal?: boolean;
 

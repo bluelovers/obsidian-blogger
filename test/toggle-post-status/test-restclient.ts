@@ -22,7 +22,7 @@ import * as process from 'node:process';
 import { nodeRequest } from '../lib/node-request';
 import { RestClient, IBloggerPostApiReturn } from '../../src/client/blogger/rest-client';
 import { BLOGGER_API_ENDPOINT } from '../../src/consts';
-import { getBloggerRestEndpoint, getUrl } from '../../src/client/blogger/utils/url';
+import { EnumBloggerRestEndpoint, getBloggerRestEndpoint, getUrl } from '../../src/client/blogger/utils/url';
 import { EnumPostStatus } from '../../src/types/const';
 import { _hasError } from '../../src/utils/type-utils';
 import {
@@ -178,7 +178,7 @@ async function main(): Promise<void>
 	 * Blogger API supports view=AUTHOR parameter, allowing
 	 * authenticated users to fetch their own DRAFT posts via GET.
 	 */
-	const getPathTryDraft = getUrl(endpoints.getPost, { postId: DRAFT_POST_ID, view: 'AUTHOR' });
+	const getPathTryDraft = getUrl(endpoints[EnumBloggerRestEndpoint.getPost], { postId: DRAFT_POST_ID, view: 'AUTHOR' });
 	const getResp: IBloggerPostApiReturn = await client.httpGet(getPathTryDraft, auth);
 	saveApiResponse('01-get-before', { method: 'httpGet', path: getPathTryDraft, auth }, getResp);
 
@@ -262,7 +262,7 @@ async function main(): Promise<void>
 	// ===== Step 2: 執行狀態切換 =====
 	console.log('\n📋 Step 2: 執行狀態切換');
 
-	const toggleEndpoint = wasDraft ? endpoints.publishPost : endpoints.revertPost;
+	const toggleEndpoint = wasDraft ? endpoints[EnumBloggerRestEndpoint.publishPost] : endpoints[EnumBloggerRestEndpoint.revertPost];
 	const togglePath = getUrl(toggleEndpoint, { postId: DRAFT_POST_ID });
 	const toggleResp: IBloggerPostApiReturn = wasDraft
 		? await client.httpPublish(togglePath, auth)
@@ -314,7 +314,7 @@ async function main(): Promise<void>
 	 * view=AUTHOR is the standard Blogger API parameter that allows
 	 * fetching both LIVE and DRAFT posts, avoiding the DRAFT 404 issue.
 	 */
-	const verifyPath = getUrl(endpoints.getPost, {
+	const verifyPath = getUrl(endpoints[EnumBloggerRestEndpoint.getPost], {
 		postId: DRAFT_POST_ID,
 		view: 'AUTHOR',
 	});
@@ -364,7 +364,7 @@ async function main(): Promise<void>
 	 *   wasDraft=true  (原 DRAFT) → Step 2 執行 publish → Step 4 執行 revert
 	 *   wasDraft=false (原 LIVE)  → Step 2 執行 revert → Step 4 執行 publish
 	 */
-	const restoreEndpoint = wasDraft ? endpoints.revertPost : endpoints.publishPost;
+	const restoreEndpoint = wasDraft ? endpoints[EnumBloggerRestEndpoint.revertPost] : endpoints[EnumBloggerRestEndpoint.publishPost];
 	const restorePath = getUrl(restoreEndpoint, { postId: DRAFT_POST_ID });
 	const restoreResp: IBloggerPostApiReturn = wasDraft
 		? await client.httpRevert(restorePath, auth)

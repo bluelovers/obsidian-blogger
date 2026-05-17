@@ -9,7 +9,266 @@ import { IBloggerProfile } from '../../../blogger-profile';
  * 支援惰性求值（lazy evaluation），用於需要動態建構 URL 的場景。
  * Supports lazy evaluation for dynamically constructing URLs.
  */
-export type IUrlGetter = () => string;
+export type IUrlGetter<T extends string = string> = () => T;
+
+export type IRestEndpointUrl<T extends string = string> = T | IUrlGetter;
+
+/**
+ * 檢視模式（字串），以指定的檢視模式來偵測文章可見性與可取得資訊
+ *
+ * @see https://developers.google.com/blogger/docs/3.0/reference/posts/get?hl=zh-tw#request-body
+ */
+export const enum EnumBloggerViewMode
+{
+	/**
+	 * view=AUTHOR：作者層級詳細資料
+	 *     LIVE 文章  → ✅ 成功（有 status 欄位，值為 LIVE）
+	 *     DRAFT 文章 → ✅ 成功（有 status 欄位，值為 DRAFT）
+	 */
+	AUTHOR = 'AUTHOR',
+
+	/**
+	 * 無 view 或 view=READER：讀者層級詳細資料
+	 *     LIVE 文章  → ✅ 成功（但無 status 欄位，需預設為 LIVE）
+	 *     DRAFT 文章 → ❌ HTTP 404（！！）
+	 */
+	READER = 'READER',
+
+	/**
+	 * view=ADMIN：管理員層級詳細資料
+	 */
+	ADMIN = 'ADMIN',
+}
+
+/**
+ * Blogger API v3 REST 端點枚舉 (endpoint enum)
+ *
+ * @see {getBloggerRestEndpoint}
+ * @see {getUrl}
+ */
+export const enum EnumBloggerRestEndpoint
+{
+	/**
+	 * Blogger API v3 基礎端點 / Blogger API v3 base endpoint
+	 *
+	 * 固定值：https://www.googleapis.com/blogger/v3/blogs
+	 * 所有文章端點皆以此為前綴。
+	 * Constant: https://www.googleapis.com/blogger/v3/blogs
+	 * All post endpoints are prefixed with this.
+	 *
+	 * @example
+	 * {
+	 *   path: 'https://www.googleapis.com/blogger/v3/blogs',
+	 *   method: EnumHttpMethod.GET
+	 * }
+	 */
+	base = 'base',
+
+	/**
+	 * 建立新文章 / Create a new post
+	 *
+	 * POST /{blogId}/posts?isDraft=<%= isDraft %>
+	 *
+	 * 用於首次發布文章到 Blogger。
+	 * isDraft 是否要以草稿形式建立貼文
+	 *
+	 * isDraft=true 建立草稿，false 直接發布。
+	 * 請求主體須包含 kind、blog.id、title、content、labels、status。
+	 *
+	 * Used for first-time publishing. isDraft=true creates a draft, false publishes live.
+	 * Request body must include kind, blog.id, title, content, labels, status.
+	 *
+	 * @see {BloggerCoreApiClient.publish}
+	 *
+	 * @see https://developers.google.com/blogger/docs/3.0/reference/posts/insert?hl=zh-tw
+	 *
+	 * @example
+	 * {
+	 *   path: '/{blogId}/posts?isDraft={isDraft}',
+	 *   method: EnumHttpMethod.POST,
+	 *   query: {
+	 *     isDraft: boolean,
+	 *   },
+	 *   body: {
+	 *     kind: 'blogger#post',
+	 *     blog: { id: IBloggerPostParamsCore["postId"] },
+	 *     title: string,
+	 *     content: string,
+	 *     labels: string[],
+	 *     status: EnumPostStatus.Draft | EnumPostStatus.Live,
+	 *   }
+	 * }
+	 */
+	newPost = 'newPost',
+
+	/**
+	 * 完整更新（取代）已有文章
+	 * Fully update (replace) an existing post
+	 *
+	 * PUT /{blogId}/posts/<%= postId %>
+	 *
+	 * 完整取代（PUT）已有文章。
+	 * ⚠️ PUT 會完整取代所有欄位，未提供的內容會被清空。
+	 *
+	 * Fully replaces (PUT) an existing post.
+	 * ⚠️ PUT overwrites all fields — omitted content will be cleared.
+	 *
+	 * @see https://developers.google.com/blogger/docs/3.0/reference/posts/update?hl=zh-tw
+	 *
+	 * @example
+	 * {
+	 *   path: '/{blogId}/posts/{postId}?isDraft={isDraft}',
+	 *   method: EnumHttpMethod.PUT,
+	 *   query: {
+	 *     postId: IBloggerPostParamsCore["postId"],
+	 *   },
+	 *   body: {
+	 *     kind: 'blogger#post',
+	 *     blog: { id: IBloggerPostParamsCore["postId"] },
+	 *     title: string,
+	 *     content: string,
+	 *     labels: string[],
+	 *     status: EnumPostStatus.Draft | EnumPostStatus.Live,
+	 *   }
+	 * }
+	 */
+	editPost = 'editPost',
+
+	/**
+	 * 部分更新文章
+	 * Partially update an existing post
+	 *
+	 * PATCH /{blogId}/posts/<%= postId %>
+	 *
+	 * 僅更新有提供的欄位（PATCH），不影響其他內容。
+	 * 適合輕量操作，如只更新 status。
+	 *
+	 * Updates only the provided fields (PATCH).
+	 * Suitable for lightweight operations, e.g. status-only update.
+	 *
+	 * @see https://developers.google.com/blogger/docs/3.0/reference/posts/patch?hl=zh-tw
+	 *
+	 * @example
+	 * {
+	 *   path: '/{blogId}/posts/{postId}?isDraft={isDraft}',
+	 *   method: EnumHttpMethod.PATCH,
+	 *   query: {
+	 *     postId: IBloggerPostParamsCore["postId"],
+	 *   },
+	 *   body: {
+	 *     status: EnumPostStatus.Draft | EnumPostStatus.Live,
+	 *   }
+	 * }
+	 */
+	patchPost = 'patchPost',
+
+	/**
+	 * 取得單一文章
+	 * Get a single post
+	 *
+	 * GET /{blogId}/posts/<%= postId %>?view=<%= view %>
+	 *
+	 * 如果文章位於私人網誌上，則必須取得授權。
+	 * 如果文章是在公開的網誌上，則可以在未經授權的情況下呼叫此方法。
+	 *
+	 * 模板參數 / Template parameters:
+	 *   view   — 檢視模式（字串），以指定的檢視模式來偵測文章可見性與可取得資訊
+	 *            View mode (string), controls post visibility
+	 *
+	 *   view=AUTHOR：作者層級詳細資料
+	 *     LIVE 文章  → ✅ 成功（有 status 欄位，值為 LIVE）
+	 *     DRAFT 文章 → ✅ 成功（有 status 欄位，值為 DRAFT）
+	 *
+	 *   無 view 或 view=READER：讀者層級詳細資料
+	 *     LIVE 文章  → ✅ 成功（但無 status 欄位，需預設為 LIVE）
+	 *     DRAFT 文章 → ❌ HTTP 404（！！）
+	 *
+	 *   view=ADMIN：管理員層級詳細資料
+	 *
+	 *   maxComments — (可選) 貼文資源中可擷取的留言數量上限。如未指定這個參數，系統就不會傳回任何註解。
+	 *
+	 * 結論：讀取 DRAFT 文章時**必須**加上 view=AUTHOR，否則必定 404。
+	 *       `?isDraft=true` 無法繞過此限制（已實測確認無效）。
+	 *
+	 * @see {BloggerCoreApiClient.getPost}
+	 * @see {BloggerCoreApiClient.updatePostStatusOnly}
+	 *
+	 * @see https://developers.google.com/blogger/docs/3.0/reference/posts/get?hl=zh-tw
+	 *
+	 * @example
+	 * {
+	 *   path: '/{blogId}/posts/{postId}?view={view}',
+	 *   method: EnumHttpMethod.GET,
+	 *   query: {
+	 *     postId: IBloggerPostParamsCore["postId"],
+	 *     view: EnumBloggerViewMode,
+	 *     maxComments?: number,
+	 *   },
+	 *   response: {
+	 *     status: EnumPostStatus.Draft | EnumPostStatus.Live,
+	 *   }
+	 * }
+	 */
+	getPost = 'getPost',
+
+	/**
+	 * 將文章更改發布為可見（DRAFT → LIVE） / Publish a post (DRAFT → LIVE)
+	 *
+	 * POST /{blogId}/posts/<%= postId %>/publish
+	 *
+	 * 將 DRAFT 文章發布為 LIVE。
+	 * 無請求主體，回應一定包含 status: "LIVE"。
+	 * 對已是 LIVE 的文章再次 publish 可能導致錯誤。
+	 *
+	 * Publishes a DRAFT post to LIVE.
+	 * No request body, response always includes status: "LIVE".
+	 * Calling publish on an already-LIVE post may error.
+	 *
+	 * @see {RestClient.httpPublish}
+	 *
+	 * @example
+	 * {
+	 *   path: '/{blogId}/posts/{postId}/publish',
+	 *   method: EnumHttpMethod.POST,
+	 *   query: {
+	 *     postId: IBloggerPostParamsCore["postId"],
+	 *   },
+	 *   response: {
+	 *     status: EnumPostStatus.Live,
+	 *   }
+	 * }
+	 */
+	publishPost = 'publishPost',
+
+	/**
+	 * 將文章更改恢復為草稿（LIVE → DRAFT） / Revert a post (LIVE → DRAFT)
+	 *
+	 * POST /{blogId}/posts/<%= postId %>/revert
+	 *
+	 * 將 LIVE 文章復原為 DRAFT。
+	 * 無請求主體，回應一定包含 status: "DRAFT"。
+	 * 對已是 DRAFT 的文章再次 revert 可能導致錯誤。
+	 *
+	 * Reverts a LIVE post back to DRAFT.
+	 * No request body, response always includes status: "DRAFT".
+	 * Calling revert on an already-DRAFT post may error.
+	 *
+	 * @see {RestClient.httpRevert}
+	 *
+	 * @example
+	 * {
+	 *   path: '/{blogId}/posts/{postId}/revert',
+	 *   method: EnumHttpMethod.POST,
+	 *   query: {
+	 *     postId: IBloggerPostParamsCore["postId"],
+	 *   },
+	 *   response: {
+	 *     status: EnumPostStatus.Draft,
+	 *   }
+	 * }
+	 */
+	revertPost = 'revertPost',
+}
 
 /**
  * 解析 URL，支援靜態字串、函式與預設值三種模式
@@ -94,167 +353,12 @@ export function getUrl(
 export function getBloggerRestEndpoint(blogId: IBloggerProfile["blogId"])
 {
 	return {
-		/**
-		 * Blogger API v3 基礎端點
-		 * Blogger API v3 base endpoint
-		 *
-		 * 固定值：https://www.googleapis.com/blogger/v3/blogs
-		 * Constant: https://www.googleapis.com/blogger/v3/blogs
-		 *
-		 * 所有文章端點皆以此為前綴，後接 `/{blogId}/posts/...`。
-		 * All post endpoints are prefixed with this, followed by `/{blogId}/posts/...`.
-		 */
-		base: BLOGGER_API_ENDPOINT,
-
-		/**
-		 * 建立新文章
-		 * Create a new post
-		 *
-		 * 路徑模板：`/{blogId}/posts?isDraft=<%= isDraft %>`
-		 * Path template：`/{blogId}/posts?isDraft=<%= isDraft %>`
-		 *
-		 * 模板參數 / Template parameters:
-		 *   blogId  — 由 getBloggerRestEndpoint() 傳入，固化在 closure 中
-		 *             Passed into getBloggerRestEndpoint(), baked into the closure
-		 *
-		 * 查詢參數 / Query parameters:
-		 *   isDraft — boolean, 由 getUrl() params 傳入
-		 *             ⚠️ 注意：此參數為 boolean，但在 lodash template 中會自動轉為字串
-		 *             Passed via getUrl() params
-		 *             ⚠️ Note: boolean auto-converts to string in lodash template
-		 *   true  → 建立 DRAFT 草稿文章 / Create as DRAFT
-		 *   false → 直接發布 LIVE 文章 / Publish as LIVE immediately
-		 *
-		 * HTTP 方法：POST（透過 RestClient.httpPost()）
-		 * HTTP method: POST (via RestClient.httpPost())
-		 *
-		 * 請求主體：需包含 kind、blog.id、title、content、labels、status
-		 * Request body: must include kind, blog.id, title, content, labels, status
-		 */
-		newPost: () => `/${blogId}/posts?isDraft=<%= isDraft %>` as const,
-
-		/**
-		 * 完整更新（取代）已有文章
-		 * Fully update (replace) an existing post
-		 *
-		 * 路徑模板：`/{blogId}/posts/<%= postId %>?isDraft=<%= isDraft %>`
-		 * Path template：`/{blogId}/posts/<%= postId %>?isDraft=<%= isDraft %>`
-		 *
-		 * 模板參數 / Template parameters:
-		 *   postId  — 目標文章的 Blogger ID（樣板字面型別 `${number}`）
-		 *              Target post's Blogger ID (template literal type `${number}`)
-		 *   isDraft — boolean, 控制更新後的草稿狀態
-		 *              Controls whether the post remains as draft after update
-		 *
-		 * HTTP 方法：PUT（透過 RestClient.httpPut()）
-		 * HTTP method: PUT (via RestClient.httpPut())
-		 *
-		 * ⚠️ PUT 會完整取代文章內容，未提供的欄位可能被清空
-		 * ⚠️ PUT replaces the entire post — omitted fields may be cleared
-		 */
-		editPost: () => `/${blogId}/posts/<%= postId %>?isDraft=<%= isDraft %>` as const,
-
-		/**
-		 * 部分更新文章
-		 * Partially update an existing post
-		 *
-		 * 路徑模板：`/{blogId}/posts/<%= postId %>?isDraft=<%= isDraft %>`
-		 * Path template：`/{blogId}/posts/<%= postId %>?isDraft=<%= isDraft %>`
-		 *
-		 * 模板參數 / Template parameters:
-		 *   postId  — 目標文章的 Blogger ID
-		 *              Target post's Blogger ID
-		 *   isDraft — boolean, 控制更新後的草稿狀態
-		 *              Controls whether the post remains as draft after update
-		 *
-		 * HTTP 方法：PATCH（透過 RestClient.httpPatch()）
-		 * HTTP method: PATCH (via RestClient.httpPatch())
-		 *
-		 * 適用場景：僅更新特定欄位（如 status），不影響其他內容
-		 * Use case: update only specific fields (e.g. status), leave other content intact
-		 *
-		 * 本專案中 `updatePostStatus()` 使用此端點搭配 `{ status: newStatus }` 主體
-		 * In this project, `updatePostStatus()` uses this endpoint with `{ status: newStatus }` body
-		 */
-		patchPost: () => `/${blogId}/posts/<%= postId %>?isDraft=<%= isDraft %>` as const,
-
-		/**
-		 * 取得單一文章
-		 * Get a single post
-		 *
-		 * 路徑模板：`/{blogId}/posts/<%= postId %>?view=<%= view %>`
-		 * Path template：`/{blogId}/posts/<%= postId %>?view=<%= view %>`
-		 *
-		 * 模板參數 / Template parameters:
-		 *   postId — 目標文章的 Blogger ID
-		 *            Target post's Blogger ID
-		 *   view   — 檢視模式（字串），控制文章可見性
-		 *            View mode (string), controls post visibility
-		 *
-		 * HTTP 方法：GET（透過 RestClient.httpGet()）
-		 * HTTP method: GET (via RestClient.httpGet())
-		 *
-		 * ⚠️ view 參數行為（2026-05-16 實測）⚠️
-		 * ⚠️ view parameter behavior (verified 2026-05-16) ⚠️
-		 *
-		 *   無 view 或 view=READER：
-		 *     LIVE 文章  → ✅ 成功（但無 status 欄位，需預設為 LIVE）
-		 *     LIVE post  → ✅ success (no status field, default to LIVE)
-		 *     DRAFT 文章 → ❌ HTTP 404（！！）
-		 *     DRAFT post → ❌ HTTP 404 (!!)
-		 *
-		 *   view=AUTHOR：
-		 *     LIVE 文章  → ✅ 成功，無 status 欄位
-		 *     LIVE post  → ✅ success, no status field
-		 *     DRAFT 文章 → ✅ 成功，有 status: "DRAFT"
-		 *     DRAFT post → ✅ success, includes status: "DRAFT"
-		 *
-		 * 結論：讀取 DRAFT 文章時**必須**加上 view=AUTHOR，否則必定 404。
-		 *       `?isDraft=true` 無法繞過此限制（已實測確認無效）。
-		 * Conclusion: fetching DRAFT posts REQUIRES view=AUTHOR, otherwise 404.
-		 *       `?isDraft=true` does NOT bypass this (verified ineffective).
-		 *
-		 * 參考文件：docs/blogger-api-endpoints.md
-		 * Reference: docs/blogger-api-endpoints.md
-		 */
-		getPost: () => `/${blogId}/posts/<%= postId %>?view=<%= view %>` as const,
-
-		/**
-		 * 發布文章（DRAFT → LIVE）
-		 * Publish a post (DRAFT → LIVE)
-		 *
-		 * 路徑模板：`/{blogId}/posts/<%= postId %>/publish`
-		 * Path template：`/{blogId}/posts/<%= postId %>/publish`
-		 *
-		 * 模板參數 / Template parameters:
-		 *   postId — 目標文章的 Blogger ID
-		 *            Target post's Blogger ID
-		 *
-		 * HTTP 方法：POST，無請求主體（透過 RestClient.httpPublish()）
-		 * HTTP method: POST, no request body (via RestClient.httpPublish())
-		 *
-		 * 回應：一定包含 status: "LIVE"
-		 * Response: always includes status: "LIVE"
-		 */
-		publishPost: () => `/${blogId}/posts/<%= postId %>/publish` as const,
-
-		/**
-		 * 復原文章（LIVE → DRAFT）
-		 * Revert a post (LIVE → DRAFT)
-		 *
-		 * 路徑模板：`/{blogId}/posts/<%= postId %>/revert`
-		 * Path template：`/{blogId}/posts/<%= postId %>/revert`
-		 *
-		 * 模板參數 / Template parameters:
-		 *   postId — 目標文章的 Blogger ID
-		 *            Target post's Blogger ID
-		 *
-		 * HTTP 方法：POST，無請求主體（透過 RestClient.httpRevert()）
-		 * HTTP method: POST, no request body (via RestClient.httpRevert())
-		 *
-		 * 回應：一定包含 status: "DRAFT"
-		 * Response: always includes status: "DRAFT"
-		 */
+		[EnumBloggerRestEndpoint.base]: BLOGGER_API_ENDPOINT,
+		[EnumBloggerRestEndpoint.newPost]: () => `/${blogId}/posts?isDraft=<%= isDraft %>` as const,
+		[EnumBloggerRestEndpoint.editPost]: () => `/${blogId}/posts/<%= postId %>=` as const,
+		[EnumBloggerRestEndpoint.patchPost]: () => `/${blogId}/posts/<%= postId %>=` as const,
+		[EnumBloggerRestEndpoint.getPost]: () => `/${blogId}/posts/<%= postId %>=` as const,
+		[EnumBloggerRestEndpoint.publishPost]: () => `/${blogId}/posts/<%= postId %>/publish` as const,
 		revertPost: () => `/${blogId}/posts/<%= postId %>/revert` as const,
 	} as const satisfies IBloggerRestEndpoint
 }
@@ -286,76 +390,164 @@ export interface IBloggerRestEndpoint
 	 * 所有文章端點皆以此為前綴。
 	 * Constant: https://www.googleapis.com/blogger/v3/blogs
 	 * All post endpoints are prefixed with this.
+	 *
+	 * @example
+	 * {
+	 *   path: 'https://www.googleapis.com/blogger/v3/blogs',
+	 *   method: EnumHttpMethod.GET
+	 * }
 	 */
-	base: string | IUrlGetter;
+	[EnumBloggerRestEndpoint.base]: IRestEndpointUrl;
 
 	/**
-	 * 建立新文章端點 / Create new post endpoint
+	 * 建立新文章 / Create a new post
 	 *
 	 * POST /{blogId}/posts?isDraft=<%= isDraft %>
 	 *
 	 * 用於首次發布文章到 Blogger。
+	 * isDraft 是否要以草稿形式建立貼文
+	 *
 	 * isDraft=true 建立草稿，false 直接發布。
 	 * 請求主體須包含 kind、blog.id、title、content、labels、status。
 	 *
 	 * Used for first-time publishing. isDraft=true creates a draft, false publishes live.
 	 * Request body must include kind, blog.id, title, content, labels, status.
+	 *
+	 * @see {BloggerCoreApiClient.publish}
+	 *
+	 * @see https://developers.google.com/blogger/docs/3.0/reference/posts/insert?hl=zh-tw
+	 *
+	 * @example
+	 * {
+	 *   path: '/{blogId}/posts?isDraft={isDraft}',
+	 *   method: EnumHttpMethod.POST,
+	 *   query: {
+	 *     isDraft: boolean,
+	 *   },
+	 *   body: {
+	 *     kind: 'blogger#post',
+	 *     blog: { id: IBloggerPostParamsCore["postId"] },
+	 *     title: string,
+	 *     content: string,
+	 *     labels: string[],
+	 *     status: EnumPostStatus.Draft | EnumPostStatus.Live,
+	 *   }
+	 * }
 	 */
-	newPost: string | IUrlGetter;
+	[EnumBloggerRestEndpoint.newPost]: IRestEndpointUrl;
 
 	/**
-	 * 編輯已有文章端點 / Edit existing post endpoint
+	 * 完整更新（取代）已有文章
+	 * Fully update (replace) an existing post
 	 *
-	 * PUT /{blogId}/posts/<%= postId %>?isDraft=<%= isDraft %>
+	 * PUT /{blogId}/posts/<%= postId %>
 	 *
 	 * 完整取代（PUT）已有文章。
 	 * ⚠️ PUT 會完整取代所有欄位，未提供的內容會被清空。
-	 * isDraft 控制文章是否為草稿狀態。
 	 *
 	 * Fully replaces (PUT) an existing post.
 	 * ⚠️ PUT overwrites all fields — omitted content will be cleared.
-	 * isDraft controls whether the post stays as draft.
+	 *
+	 * @see https://developers.google.com/blogger/docs/3.0/reference/posts/update?hl=zh-tw
+	 *
+	 * @example
+	 * {
+	 *   path: '/{blogId}/posts/{postId}?isDraft={isDraft}',
+	 *   method: EnumHttpMethod.PUT,
+	 *   query: {
+	 *     postId: IBloggerPostParamsCore["postId"],
+	 *   },
+	 *   body: {
+	 *     kind: 'blogger#post',
+	 *     blog: { id: IBloggerPostParamsCore["postId"] },
+	 *     title: string,
+	 *     content: string,
+	 *     labels: string[],
+	 *     status: EnumPostStatus.Draft | EnumPostStatus.Live,
+	 *   }
+	 * }
 	 */
-	editPost: string | IUrlGetter;
+	[EnumBloggerRestEndpoint.editPost]: IRestEndpointUrl;
 
 	/**
-	 * 部分更新文章端點 / Patch post endpoint
+	 * 部分更新文章
+	 * Partially update an existing post
 	 *
-	 * PATCH /{blogId}/posts/<%= postId %>?isDraft=<%= isDraft %>
+	 * PATCH /{blogId}/posts/<%= postId %>
 	 *
-	 * 僅更新有提供的欄位（PATCH）。
+	 * 僅更新有提供的欄位（PATCH），不影響其他內容。
 	 * 適合輕量操作，如只更新 status。
-	 * 本專案的 updatePostStatus() 使用此端點。
 	 *
 	 * Updates only the provided fields (PATCH).
 	 * Suitable for lightweight operations, e.g. status-only update.
-	 * Used by this project's updatePostStatus().
+	 *
+	 * @see https://developers.google.com/blogger/docs/3.0/reference/posts/patch?hl=zh-tw
+	 *
+	 * @example
+	 * {
+	 *   path: '/{blogId}/posts/{postId}?isDraft={isDraft}',
+	 *   method: EnumHttpMethod.PATCH,
+	 *   query: {
+	 *     postId: IBloggerPostParamsCore["postId"],
+	 *   },
+	 *   body: {
+	 *     status: EnumPostStatus.Draft | EnumPostStatus.Live,
+	 *   }
+	 * }
 	 */
-	patchPost: string | IUrlGetter;
+	[EnumBloggerRestEndpoint.patchPost]: IRestEndpointUrl;
 
 	/**
-	 * 取得單一文章端點 / Get single post endpoint
+	 * 取得單一文章
+	 * Get a single post
 	 *
 	 * GET /{blogId}/posts/<%= postId %>?view=<%= view %>
 	 *
-	 * 透過 postId 取得文章詳細資料。
-	 * view 參數控制可見性：
-	 *   - view=AUTHOR → 可讀取 DRAFT 文章（包含 status="DRAFT"）
-	 *   - 無 view     → DRAFT 文章回傳 404（已知限制）
+	 * 如果文章位於私人網誌上，則必須取得授權。
+	 * 如果文章是在公開的網誌上，則可以在未經授權的情況下呼叫此方法。
 	 *
-	 * 詳見 docs/blogger-api-endpoints.md
+	 * 模板參數 / Template parameters:
+	 *   view   — 檢視模式（字串），以指定的檢視模式來偵測文章可見性與可取得資訊
+	 *            View mode (string), controls post visibility
 	 *
-	 * Fetches post details by postId.
-	 * The view parameter controls visibility:
-	 *   - view=AUTHOR → can read DRAFT posts (includes status="DRAFT")
-	 *   - no view     → DRAFT posts return 404 (known limitation)
+	 *   view=AUTHOR：作者層級詳細資料
+	 *     LIVE 文章  → ✅ 成功（有 status 欄位，值為 LIVE）
+	 *     DRAFT 文章 → ✅ 成功（有 status 欄位，值為 DRAFT）
 	 *
-	 * See docs/blogger-api-endpoints.md for details.
+	 *   無 view 或 view=READER：讀者層級詳細資料
+	 *     LIVE 文章  → ✅ 成功（但無 status 欄位，需預設為 LIVE）
+	 *     DRAFT 文章 → ❌ HTTP 404（！！）
+	 *
+	 *   view=ADMIN：管理員層級詳細資料
+	 *
+	 *   maxComments — (可選) 貼文資源中可擷取的留言數量上限。如未指定這個參數，系統就不會傳回任何註解。
+	 *
+	 * 結論：讀取 DRAFT 文章時**必須**加上 view=AUTHOR，否則必定 404。
+	 *       `?isDraft=true` 無法繞過此限制（已實測確認無效）。
+	 *
+	 * @see {BloggerCoreApiClient.getPost}
+	 * @see {BloggerCoreApiClient.updatePostStatusOnly}
+	 *
+	 * @see https://developers.google.com/blogger/docs/3.0/reference/posts/get?hl=zh-tw
+	 *
+	 * @example
+	 * {
+	 *   path: '/{blogId}/posts/{postId}?view={view}',
+	 *   method: EnumHttpMethod.GET,
+	 *   query: {
+	 *     postId: IBloggerPostParamsCore["postId"],
+	 *     view: EnumBloggerViewMode,
+	 *     maxComments?: number,
+	 *   },
+	 *   response: {
+	 *     status: EnumPostStatus.Draft | EnumPostStatus.Live,
+	 *   }
+	 * }
 	 */
-	getPost: string | IUrlGetter;
+	[EnumBloggerRestEndpoint.getPost]: IRestEndpointUrl;
 
 	/**
-	 * 發布文章端點 / Publish post endpoint
+	 * 將文章更改發布為可見（DRAFT → LIVE） / Publish a post (DRAFT → LIVE)
 	 *
 	 * POST /{blogId}/posts/<%= postId %>/publish
 	 *
@@ -366,11 +558,25 @@ export interface IBloggerRestEndpoint
 	 * Publishes a DRAFT post to LIVE.
 	 * No request body, response always includes status: "LIVE".
 	 * Calling publish on an already-LIVE post may error.
+	 *
+	 * @see {RestClient.httpPublish}
+	 *
+	 * @example
+	 * {
+	 *   path: '/{blogId}/posts/{postId}/publish',
+	 *   method: EnumHttpMethod.POST,
+	 *   query: {
+	 *     postId: IBloggerPostParamsCore["postId"],
+	 *   },
+	 *   response: {
+	 *     status: EnumPostStatus.Live,
+	 *   }
+	 * }
 	 */
-	publishPost: string | IUrlGetter;
+	[EnumBloggerRestEndpoint.publishPost]: IRestEndpointUrl;
 
 	/**
-	 * 復原文章端點 / Revert post endpoint
+	 * 將文章更改恢復為草稿（LIVE → DRAFT） / Revert a post (LIVE → DRAFT)
 	 *
 	 * POST /{blogId}/posts/<%= postId %>/revert
 	 *
@@ -381,6 +587,20 @@ export interface IBloggerRestEndpoint
 	 * Reverts a LIVE post back to DRAFT.
 	 * No request body, response always includes status: "DRAFT".
 	 * Calling revert on an already-DRAFT post may error.
+	 *
+	 * @see {RestClient.httpRevert}
+	 *
+	 * @example
+	 * {
+	 *   path: '/{blogId}/posts/{postId}/revert',
+	 *   method: EnumHttpMethod.POST,
+	 *   query: {
+	 *     postId: IBloggerPostParamsCore["postId"],
+	 *   },
+	 *   response: {
+	 *     status: EnumPostStatus.Draft,
+	 *   }
+	 * }
 	 */
-	revertPost: string | IUrlGetter;
+	[EnumBloggerRestEndpoint.revertPost]: IRestEndpointUrl;
 }

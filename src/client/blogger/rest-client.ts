@@ -314,10 +314,20 @@ export class RestClient extends AbstractRequestClientWithConstructor
 		return _getEndpoint(this.href, path);
 	}
 
+	requestHttpMethod(
+		method: EnumHttpMethod,
+		path: string,
+		body?: Partial<IBloggerPostApiBody>,
+		options?: IHttpOptions,
+	)
+	{
+		return _httpPost(method, path, this, body as IBloggerPostApiBody, options);
+	}
+
 	/**
 	 * 發送 HTTP GET 請求
 	 * Send an HTTP GET request
-	 *
+	*
 	 * ⚠️ 對 DRAFT 文章使用 GET 時，需在端點路徑中加入 view=AUTHOR 參數，
 	 *    否則 Blogger API 會回傳 404。
 	 * ⚠️ When GETting DRAFT posts, include view=AUTHOR in the endpoint path,
@@ -337,7 +347,7 @@ export class RestClient extends AbstractRequestClientWithConstructor
 		options?: ITSPickExtra<IHttpOptions, 'headers'>,
 	): Promise<IBloggerPostApiReturn>
 	{
-		return _httpPost(EnumHttpMethod.GET, path, this, undefined, options);
+		return this.requestHttpMethod(EnumHttpMethod.GET, path, undefined, options);
 	}
 
 	/**
@@ -354,7 +364,7 @@ export class RestClient extends AbstractRequestClientWithConstructor
 		options: IHttpOptions,
 	): Promise<IBloggerPostApiReturn>
 	{
-		return _httpPost(EnumHttpMethod.POST, path, this, body, options);
+		return this.requestHttpMethod(EnumHttpMethod.POST, path, body, options);
 	}
 
 	/**
@@ -371,7 +381,7 @@ export class RestClient extends AbstractRequestClientWithConstructor
 		options: IHttpOptions,
 	): Promise<IBloggerPostApiReturn>
 	{
-		return _httpPost(EnumHttpMethod.PUT, path, this, body, options);
+		return this.requestHttpMethod(EnumHttpMethod.PUT, path, body, options);
 	}
 
 	/**
@@ -388,7 +398,7 @@ export class RestClient extends AbstractRequestClientWithConstructor
 		options: IHttpOptions,
 	): Promise<IBloggerPostApiReturn>
 	{
-		return _httpPost(EnumHttpMethod.PATCH, path, this, body as IBloggerPostApiBody, options);
+		return this.requestHttpMethod(EnumHttpMethod.PATCH, path, body as IBloggerPostApiBody, options);
 	}
 
 	/**
@@ -406,7 +416,7 @@ export class RestClient extends AbstractRequestClientWithConstructor
 		options?: IHttpOptions,
 	): Promise<IBloggerPostApiReturn>
 	{
-		return _httpPost(EnumHttpMethod.POST, path, this, undefined, options);
+		return this.requestHttpMethod(EnumHttpMethod.POST, path, undefined, options);
 	}
 
 	/**
@@ -424,6 +434,6 @@ export class RestClient extends AbstractRequestClientWithConstructor
 		options?: IHttpOptions,
 	): Promise<IBloggerPostApiReturn>
 	{
-		return _httpPost(EnumHttpMethod.POST, path, this, undefined, options);
+		return this.requestHttpMethod(EnumHttpMethod.POST, path, undefined, options);
 	}
 }

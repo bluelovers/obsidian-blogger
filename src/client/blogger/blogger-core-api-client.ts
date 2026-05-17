@@ -6,7 +6,7 @@ import {
 } from '../../types/blogger-client-interface';
 import { IBloggerPostApiReturn, RestClient } from './rest-client';
 import { IBloggerRestClientContext } from './types';
-import { getUrl } from './utils/url';
+import { EnumBloggerRestEndpoint, getUrl } from './utils/url';
 import { getGlobalI18n } from '../../i18n/i18n';
 import { _hasError } from '../../utils/type-utils';
 import { EnumBloggerClientReturnCode, EnumPostStatus } from '../../types/const';
@@ -154,7 +154,7 @@ export class BloggerCoreApiClient
 		 */
 		if (postParams.postId)
 		{
-			url = getUrl(this.context.endpoints?.editPost, {
+			url = getUrl(this.context.endpoints[EnumBloggerRestEndpoint.editPost], {
 				postId: postParams.postId,
 				isDraft,
 			});
@@ -166,7 +166,7 @@ export class BloggerCoreApiClient
 		 */
 		else
 		{
-			url = getUrl(this.context.endpoints?.newPost, {
+			url = getUrl(this.context.endpoints[EnumBloggerRestEndpoint.newPost], {
 				isDraft,
 			});
 			method = this.client.httpPost.bind(this.client);
@@ -204,7 +204,7 @@ export class BloggerCoreApiClient
 	 */
 	async getPost(postId: IBloggerProfile["blogId"], view: string = 'AUTHOR'): Promise<IBloggerClientResult<IBloggerPublishResult>>
 	{
-		const url = getUrl(this.context.endpoints?.getPost, {
+		const url = getUrl(this.context.endpoints[EnumBloggerRestEndpoint.getPost], {
 			postId,
 			view,
 		});
@@ -224,7 +224,7 @@ export class BloggerCoreApiClient
 	 */
 	async publishPostAction(postId: IBloggerProfile["blogId"]): Promise<IBloggerClientResult<IBloggerPublishResult>>
 	{
-		const url = getUrl(this.context.endpoints?.publishPost, {
+		const url = getUrl(this.context.endpoints[EnumBloggerRestEndpoint.publishPost], {
 			postId,
 		});
 		const resp = await this.client.httpPublish(url, { headers: await this.getHeaders() });
@@ -243,7 +243,7 @@ export class BloggerCoreApiClient
 	 */
 	async revertPostAction(postId: IBloggerProfile["blogId"]): Promise<IBloggerClientResult<IBloggerPublishResult>>
 	{
-		const url = getUrl(this.context.endpoints?.revertPost, {
+		const url = getUrl(this.context.endpoints[EnumBloggerRestEndpoint.revertPost], {
 			postId,
 		});
 		const resp = await this.client.httpRevert(url, { headers: await this.getHeaders() });

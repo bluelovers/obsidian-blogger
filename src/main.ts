@@ -60,7 +60,7 @@ export default class BloggerPlugin extends Plugin {
     return this.#settings!;
   }
 
-  private ribbonBloggerIcon: HTMLElement | null = null;
+  protected ribbonBloggerIcon: HTMLElement | null = null;
 
   onload = async () => {
     await this.loadSettings();
@@ -142,7 +142,8 @@ export default class BloggerPlugin extends Plugin {
     }
   };
 
-  private openProfileChooser = async () => {
+  protected openProfileChooser = async () =>
+  {
     if (this.settings.profiles.length === 1) {
       await doClientPublish(this, this.settings.profiles[0]);
     } else if (this.settings.profiles.length > 1) {

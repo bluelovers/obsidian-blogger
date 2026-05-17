@@ -13,11 +13,11 @@ import { addNewProfile, removeProfile, setDefaultProfile } from './plugin/settin
  * Blogger profiles manage modal.
  */
 export class BloggerProfileManageModal extends Modal {
-  private readonly profiles: IBloggerProfile[];
+  protected readonly profiles: IBloggerProfile[];
   constructor(
     readonly plugin: Plugin,
     readonly settings: IPluginSettings,
-    private readonly saveSettings: () => Promise<void>,
+    protected readonly saveSettings: () => Promise<void>,
   ) {
     super(plugin.app);
     this.profiles = settings.profiles;

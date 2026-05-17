@@ -27,7 +27,7 @@ import { AbstractBloggerClient } from './client/blogger/abstract-blogger-client'
  */
 export class BloggerRestClient extends AbstractBloggerClient
 {
-	private readonly client: RestClient;
+	protected readonly client: RestClient;
 
 	/**
 	 * 建立 Blogger REST 客戶端實例
@@ -44,9 +44,9 @@ export class BloggerRestClient extends AbstractBloggerClient
 		readonly settings: IPluginSettings,
 		// FIXME: Since only what we need is to refresh the token, there should be a
 		// better way than passing `saveSettings` here.
-		private readonly saveSettings: () => Promise<void>,
+		protected readonly saveSettings: () => Promise<void>,
 		readonly profile: IBloggerProfile,
-		private readonly context: IBloggerRestClientContext,
+		protected readonly context: IBloggerRestClientContext,
 	)
 	{
 		super(ctx, settings, profile);

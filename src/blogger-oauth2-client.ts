@@ -80,13 +80,13 @@ export const reauthorizeGoogleToken = async (
 };
 
 export class MobileOAuth2Helper {
-  private static oAuth2Record: {
+  protected static oAuth2Record: {
     oAuth2Client: OAuth2Client;
     state: string;
     codeVerifier: string;
     setGoogleOAuth2Token: (token?: IFreshInternalOAuth2Token) => void;
   } | null = null;
-  private static isSetUp = false;
+  protected static isSetUp = false;
   static setOAuth2Record = (oAuth2Record: (typeof MobileOAuth2Helper)['oAuth2Record']): void => {
     MobileOAuth2Helper.oAuth2Record = oAuth2Record;
   };

@@ -10,8 +10,8 @@ import { ITranslateKey } from './i18n/langs';
 export class BloggerSettingTab extends PluginSettingTab {
   constructor(
     readonly app: App,
-    private readonly settings: IPluginSettings,
-    private readonly saveSettings: () => Promise<void>,
+    protected readonly settings: IPluginSettings,
+    protected readonly saveSettings: () => Promise<void>,
     readonly plugin: Plugin,
   ) {
     super(plugin.app, plugin);

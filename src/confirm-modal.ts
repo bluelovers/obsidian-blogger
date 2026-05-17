@@ -30,9 +30,9 @@ export function openConfirmModal(
  */
 class ConfirmModal extends Modal {
   constructor(
-    private readonly messages: IConfirmModalMessages,
+    protected readonly messages: IConfirmModalMessages,
     app: App,
-    private readonly onAction: (code: EnumConfirmCode, modal: Modal) => void,
+    protected readonly onAction: (code: EnumConfirmCode, modal: Modal) => void,
   ) {
     super(app);
   }

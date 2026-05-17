@@ -21,8 +21,8 @@ export function openProfileChooserModal(
 class BloggerProfileChooserModal extends Modal {
   constructor(
     readonly app: App,
-    private readonly profiles: IBloggerProfile[],
-    private readonly onChoose: (profile: IBloggerProfile) => void,
+    protected readonly profiles: IBloggerProfile[],
+    protected readonly onChoose: (profile: IBloggerProfile) => void,
   ) {
     super(app);
   }

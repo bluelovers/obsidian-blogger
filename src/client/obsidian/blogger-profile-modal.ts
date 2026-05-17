@@ -61,14 +61,14 @@ const fetchBlogId = async (
  */
 class BloggerProfileModal extends AbstractObsidianModal
 {
-  private readonly profileData: Partial<IBloggerProfile>;
+  protected readonly profileData: Partial<IBloggerProfile>;
 
   constructor(
     readonly plugin: Plugin,
-    private readonly onSubmit: (profile: IBloggerProfile, atIndex?: number) => void,
+    protected readonly onSubmit: (profile: IBloggerProfile, atIndex?: number) => void,
     profile: Partial<IBloggerProfile>,
-    private readonly oAuth2Client: OAuth2Client,
-    private readonly atIndex: number = -1,
+    protected readonly oAuth2Client: OAuth2Client,
+    protected readonly atIndex: number = -1,
   ) {
     super(plugin.app);
 
@@ -181,7 +181,8 @@ class BloggerProfileModal extends AbstractObsidianModal
     contentEl.empty();
   };
 
-  private createFullProfile = async (): Promise<IBloggerProfile> => {
+  protected createFullProfile = async (): Promise<IBloggerProfile> =>
+  {
     const name = this.profileData.name;
     if (name === undefined || name.length === 0) {
       throw new Error(getGlobalI18n().t('error_noProfileName'));

@@ -18,7 +18,7 @@ export class I18n
 	/**
 	 * @param lang - 語言識別碼，預設為 auto（自動偵測）/ Language ID, defaults to auto-detect
 	 */
-	constructor(private readonly lang: EnumLanguageIDAll = EnumLanguageIDAll.auto)
+	constructor(protected readonly lang: EnumLanguageIDAll = EnumLanguageIDAll.auto)
 	{
 		this.lang = lang;
 	}

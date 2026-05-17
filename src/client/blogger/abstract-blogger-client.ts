@@ -101,7 +101,7 @@ export abstract class AbstractBloggerClient implements IBloggerClient
 	 * @param params.updateMatterData - 更新 Frontmatter 資料的函式（可選）/ Function to update Frontmatter data (optional)
 	 * @returns 發布結果 Promise / Promise of publish result
 	 */
-	private async tryToPublish(params: {
+	protected async tryToPublish(params: {
 		postParams: Partial<IBloggerPostParams>;
 		updateMatterData?: (matter: Partial<IMatterData>) => void;
 	}): Promise<IBloggerClientResult<IBloggerPublishResult>>
@@ -369,7 +369,7 @@ export abstract class AbstractBloggerClient implements IBloggerClient
 	 * @param params - 既有的發布參數 / Existing publish parameters
 	 * @returns 處理過後的最終發布參數 / Processed final publish parameters
 	 */
-	private readFromFrontMatter(
+	protected readFromFrontMatter(
 		noteTitle: string,
 		matterData: IMatterData,
 		params: Partial<IBloggerPostParams>,

@@ -31,7 +31,7 @@ export class BloggerRestClientGoogleOAuth2Context implements IBloggerRestClientC
 	 *
 	 * @param blogId - Blogger 網誌 ID / Blogger blog ID
 	 */
-	constructor(private readonly blogId: IBloggerProfile["blogId"])
+	constructor(protected readonly blogId: IBloggerProfile["blogId"])
 	{}
 
 	/**
@@ -82,7 +82,7 @@ export class BloggerRestClientGoogleOAuth2Context implements IBloggerRestClientC
 					status: response.status ?? EnumPostStatus.Live,
 				};
 			}
-			/** 
+			/**
 			 * 若回應不包含 ID，拋出一般錯誤
 			 * Throw generic error if response does not contain ID
 			 */

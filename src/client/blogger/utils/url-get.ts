@@ -4,7 +4,7 @@ import { EnumBloggerRestEndpoint, EnumBloggerViewMode, getUrl, IBloggerRestEndpo
 import { ITSRequireAtLeastOne } from 'ts-type';
 import { IBloggerPostApiBody, IBloggerPostApiReturn, RestClient } from '../rest-client';
 import { IHttpHeaders } from '../../../types/http';
-import { EnumPostStatus } from 'src/types/const';
+import { EnumPostStatus } from '../../../types/const';
 
 export interface IEndpointQuery
 {
@@ -174,8 +174,10 @@ export interface IBloggerRestEndpointPostList extends _IEndpointImplWithoutBody
 		 */
 		startDate?: string;
 
+		/** 篩選狀態 / Filter by status */
 		status?: EnumPostStatus.Draft | EnumPostStatus.Live | EnumPostStatus.Scheduled;
 
+		/** 檢視模式 / View mode */
 		view: EnumBloggerViewMode;
 
 		/**
@@ -267,10 +269,46 @@ function getEndpointMethod<K extends EnumBloggerRestEndpoint>(
 		case EnumBloggerRestEndpoint.patchPost:
 			return EnumHttpMethod.PATCH as IBloggerRestEndpointHelperDetect<K>["method"];
 		case EnumBloggerRestEndpoint.getPost:
+		case EnumBloggerRestEndpoint.getByPath:
+		case EnumBloggerRestEndpoint.listPosts:
 			return EnumHttpMethod.GET as IBloggerRestEndpointHelperDetect<K>["method"];
 	}
 
 	throw new RangeError(`Unknown endpoint ID: ${endpointID}`);
+}
+
+/**
+ * @internal 除錯用的內部函數
+ */
+export function _requestUrlEndpointOptions<K extends EnumBloggerRestEndpoint>(
+	client: RestClient,
+	endpoints: Pick<IBloggerRestEndpoint, K>,
+	endpointID: K,
+	requestInit: {
+		headers: IHttpHeaders,
+	} & Pick<IBloggerRestEndpointHelperDetect<K>, 'query' | 'body'>,
+)
+{
+	const method = getEndpointMethod(endpointID);
+
+	const url = getUrlEndpoint(endpoints, endpointID, requestInit.query as IBloggerRestEndpointHelperDetect<K>["query"]);
+
+	return {
+		method,
+		url,
+		body: requestInit.body,
+		options: {
+			headers: requestInit.headers,
+		},
+	};
+}
+
+/**
+ * @internal 除錯用的內部函數
+ */
+export async function _requestUrlEndpointCore<K extends EnumBloggerRestEndpoint>(client: RestClient, requestOpts: ReturnType<typeof _requestUrlEndpointOptions<K>>)
+{
+	return client.requestHttpMethod(requestOpts.method, requestOpts.url, requestOpts.body as any, requestOpts.options) as any as IBloggerRestEndpointHelperDetect<K>["response"];
 }
 
 /**
@@ -291,26 +329,22 @@ export async function requestUrlEndpoint<K extends EnumBloggerRestEndpoint>(
 	} & Pick<IBloggerRestEndpointHelperDetect<K>, 'query' | 'body'>,
 )
 {
-	const method = getEndpointMethod(endpointID);
+	const requestOpts = _requestUrlEndpointOptions(client, endpoints, endpointID, requestInit);
 
-	const url = getUrlEndpoint(endpoints, endpointID, requestInit.query as IBloggerRestEndpointHelperDetect<K>["query"]);
-
-	const resp = await client.requestHttpMethod(method, url, requestInit.body as any, {
-		headers: requestInit.headers,
-	});
-
-	return resp;
+	return _requestUrlEndpointCore(client, requestOpts);
 }
 
 /** =========== 確認實作的類型是否正確 =========== */
 
 /*
-getUrlEndpoint({} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.newPost, {});
+getUrlEndpoint({} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.newPost, { isDraft: true });
 getUrlEndpoint({} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.editPost, { postId: "123" });
 getUrlEndpoint({} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.patchPost, { postId: "123" });
 getUrlEndpoint({} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.getPost, { postId: "123", view: EnumBloggerViewMode.AUTHOR });
-getUrlEndpoint({} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.publishPost, { postId: "123" });
-getUrlEndpoint({} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.revertPost, { postId: "123" });
+getUrlEndpoint({} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.setPostStatusLive, { postId: "123" });
+getUrlEndpoint({} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.setPostStatusDraft, { postId: "123" });
+getUrlEndpoint({} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.getByPath, { path: "/2024/01/test-post.html", view: EnumBloggerViewMode.AUTHOR });
+getUrlEndpoint({} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.listPosts, { view: EnumBloggerViewMode.AUTHOR });
 
 requestUrlEndpoint({} as RestClient, {} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.newPost, {
 	headers: {},
@@ -334,13 +368,23 @@ requestUrlEndpoint({} as RestClient, {} as IBloggerRestEndpoint, EnumBloggerRest
 	query: { postId: "123", view: EnumBloggerViewMode.AUTHOR },
 });
 
-requestUrlEndpoint({} as RestClient, {} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.publishPost, {
+requestUrlEndpoint({} as RestClient, {} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.setPostStatusLive, {
 	headers: {},
 	query: { postId: "123" },
 });
 
-requestUrlEndpoint({} as RestClient, {} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.revertPost, {
+requestUrlEndpoint({} as RestClient, {} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.setPostStatusDraft, {
 	headers: {},
 	query: { postId: "123" },
+});
+
+requestUrlEndpoint({} as RestClient, {} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.getByPath, {
+	headers: {},
+	query: { path: "/2024/01/test.html", view: EnumBloggerViewMode.AUTHOR },
+});
+
+requestUrlEndpoint({} as RestClient, {} as IBloggerRestEndpoint, EnumBloggerRestEndpoint.listPosts, {
+	headers: {},
+	query: { view: EnumBloggerViewMode.AUTHOR },
 });
 */

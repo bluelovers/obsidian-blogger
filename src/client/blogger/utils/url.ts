@@ -378,9 +378,9 @@ export function getBloggerRestEndpoint(blogId: IBloggerProfile["blogId"])
 	return {
 		[EnumBloggerRestEndpoint.base]: BLOGGER_API_ENDPOINT,
 		[EnumBloggerRestEndpoint.newPost]: () => `/${blogId}/posts?isDraft=<%= isDraft %>` as const,
-		[EnumBloggerRestEndpoint.editPost]: () => `/${blogId}/posts/<%= postId %>=` as const,
-		[EnumBloggerRestEndpoint.patchPost]: () => `/${blogId}/posts/<%= postId %>=` as const,
-		[EnumBloggerRestEndpoint.getPost]: () => `/${blogId}/posts/<%= postId %>=` as const,
+		[EnumBloggerRestEndpoint.editPost]: () => `/${blogId}/posts/<%= postId %>` as const,
+		[EnumBloggerRestEndpoint.patchPost]: () => `/${blogId}/posts/<%= postId %>` as const,
+		[EnumBloggerRestEndpoint.getPost]: () => `/${blogId}/posts/<%= postId %>?view=<%= view %>` as const,
 		[EnumBloggerRestEndpoint.setPostStatusLive]: () => `/${blogId}/posts/<%= postId %>/publish` as const,
 		[EnumBloggerRestEndpoint.setPostStatusDraft]: () => `/${blogId}/posts/<%= postId %>/revert` as const,
 		[EnumBloggerRestEndpoint.getByPath]: () => `/${blogId}/posts/byPath?path=<%= path %>` as const,

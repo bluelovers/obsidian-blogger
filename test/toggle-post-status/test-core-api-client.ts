@@ -35,7 +35,7 @@ import {
 	ITestResult,
 } from '../lib/test-utils';
 import { __TEST_TEMP } from '../__root';
-import { extractStatus } from '../../src/client/blogger/utils/post-utils';
+import { extractStatusFromBloggerClient } from '../../src/client/blogger/utils/post-utils';
 import { createBloggerCoreApiClient } from '../lib/blogger-core-api-client';
 import { EnumBloggerViewMode } from '../../src/client/blogger/utils/url';
 
@@ -97,7 +97,7 @@ async function main(): Promise<void>
 	}
 	else
 	{
-		originalStatus = extractStatus(getResp);
+		originalStatus = extractStatusFromBloggerClient(getResp);
 		assert(
 			originalStatus === EnumPostStatus.Draft || originalStatus === EnumPostStatus.Live,
 			`預期 DRAFT 或 LIVE，實際: "${originalStatus}"`,
@@ -153,7 +153,7 @@ async function main(): Promise<void>
 		if (verifyResp.code === EnumBloggerClientReturnCode.OK)
 		{
 			assertEqual(
-				extractStatus(verifyResp),
+				extractStatusFromBloggerClient(verifyResp),
 				expectedAfterToggle,
 				`持久化狀態應為 "${expectedAfterToggle}"`,
 				result,

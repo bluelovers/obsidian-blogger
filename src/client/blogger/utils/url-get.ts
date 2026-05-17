@@ -18,6 +18,11 @@ export interface IEndpointQueryWithPostId extends IEndpointQuery
 	postId: IBloggerProfile["blogId"];
 }
 
+export interface IEndpointRequestInit<K extends EnumBloggerRestEndpoint> extends Pick<IBloggerRestEndpointHelperDetect<K>, 'query' | 'body'>
+{
+	headers: IHttpHeaders;
+}
+
 /**
  * 建立可依照 IBloggerRestEndpointHelperDetect<EnumBloggerRestEndpoint> 來自動偵測所需要輸入的資料是否符合類型定義
  * @internal
@@ -284,9 +289,7 @@ export function _requestUrlEndpointOptions<K extends EnumBloggerRestEndpoint>(
 	client: RestClient,
 	endpoints: Pick<IBloggerRestEndpoint, K>,
 	endpointID: K,
-	requestInit: {
-		headers: IHttpHeaders,
-	} & Pick<IBloggerRestEndpointHelperDetect<K>, 'query' | 'body'>,
+	requestInit: IEndpointRequestInit<K>,
 )
 {
 	const method = getEndpointMethod(endpointID);
@@ -324,9 +327,7 @@ export async function requestUrlEndpoint<K extends EnumBloggerRestEndpoint>(
 	client: RestClient,
 	endpoints: Pick<IBloggerRestEndpoint, K>,
 	endpointID: K,
-	requestInit: {
-		headers: IHttpHeaders,
-	} & Pick<IBloggerRestEndpointHelperDetect<K>, 'query' | 'body'>,
+	requestInit: IEndpointRequestInit<K>,
 )
 {
 	const requestOpts = _requestUrlEndpointOptions(client, endpoints, endpointID, requestInit);

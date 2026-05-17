@@ -19,11 +19,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as process from 'node:process';
-import { nodeRequest } from '../lib/node-request';
-import { RestClient } from '../../src/client/blogger/rest-client';
-import { BloggerCoreApiClient } from '../../src/client/blogger/blogger-core-api-client';
-import { BloggerRestClientGoogleOAuth2Context } from '../../src/client/blogger/blogger-rest-client-google-o-auth2-context';
-import { BLOGGER_API_ENDPOINT } from '../../src/consts';
 import { EnumPostStatus, EnumBloggerClientReturnCode } from '../../src/types/const';
 import { IBloggerClientResult, IBloggerPublishResult } from '../../src/types/blogger-client-interface';
 import {
@@ -37,7 +32,7 @@ import {
 import { __TEST_TEMP } from '../__root';
 import { extractStatusFromBloggerClient } from '../../src/client/blogger/utils/post-utils';
 import { createBloggerCoreApiClient } from '../lib/blogger-core-api-client';
-import { EnumBloggerViewMode } from '../../src/client/blogger/utils/url';
+
 
 /** ==================== 工具函數 / Utilities ==================== */
 
@@ -115,8 +110,8 @@ async function main(): Promise<void>
 	console.log('\n📋 Step 2: 執行狀態切換');
 
 	const toggleResp = wasDraft
-		? await coreClient.publishPostAction(DRAFT_POST_ID)
-		: await coreClient.revertPostAction(DRAFT_POST_ID);
+		? await coreClient.setPostStatusLive(DRAFT_POST_ID)
+		: await coreClient.setPostStatusDraft(DRAFT_POST_ID);
 
 	saveApiResponse('02-toggle', wasDraft ? 'publishPostAction' : 'revertPostAction', toggleResp);
 
@@ -165,8 +160,8 @@ async function main(): Promise<void>
 	console.log('\n📋 Step 4: 回復原始狀態 (cleanup)');
 
 	const restoreResp = wasDraft
-		? await coreClient.revertPostAction(DRAFT_POST_ID)
-		: await coreClient.publishPostAction(DRAFT_POST_ID);
+		? await coreClient.setPostStatusDraft(DRAFT_POST_ID)
+		: await coreClient.setPostStatusLive(DRAFT_POST_ID);
 
 	saveApiResponse('04-restore', wasDraft ? 'revertPostAction' : 'publishPostAction', restoreResp);
 

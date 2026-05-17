@@ -22,7 +22,8 @@ import * as process from 'node:process';
 import { nodeRequest } from '../lib/node-request';
 import { RestClient, IBloggerPostApiReturn } from '../../src/client/blogger/rest-client';
 import { BLOGGER_API_ENDPOINT } from '../../src/consts';
-import { EnumBloggerRestEndpoint, getBloggerRestEndpoint, getUrl } from '../../src/client/blogger/utils/url';
+import { EnumBloggerRestEndpoint, EnumBloggerViewMode, getBloggerRestEndpoint, getUrl, IBloggerRestEndpoint } from '../../src/client/blogger/utils/url';
+import { _requestUrlEndpointCore, _requestUrlEndpointOptions, IBloggerRestEndpointHelperDetect } from '../../src/client/blogger/utils/url-get';
 import { EnumPostStatus } from '../../src/types/const';
 import { _hasError } from '../../src/utils/type-utils';
 import {
@@ -36,6 +37,7 @@ import {
 import { __TEST_TEMP } from '../__root';
 import { ITSPickExtra } from 'ts-type';
 import { IHttpHeaders } from '../../src/types/http';
+import { _extractStatusCore } from '../../src/client/blogger/utils/post-utils';
 
 /** ==================== 型別定義 / Type Definitions ==================== */
 
@@ -124,16 +126,27 @@ function saveApiResponse(
  */
 function extractStatus(resp: IBloggerPostApiReturn): EnumPostStatus
 {
-	const s = resp.status;
-	if (s === EnumPostStatus.Draft) return EnumPostStatus.Draft;
-	if (s === EnumPostStatus.Live) return EnumPostStatus.Live;
+	// return _extractStatusCore(resp, EnumPostStatus.Live)!;
+	return _extractStatusCore(resp)!;
+}
 
-	/**
-	 * Blogger API GET 對 LIVE 文章不回傳 status 欄位，
-	 * 以 LIVE 為預設值。
-	 * Blogger API GET omits `status` for LIVE posts — default to LIVE.
-	 */
-	return EnumPostStatus.Live;
+/**
+ * 除錯用
+ */
+async function requestUrlEndpoint<K extends EnumBloggerRestEndpoint>(
+	client: RestClient,
+	endpoints: Pick<IBloggerRestEndpoint, K>,
+	endpointID: K,
+	requestInit: {
+		headers: IHttpHeaders,
+	} & Pick<IBloggerRestEndpointHelperDetect<K>, 'query' | 'body'>,
+)
+{
+	const requestOpts = _requestUrlEndpointOptions(client, endpoints, endpointID, requestInit);
+
+	console.dir(requestOpts, { depth: null });
+
+	return _requestUrlEndpointCore(client, requestOpts);
 }
 
 /** ==================== Main ==================== */
@@ -178,9 +191,16 @@ async function main(): Promise<void>
 	 * Blogger API supports view=AUTHOR parameter, allowing
 	 * authenticated users to fetch their own DRAFT posts via GET.
 	 */
-	const getPathTryDraft = getUrl(endpoints[EnumBloggerRestEndpoint.getPost], { postId: DRAFT_POST_ID, view: 'AUTHOR' });
-	const getResp: IBloggerPostApiReturn = await client.httpGet(getPathTryDraft, auth);
-	saveApiResponse('01-get-before', { method: 'httpGet', path: getPathTryDraft, auth }, getResp);
+	const getResp: IBloggerPostApiReturn = await requestUrlEndpoint(
+		client,
+		endpoints,
+		EnumBloggerRestEndpoint.getPost,
+		{
+			headers: auth.headers as IHttpHeaders,
+			query: { postId: DRAFT_POST_ID, view: EnumBloggerViewMode.AUTHOR },
+		},
+	);
+	saveApiResponse('01-get-before', { method: 'requestUrlEndpoint', path: EnumBloggerRestEndpoint.getPost, auth }, getResp);
 
 	/**
 	 * ═══════════════════════════════════════════════════════════
@@ -262,16 +282,20 @@ async function main(): Promise<void>
 	// ===== Step 2: 執行狀態切換 =====
 	console.log('\n📋 Step 2: 執行狀態切換');
 
-	const toggleEndpoint = wasDraft ? endpoints[EnumBloggerRestEndpoint.setPostStatusLive] : endpoints[EnumBloggerRestEndpoint.setPostStatusDraft];
-	const togglePath = getUrl(toggleEndpoint, { postId: DRAFT_POST_ID });
 	const toggleResp: IBloggerPostApiReturn = wasDraft
-		? await client.httpPublish(togglePath, auth)
-		: await client.httpRevert(togglePath, auth);
+		? await requestUrlEndpoint(client, endpoints, EnumBloggerRestEndpoint.setPostStatusLive, {
+			headers: auth.headers as IHttpHeaders,
+			query: { postId: DRAFT_POST_ID },
+		})
+		: await requestUrlEndpoint(client, endpoints, EnumBloggerRestEndpoint.setPostStatusDraft, {
+			headers: auth.headers as IHttpHeaders,
+			query: { postId: DRAFT_POST_ID },
+		});
 	saveApiResponse(
 		'02-toggle',
 		{
-			method: wasDraft ? 'httpPublish' : 'httpRevert',
-			path: togglePath,
+			method: 'requestUrlEndpoint',
+			path: wasDraft ? EnumBloggerRestEndpoint.setPostStatusLive : EnumBloggerRestEndpoint.setPostStatusDraft,
 			auth,
 		},
 		toggleResp,
@@ -314,12 +338,16 @@ async function main(): Promise<void>
 	 * view=AUTHOR is the standard Blogger API parameter that allows
 	 * fetching both LIVE and DRAFT posts, avoiding the DRAFT 404 issue.
 	 */
-	const verifyPath = getUrl(endpoints[EnumBloggerRestEndpoint.getPost], {
-		postId: DRAFT_POST_ID,
-		view: 'AUTHOR',
-	});
-	const verifyResp: IBloggerPostApiReturn = await client.httpGet(verifyPath, auth);
-	saveApiResponse('03-get-verify', { method: 'httpGet', path: verifyPath, auth }, verifyResp);
+	const verifyResp: IBloggerPostApiReturn = await requestUrlEndpoint(
+		client,
+		endpoints,
+		EnumBloggerRestEndpoint.getPost,
+		{
+			headers: auth.headers as IHttpHeaders,
+			query: { postId: DRAFT_POST_ID, view: EnumBloggerViewMode.AUTHOR },
+		},
+	);
+	saveApiResponse('03-get-verify', { method: 'requestUrlEndpoint', path: EnumBloggerRestEndpoint.getPost, auth }, verifyResp);
 
 	/**
 	 * ═══════════════════════════════════════════════════════════
@@ -364,16 +392,20 @@ async function main(): Promise<void>
 	 *   wasDraft=true  (原 DRAFT) → Step 2 執行 publish → Step 4 執行 revert
 	 *   wasDraft=false (原 LIVE)  → Step 2 執行 revert → Step 4 執行 publish
 	 */
-	const restoreEndpoint = wasDraft ? endpoints[EnumBloggerRestEndpoint.setPostStatusDraft] : endpoints[EnumBloggerRestEndpoint.setPostStatusLive];
-	const restorePath = getUrl(restoreEndpoint, { postId: DRAFT_POST_ID });
 	const restoreResp: IBloggerPostApiReturn = wasDraft
-		? await client.httpRevert(restorePath, auth)
-		: await client.httpPublish(restorePath, auth);
+		? await requestUrlEndpoint(client, endpoints, EnumBloggerRestEndpoint.setPostStatusDraft, {
+			headers: auth.headers as IHttpHeaders,
+			query: { postId: DRAFT_POST_ID },
+		})
+		: await requestUrlEndpoint(client, endpoints, EnumBloggerRestEndpoint.setPostStatusLive, {
+			headers: auth.headers as IHttpHeaders,
+			query: { postId: DRAFT_POST_ID },
+		});
 	saveApiResponse(
 		'04-restore',
 		{
-			method: wasDraft ? 'httpRevert' : 'httpPublish',
-			path: restorePath,
+			method: 'requestUrlEndpoint',
+			path: wasDraft ? EnumBloggerRestEndpoint.setPostStatusDraft : EnumBloggerRestEndpoint.setPostStatusLive,
 			auth,
 		},
 		restoreResp,

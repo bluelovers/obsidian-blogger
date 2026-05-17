@@ -6,7 +6,8 @@ import {
 } from '../../types/blogger-client-interface';
 import { IBloggerPostApiReturn, RestClient } from './rest-client';
 import { IBloggerRestClientContext } from './types';
-import { EnumBloggerRestEndpoint, EnumBloggerViewMode, getUrl } from './utils/url';
+import { EnumBloggerRestEndpoint, EnumBloggerViewMode } from './utils/url';
+import { IBloggerRestEndpointHelperDetect, IEndpointRequestInit, requestUrlEndpoint } from './utils/url-get';
 import { getGlobalI18n } from '../../i18n/i18n';
 import { _hasError } from '../../utils/type-utils';
 import { EnumBloggerClientReturnCode, EnumPostStatus } from '../../types/const';
@@ -40,6 +41,24 @@ export class BloggerCoreApiClient
 		public readonly getHeaders: () => Promise<ITSPickExtra<IHttpHeaders, "authorization">>,
 	)
 	{}
+
+	protected async _requestUrlEndpoint<K extends EnumBloggerRestEndpoint>(
+		endpointID: K,
+		requestInit: Omit<IEndpointRequestInit<K>, 'headers'>,
+	)
+	{
+		const resp = await requestUrlEndpoint(
+			this.client,
+			this.context.endpoints,
+			endpointID,
+			{
+				...requestInit,
+				headers: await this.getHeaders(),
+			},
+		);
+
+		return resp;
+	}
 
 	/**
 	 * 處理發布/更新的 API 回應
@@ -145,8 +164,16 @@ export class BloggerCoreApiClient
 		}
 
 		/** ========== 正常發布/更新路徑（PUT / POST）========== */
-		let url: string;
-		let method: typeof this.client.httpPut;
+		const body = {
+			kind: 'blogger#post' as const,
+			blog: {
+				id: this.blogId,
+			},
+			title: title!,
+			content: content!,
+			labels: _handleTagsForBloggerPostApi(postParams.tags),
+			status: postParams.status!,
+		};
 		const isDraft = postParams.status === EnumPostStatus.Draft;
 		/**
 		 * 若參數中已有 postId，代表是更新現有文章（PUT 請求）
@@ -154,11 +181,16 @@ export class BloggerCoreApiClient
 		 */
 		if (postParams.postId)
 		{
-			url = getUrl(this.context.endpoints[EnumBloggerRestEndpoint.editPost], {
-				postId: postParams.postId,
-				isDraft,
-			});
-			method = this.client.httpPut.bind(this.client);
+			const resp = await this._requestUrlEndpoint(
+				EnumBloggerRestEndpoint.editPost,
+				{
+					query: {
+						postId: postParams.postId,
+					},
+					body,
+				},
+			);
+			return this._handlePublishResponse(resp, postParams, true);
 		}
 		/**
 		 * 若參數中無 postId，代表是建立新文章（POST 請求）
@@ -166,29 +198,17 @@ export class BloggerCoreApiClient
 		 */
 		else
 		{
-			url = getUrl(this.context.endpoints[EnumBloggerRestEndpoint.newPost], {
-				isDraft,
-			});
-			method = this.client.httpPost.bind(this.client);
-		}
-		const resp = await method(
-			url,
-			{
-				kind: 'blogger#post',
-				blog: {
-					id: this.blogId,
+			const resp = await this._requestUrlEndpoint(
+				EnumBloggerRestEndpoint.newPost,
+				{
+					query: {
+						isDraft,
+					},
+					body,
 				},
-				title: title!,
-				content: content!,
-				labels: _handleTagsForBloggerPostApi(postParams.tags),
-				status: postParams.status!,
-			},
-			{
-				headers: await this.getHeaders(),
-			},
-		);
-
-		return this._handlePublishResponse(resp, postParams, !!postParams.postId);
+			);
+			return this._handlePublishResponse(resp, postParams, false);
+		}
 	}
 
 	/**
@@ -204,11 +224,15 @@ export class BloggerCoreApiClient
 	 */
 	async getPost(postId: IBloggerProfile["blogId"], view: EnumBloggerViewMode = EnumBloggerViewMode.AUTHOR): Promise<IBloggerClientResult<IBloggerPublishResult>>
 	{
-		const url = getUrl(this.context.endpoints[EnumBloggerRestEndpoint.getPost], {
-			postId,
-			view,
-		});
-		const resp = await this.client.httpGet(url, { headers: await this.getHeaders() });
+		const resp = await this._requestUrlEndpoint(
+			EnumBloggerRestEndpoint.getPost,
+			{
+				query: {
+					postId,
+					view,
+				},
+			},
+		);
 		return this._handlePublishResponse(resp, { postId }, true);
 	}
 
@@ -222,12 +246,16 @@ export class BloggerCoreApiClient
 	 * @param postId - 文章 ID / Post ID
 	 * @returns 包含發布結果的 Promise / Promise containing publish result
 	 */
-	async publishPostAction(postId: IBloggerProfile["blogId"]): Promise<IBloggerClientResult<IBloggerPublishResult>>
+	async setPostStatusLive(postId: IBloggerProfile["blogId"]): Promise<IBloggerClientResult<IBloggerPublishResult>>
 	{
-		const url = getUrl(this.context.endpoints[EnumBloggerRestEndpoint.setPostStatusLive], {
-			postId,
-		});
-		const resp = await this.client.httpPublish(url, { headers: await this.getHeaders() });
+		const resp = await this._requestUrlEndpoint(
+			EnumBloggerRestEndpoint.setPostStatusLive,
+			{
+				query: {
+					postId,
+				},
+			},
+		);
 		return this._handlePublishResponse(resp, { postId }, true);
 	}
 
@@ -241,12 +269,14 @@ export class BloggerCoreApiClient
 	 * @param postId - 文章 ID / Post ID
 	 * @returns 包含發布結果的 Promise / Promise containing publish result
 	 */
-	async revertPostAction(postId: IBloggerProfile["blogId"]): Promise<IBloggerClientResult<IBloggerPublishResult>>
+	async setPostStatusDraft(postId: IBloggerProfile["blogId"]): Promise<IBloggerClientResult<IBloggerPublishResult>>
 	{
-		const url = getUrl(this.context.endpoints[EnumBloggerRestEndpoint.setPostStatusDraft], {
-			postId,
+		const resp = await this._requestUrlEndpoint(EnumBloggerRestEndpoint.setPostStatusDraft, {
+			query: {
+				postId,
+			},
 		});
-		const resp = await this.client.httpRevert(url, { headers: await this.getHeaders() });
+
 		return this._handlePublishResponse(resp, { postId }, true);
 	}
 
@@ -263,7 +293,7 @@ export class BloggerCoreApiClient
 	 */
 	async updatePostStatusOnly(postId: IBloggerProfile["blogId"], targetStatus: EnumPostStatus): Promise<IBloggerClientResult<IBloggerPublishResult>>
 	{
-		const getResp = await this.getPost(postId, 'AUTHOR');
+		const getResp = await this.getPost(postId, EnumBloggerViewMode.AUTHOR);
 		if (getResp.code !== EnumBloggerClientReturnCode.OK)
 		{
 			return getResp; // 返回獲取失敗錯誤 / Return fetch error
@@ -280,11 +310,11 @@ export class BloggerCoreApiClient
 
 		if (targetStatus === EnumPostStatus.Live)
 		{
-			return this.publishPostAction(postId);
+			return this.setPostStatusLive(postId);
 		}
 		else
 		{
-			return this.revertPostAction(postId);
+			return this.setPostStatusDraft(postId);
 		}
 	}
 }

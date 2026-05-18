@@ -63,7 +63,8 @@ export class BloggerRestClient extends AbstractBloggerClient
 			this.client,
 			this.context,
 			this.profile.blogId,
-			() => this.getHeaders()
+			() => this.getHeaders(),
+			this.settings.enableSmartPreCheck,
 		);
 	}
 

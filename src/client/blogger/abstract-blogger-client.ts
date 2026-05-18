@@ -155,8 +155,18 @@ export abstract class AbstractBloggerClient implements IBloggerClient
 					{
 						fm.profileName = this.profile.name;
 						fm.postId = postId;
+						fm.url = result.data.url;
 
 						fm.tags = _updateFrontMatterTagsByPostStatus(fm, result.data.status);
+
+						/**
+						 * 當自訂標題與檔案名稱不同時，一併紀錄至 Frontmatter
+						 * If the custom title differs from the file name, also record it in Frontmatter
+						 */
+						if (postParams.title && postParams.title !== file.basename)
+						{
+							fm.title = postParams.title;
+						}
 
 						/**
 						 * 執行外部傳入的自訂 Frontmatter 更新邏輯

@@ -120,6 +120,16 @@ export class BloggerSettingTab extends PluginSettingTab {
     });
 
     new Setting(containerEl)
+      .setName(t('settings_enableSmartPreCheck'))
+      .setDesc(t('settings_enableSmartPreCheckDesc'))
+      .addToggle((toggle) =>
+        toggle.setValue(this.settings.enableSmartPreCheck).onChange(async (value) => {
+          this.settings.enableSmartPreCheck = value;
+          await this.saveSettings();
+        }),
+      );
+
+    new Setting(containerEl)
       .setName(t('settings_enableHtml'))
       .setDesc(t('settings_enableHtmlDesc'))
       .addToggle((toggle) =>

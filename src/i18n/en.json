@@ -69,6 +69,8 @@
   "settings_MathJaxOutputTypeTeXDesc": "Convert MathJax to TeX directly. Blogger needs install MathJax related plugin, such as simple-mathjax.",
   "settings_mathJaxOutputTypeSVG": "SVG",
   "settings_MathJaxOutputTypeSVGDesc": "Convert MathJax to SVG. Browser render SVG, no plugin needed for Blogger.",
+  "settings_enableSmartPreCheck": "Check post status before update",
+  "settings_enableSmartPreCheckDesc": "When enabled, queries the current post status before updating, and automatically selects the correct API endpoint sequence based on status changes. This works around Blogger API limitation where PATCH cannot change post status.",
   "settings_enableHtml": "Enable HTML",
   "settings_enableHtmlDesc": "Enable HTML tags in notes. This might cause XSS attack to your Blogger.",
   "loginModal_title": "Blogger Login",

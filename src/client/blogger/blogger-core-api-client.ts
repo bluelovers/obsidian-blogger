@@ -41,6 +41,11 @@ export class BloggerCoreApiClient
 		public readonly context: IBloggerRestClientContext,
 		public readonly blogId: IBloggerProfile["blogId"],
 		public readonly getHeaders: () => Promise<ITSPickExtra<IHttpHeaders, "authorization">>,
+		/**
+		 * 更新前是否先查詢當前文章狀態
+		 * Whether to query current post status before updating
+		 */
+		public readonly enableSmartPreCheck: boolean = false,
 	)
 	{}
 
@@ -163,7 +168,7 @@ export class BloggerCoreApiClient
 			return this.updatePostStatusOnly(postParams.postId, postParams.status!);
 		}
 
-		/** ========== 正常發布/更新路徑（PUT / POST）========== */
+	/** ========== 正常發布/更新路徑（PUT / POST）========== */
 		const body = {
 			kind: 'blogger#post' as const,
 			blog: {
@@ -174,19 +179,134 @@ export class BloggerCoreApiClient
 			labels: _handleTagsForBloggerPostApi(postParams.tags),
 			status: postParams.status!,
 		};
+		/** 新文章需要 isDraft 決定初始狀態 / New posts need isDraft for initial status */
 		const isDraft = postParams.status === EnumPostStatus.Draft;
+
 		/**
-		 * 若參數中已有 postId，代表是更新現有文章（PUT 請求）
-		 * If postId exists in params, it means updating an existing post (PUT request)
+		 * 若參數中已有 postId，代表是更新現有文章
+		 * If postId exists in params, it means updating an existing post
 		 */
 		if (postParams.postId)
 		{
+			/** ========== 智慧預檢查路徑 ========== */
+			/**
+			 * 當啟用 `enableSmartPreCheck` 時，先查詢當前文章狀態，再根據狀態變更方向
+			 * 決定操作順序，確保內容與狀態都正確寫入。
+			 *
+			 * When `enableSmartPreCheck` is enabled, query current status first,
+			 * then decide the operation order based on the status change direction
+			 * to ensure both content and status are written correctly.
+			 *
+			 * 操作順序規則 / Operation order rules:
+			 * - LIVE → DRAFT：先 revert 到草稿，再 PATCH 編輯內容
+			 *   Revert to draft first, then PATCH to update content
+			 * - DRAFT → LIVE：先 PATCH 編輯內容，再 publish 發布
+			 *   PATCH to update content first, then publish to make live
+			 * - 狀態不變 / Same status：僅 PATCH 更新內容
+			 *   Only PATCH to update content
+			 */
+			if (this.enableSmartPreCheck)
+			{
+				/**
+				 * 1. GET 當前文章狀態
+				 * 1. GET current post status
+				 */
+				const getResp = await this.getPost(postParams.postId, EnumBloggerViewMode.AUTHOR);
+				if (isBloggerClientErrorResult(getResp))
+				{
+					return getResp;
+				}
+				const currentStatus = _extractStatusCore(getResp.data);
+
+				/**
+				 * 2. 根據狀態變更方向決定操作順序
+				 * 2. Decide operation order based on status change direction
+				 */
+				if (currentStatus !== postParams.status)
+				{
+					/**
+					 * LIVE → DRAFT：先 revert 到草稿，再 PATCH 編輯
+					 * LIVE → DRAFT: revert first, then PATCH to edit
+					 */
+					if (currentStatus === EnumPostStatus.Live && postParams.status === EnumPostStatus.Draft)
+					{
+						const statusResult = await this.updatePostStatusOnly(postParams.postId, postParams.status!);
+						if (isBloggerClientErrorResult(statusResult))
+						{
+							return statusResult;
+						}
+
+						const contentResp = await this._requestUrlEndpoint(
+							EnumBloggerRestEndpoint.patchPost,
+							{
+								query: {
+									postId: postParams.postId,
+									isDraft: true,
+								},
+								body,
+							},
+						);
+						return this._handlePublishResponse(contentResp, postParams, true);
+					}
+
+					/**
+					 * DRAFT → LIVE：先 PATCH 編輯內容，再 publish 發布
+					 * DRAFT → LIVE: PATCH to edit first, then publish to make live
+					 */
+					if (currentStatus === EnumPostStatus.Draft && postParams.status === EnumPostStatus.Live)
+					{
+						const contentResp = await this._requestUrlEndpoint(
+							EnumBloggerRestEndpoint.patchPost,
+							{
+								query: {
+									postId: postParams.postId,
+									isDraft: true,
+								},
+								body,
+							},
+						);
+						const contentResult = this._handlePublishResponse(contentResp, postParams, true);
+						if (isBloggerClientErrorResult(contentResult))
+						{
+							return contentResult;
+						}
+
+						return this.updatePostStatusOnly(postParams.postId, postParams.status!);
+					}
+				}
+
+				/**
+				 * 3. 狀態不變或方向非預期：僅 PATCH 更新內容
+				 * 3. Same status or unexpected direction: only PATCH to update content
+				 */
+				const contentResp = await this._requestUrlEndpoint(
+					EnumBloggerRestEndpoint.patchPost,
+					{
+						query: {
+							postId: postParams.postId,
+							isDraft: true,
+						},
+						body,
+					},
+				);
+				return this._handlePublishResponse(contentResp, postParams, true);
+			}
+
+			/** ========== 原始正常發布/更新路徑（無預檢查）========== */
+			/**
+			 * 原始行為：先 PATCH 更新內容，再檢查回應狀態，若不匹配則呼叫 publish/revert。
+			 * Original behavior: PATCH content first, check response status, call publish/revert if mismatch.
+			 *
+			 * PUT 一律用 isDraft=true 更新草稿內容，確保標題/內容寫入正確的版本。
+			 * Always use isDraft=true to update draft content, ensuring title/content
+			 * are written to the correct version.
+			 */
 			const resp = await this._requestUrlEndpoint(
 				EnumBloggerRestEndpoint.patchPost,
 				{
 					query: {
 						postId: postParams.postId,
-						isDraft,
+						isDraft: true,
 					},
 					body,
 				},
@@ -196,8 +316,6 @@ export class BloggerCoreApiClient
 			/**
 			 * Blogger API v3 的 posts.update (PUT) 不處理文章狀態變更。
 			 * 必須額外呼叫專用的 posts.publish / posts.revert 端點。
-			 *
-			 * 使用 patch 也無法解決此問題
 			 *
 			 * Blogger API v3 posts.update (PUT) does not handle post status changes.
 			 * Must call dedicated posts.publish / posts.revert endpoints separately.

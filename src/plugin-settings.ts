@@ -43,6 +43,19 @@ export interface IPluginSettings extends Partial<IOauth2ClientCredentials>
 
 	/** 是否啟用 HTML 渲染 / Whether to enable HTML rendering */
 	enableHtml: boolean;
+
+	/**
+	 * 更新文章前是否先查詢當前狀態
+	 * Whether to check current post status before updating
+	 *
+	 * 啟用後，更新文章前會先 GET 查詢當前文章狀態，並根據狀態變化
+	 * 自動選擇正確的 API 端點順序（publish/revert → PATCH），
+	 * 避免 Blogger API 不支援在 PATCH 中直接切換狀態的限制。
+	 * When enabled, queries the current post status via GET before updating,
+	 * and automatically selects the correct API endpoint order (publish/revert -> PATCH)
+	 * to work around the Blogger API limitation where PATCH cannot change post status.
+	 */
+	enableSmartPreCheck: boolean;
 }
 
 /**
@@ -78,6 +91,7 @@ export const DEFAULT_SETTINGS: IPluginSettings = {
 	openPublishedPageWithBrowser: false,
 	mathJaxOutputType: EnumMathJaxOutputType.SVG,
 	enableHtml: false,
+	enableSmartPreCheck: false,
 };
 
 /**

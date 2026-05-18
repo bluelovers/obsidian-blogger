@@ -51,6 +51,8 @@
   "settings_MathJaxOutputTypeTeXDesc": "将 MathJax 公式输出为 TeX 格式。Blogger 需要安装 MathJax 相关插件，例如 simple-mathjax",
   "settings_mathJaxOutputTypeSVG": "SVG",
   "settings_MathJaxOutputTypeSVGDesc": "将 MathJax 公式输出为 SVG 格式。浏览器可以直接显示 SVG 矢量图，Blogger 无需任何处理",
+  "settings_enableSmartPreCheck": "更新前查询文章状态",
+  "settings_enableSmartPreCheckDesc": "启用后，更新文章前会先 GET 查询当前文章状态，并根据状态变化自动选择正确的 API 端点顺序（publish/revert → PATCH），避免 Blogger API 不支持在 PATCH 中直接切换状态的限制。",
   "settings_enableHtml": "启用 HTML",
   "settings_enableHtmlDesc": "启用笔记中的 HTML 标签。这可能导致针对 Blogger 的 XSS 攻击",
   "loginModal_title": "Blogger 登录",

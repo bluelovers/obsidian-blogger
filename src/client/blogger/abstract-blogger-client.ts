@@ -144,7 +144,7 @@ export abstract class AbstractBloggerClient implements IBloggerClient
 			{
 				// const modified = matter.stringify(postParams.content, matterData, matterOptions);
 				// this.updateFrontMatter(modified);
-				const file = this.ctx.app.workspace.getActiveFile();
+				const file = this.ctx.getActiveFile();
 				/**
 				 * 若取得當前活躍檔案，則更新其 Frontmatter
 				 * If active file is retrieved, update its Frontmatter
@@ -217,7 +217,7 @@ export abstract class AbstractBloggerClient implements IBloggerClient
 				throw new Error(getGlobalI18n().t('error_noEndpoint'));
 			}
 			// const { activeEditor } = this.plugin.app.workspace;
-			const file = this.ctx.app.workspace.getActiveFile();
+			const file = this.ctx.getActiveFile();
 			/**
 			 * 確保當前有開啟的 Markdown 檔案可供處理
 			 * Ensure there is an active Markdown file to process
@@ -289,7 +289,7 @@ export abstract class AbstractBloggerClient implements IBloggerClient
 								{
 									throw new Error(r.message);
 								}
-								const file = this.ctx.app.workspace.getActiveFile();
+								const file = this.ctx.getActiveFile();
 								/**
 								 * 取得當前檔案並更新其中的標籤狀態
 								 * Get current file and update its tag status

@@ -11,6 +11,7 @@ import { IMatterData } from '../../types';
 import { IObsidianRequest } from '../../client/request/abstract-request-client';
 import { openWithBrowser } from '../webview/webview-utils';
 import BloggerPlugin from '../../main';
+import { getActiveFile } from './app/file';
 
 /**
  * 顯示 Obsidian 通知
@@ -112,8 +113,11 @@ export function createObsidianContext(context: {
 })
 {
 	context ??= {} as any;
+
+	const app = context.app!;
+
 	return {
-		app: context.app!,
+		app,
 
 		plugin: context.plugin!,
 
@@ -134,7 +138,12 @@ export function createObsidianContext(context: {
 		{
 			context.openWithBrowser?.(url);
 			console.log('openWithBrowser', url);
-		}
+		},
+
+		getActiveFile()
+		{
+			return getActiveFile(app);
+		},
 	};
 }
 

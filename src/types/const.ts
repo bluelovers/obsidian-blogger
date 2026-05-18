@@ -102,4 +102,7 @@ export const enum EnumLanguageIDAll
 	zh_cn = 'zh_cn',
 	/** 自動偵測 / Auto detect */
 	auto = 'auto',
+
+	/** 繁體中文 / Traditional Chinese */
+	zh_tw = 'zh_tw',
 }

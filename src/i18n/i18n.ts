@@ -1,4 +1,4 @@
-import { ILanguageID, ITranslateKey, LANGUAGES } from './langs';
+import { ILanguage, ILanguageID, ITranslateKey, LANGUAGES } from './langs';
 import { moment } from 'obsidian';
 import { template } from 'lodash-es';
 import { EnumLanguageIDAll } from '../types/const';
@@ -15,12 +15,28 @@ import { createObsidianContext, getLocale } from '../utils/obsidian/obsidian-con
  */
 export class I18n
 {
+	protected _data: ILanguage = {};
+
 	/**
 	 * @param lang - 語言識別碼，預設為 auto（自動偵測）/ Language ID, defaults to auto-detect
 	 */
 	constructor(protected readonly lang: EnumLanguageIDAll = EnumLanguageIDAll.auto)
 	{
-		this.lang = lang;
+		this.lang = (lang !== EnumLanguageIDAll.auto) && lang || getLocale();
+		this._data = Object.assign({}, LANGUAGES[this.lang as EnumLanguageIDAll.en] ?? {});
+
+		switch (this.lang)
+		{
+			case EnumLanguageIDAll.zh_cn:
+				this._data = Object.assign(this._data ?? {}, LANGUAGES[EnumLanguageIDAll.zh_tw] ?? {}, LANGUAGES[EnumLanguageIDAll.zh_cn]);
+				break;
+			case EnumLanguageIDAll.zh_tw:
+				this._data = Object.assign(this._data ?? {}, LANGUAGES[EnumLanguageIDAll.zh_cn], LANGUAGES[EnumLanguageIDAll.zh_tw] ?? {});
+				break;
+			default:
+		}
+
+		console.log('i18n lang:', this.lang, this._data);
 	}
 
 	/**
@@ -72,8 +88,10 @@ export class I18n
 	 */
 	#get(key: ITranslateKey): string
 	{
-		const locale = getLocale();
-		return LANGUAGES[locale]?.[key] || LANGUAGES[EnumLanguageIDAll.en][key] || key;
+		// const locale = getLocale();
+		// return LANGUAGES[locale]?.[key] || LANGUAGES[EnumLanguageIDAll.en][key] || key;
+
+		return this._data[key] || LANGUAGES[EnumLanguageIDAll.en][key] || key;
 	}
 }
 

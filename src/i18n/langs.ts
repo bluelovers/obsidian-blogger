@@ -41,6 +41,7 @@ export type ITranslateKey = keyof ILanguage;
 const _LANGUAGES = {
 	[EnumLanguageIDAll.en]: en,
 	[EnumLanguageIDAll.zh_cn]: zh_cn,
+	[EnumLanguageIDAll.zh_tw]: null as any,
 } satisfies Record<ILanguageID, ILanguage>;
 
 /**

@@ -154,19 +154,23 @@ export class BloggerPublishModal extends Modal {
             });
         });
 
-      new Setting(contentEl)
-        .setName(t('settings_enableSmartPreCheck'))
-        .setDesc(t('settings_enableSmartPreCheckDesc'))
-        .addToggle((toggle) =>
-        {
-          toggle
-            .setValue(this.settings.enableSmartPreCheck)
-            .onChange(async (value) =>
-            {
-              this.settings.enableSmartPreCheck = value;
-              await this.ctx.plugin.saveSettings();
-            });
-        });
+      {
+        const smartCheckSetting = new Setting(contentEl)
+          .setName(t('settings_enableSmartPreCheck'))
+          .setDesc(t('settings_enableSmartPreCheckDesc'))
+          .addToggle((toggle) =>
+          {
+            toggle
+              .setValue(this.settings.enableSmartPreCheck)
+              .onChange(async (value) =>
+              {
+                this.settings.enableSmartPreCheck = value;
+                await this.ctx.plugin.saveSettings();
+              });
+          });
+        smartCheckSetting.descEl.style.maxWidth = '500px';
+        smartCheckSetting.descEl.style.wordBreak = 'break-word';
+      }
     }
 
     new Setting(contentEl).addButton((button) =>

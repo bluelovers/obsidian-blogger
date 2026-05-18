@@ -8,7 +8,6 @@ import {
 import { getGlobalI18n } from './i18n/i18n';
 import { IFreshInternalOAuth2Token, OAuth2Client, generateCodeVerifier } from './client/blogger/oauth2-client';
 import { createServer } from 'http';
-import { Notice } from 'obsidian';
 import type { IObsidianContext } from './utils/obsidian/obsidian-context';
 
 const getListeningPort = (server: ReturnType<typeof createServer>): number => {
@@ -109,7 +108,7 @@ export class MobileOAuth2Helper {
           GOOGLE_OAUTH2_REDIRECT_URI_WEB,
           setGoogleOAuth2Token,
         );
-        new Notice(getGlobalI18n().t('message_googleOAuth2TokenObtained'));
+        ctx.showNotice(getGlobalI18n().t('message_googleOAuth2TokenObtained'));
       }
     });
   }

@@ -1,8 +1,9 @@
 import { Modal, Setting } from 'obsidian';
-import { IBloggerProfile, rendererProfile } from './blogger-profile';
-import { getGlobalI18n } from './i18n/i18n';
-import { ITranslateKey } from './i18n/langs';
-import type { IObsidianContext } from './utils/obsidian/obsidian-context';
+import { rendererProfile } from '../../../utils/obsidian/blogger-profile';
+import { getGlobalI18n } from '../../../i18n/i18n';
+import { ITranslateKey } from '../../../i18n/langs';
+import type { IObsidianContext } from '../../../utils/obsidian/obsidian-context';
+import { IBloggerProfile } from '../../../types/blogger-profile';
 
 export function openProfileChooserModal(
   ctx: IObsidianContext,

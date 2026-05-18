@@ -1,10 +1,10 @@
 import { EnumHttpMethod } from '../../../client/request/http-post';
-import { IBloggerProfile } from '../../../blogger-profile';
 import { EnumBloggerRestEndpoint, EnumBloggerViewMode, getUrl, IBloggerRestEndpoint } from './url';
 import { ITSRequireAtLeastOne } from 'ts-type';
 import { IBloggerPostApiBody, IBloggerPostApiReturn, RestClient } from '../rest-client';
 import { IHttpHeaders } from '../../../types/http';
 import { EnumPostStatus } from '../../../types/const';
+import { IBloggerProfile } from '../../../types/blogger-profile';
 
 export interface IEndpointQuery
 {

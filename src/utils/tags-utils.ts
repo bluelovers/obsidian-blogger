@@ -1,4 +1,4 @@
-import { IMatterData } from '../types';
+import { IMatterData } from '../types/types';
 import { IBloggerPostParams, IBloggerPostParamsCore } from '../types/blogger-client-interface';
 import { BLOGGER_DEFAULT_PROFILE_NAME } from '../consts';
 import { EnumobsidianBloggerTags, EnumPostStatus } from '../types/const';

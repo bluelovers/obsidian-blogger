@@ -1,7 +1,7 @@
 import { App } from 'obsidian';
 import { createObsidianContext } from './obsidian-context';
 import { openPublishModal } from './open-publish-modal';
-import { openConfirmModal } from '../../confirm-modal';
+import { openConfirmModal } from '../../client/obsidian/modal/confirm-modal';
 import BloggerPlugin from '../../main';
 import { obsidianRequest } from '../../client/request/obsidian-request';
 import { openWithBrowser } from '../webview/webview-utils';

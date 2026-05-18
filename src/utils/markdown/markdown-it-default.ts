@@ -1,7 +1,7 @@
 import MarkdownIt from 'markdown-it';
 import { MarkdownItImagePluginInstance } from './markdown-it-image-plugin';
 import { isEmpty, trim } from 'lodash-es';
-import { IPluginSettings } from './plugin-settings';
+import { IPluginSettings } from '../../plugin-settings';
 import MarkdownItMathJax3Plugin from './markdown-it-mathjax3-plugin';
 import footnote from 'markdown-it-footnote';
 
@@ -29,11 +29,11 @@ const createDefaultMarkdownParser = () => {
     }
     if (width) {
       if (height) {
-        return `<img src="${src}" width="${width}" height="${height}" alt="${alt}">`;
+        return `<img ${src}="../.." width="${width}" height="${height}" alt="${alt}">`;
       }
-      return `<img src="${src}" width="${width}" alt="${alt}">`;
+      return `<img ${src}="../.." width="${width}" alt="${alt}">`;
     } else {
-      return `<img src="${src}" alt="${alt}">`;
+      return `<img ${src}="../.." alt="${alt}">`;
     }
   };
   return markdownParser;

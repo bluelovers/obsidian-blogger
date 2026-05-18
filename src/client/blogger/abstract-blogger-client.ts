@@ -6,14 +6,15 @@ import {
 } from '../../types/blogger-client-interface';
 import { IObsidianContext } from '../../utils/obsidian/obsidian-context';
 import { IPluginSettings } from '../../plugin-settings';
-import { IBloggerProfile } from '../../blogger-profile';
 import { IMatterData } from '../../types';
 import { getGlobalI18n } from '../../i18n/i18n';
 import { EnumBloggerClientReturnCode, EnumConfirmCode } from '../../types/const';
-import { getGlobalMarkdownParser } from '../../markdown-it-default';
+import { getGlobalMarkdownParser } from '../../utils/markdown/markdown-it-default';
 import { _frontMatterToBloggerPostParams, _updateFrontMatterTagsByPostStatus } from '../../data/tags-utils';
 import { isFunction } from 'lodash-es';
-import { processFile } from '../../utils';
+
+import { processFile } from '../../utils/obsidian/obsidian-utils';
+import { IBloggerProfile } from '../../types/blogger-profile';
 
 /**
  * 抽象 Blogger 客戶端類別

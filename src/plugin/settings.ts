@@ -1,4 +1,3 @@
-import { IBloggerProfile } from '../blogger-profile';
 import {
 	DEFAULT_SETTINGS,
 	IPluginSettings,
@@ -7,6 +6,7 @@ import {
 	upgradeSettingsSync,
 } from '../plugin-settings';
 import { EnumSettingsVersion } from '../types/const';
+import { IBloggerProfile } from '../types/blogger-profile';
 
 /**
  * 標準化外掛設定

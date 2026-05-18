@@ -1,12 +1,12 @@
 import { PluginSettingTab, Setting } from 'obsidian';
-import { getGlobalI18n } from './i18n/i18n';
-import { BloggerProfileManageModal } from './blogger-profile-manage-modal';
-import { IPluginSettings } from './plugin-settings';
-import { getGlobalMarkdownParser, setupMarkdownParser } from './markdown-it-default';
+import { getGlobalI18n } from '../../../i18n/i18n';
+import { BloggerProfileManageModal } from '../modal/blogger-profile-manage-modal';
+import { IPluginSettings } from '../../../plugin-settings';
+import { getGlobalMarkdownParser, setupMarkdownParser } from '../../../utils/markdown/markdown-it-default';
 
-import { EnumMathJaxOutputType, EnumPostStatus } from './types/const';
-import { ITranslateKey } from './i18n/langs';
-import type { IObsidianContext } from './utils/obsidian/obsidian-context';
+import { EnumMathJaxOutputType, EnumPostStatus } from '../../../types/const';
+import { ITranslateKey } from '../../../i18n/langs';
+import type { IObsidianContext } from '../../../utils/obsidian/obsidian-context';
 
 export class BloggerSettingTab extends PluginSettingTab {
   constructor(

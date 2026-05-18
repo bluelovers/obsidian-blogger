@@ -1,13 +1,14 @@
 import { Modal, Setting } from 'obsidian';
-import { IBloggerProfile, rendererProfile } from './blogger-profile';
-import { getGlobalI18n } from './i18n/i18n';
-import { openProfileModal } from './client/obsidian/blogger-profile-modal';
+import { rendererProfile } from '../../../utils/obsidian/blogger-profile';
+import { getGlobalI18n } from '../../../i18n/i18n';
+import { openProfileModal } from '../blogger-profile-modal';
 import { isNil } from 'lodash-es';
-import { IPluginSettings, isPluginSettingsWithOAuth2 } from './plugin-settings';
-import { getGoogleOAuth2Client } from './client/blogger/oauth2-client';
-import { ITranslateKey } from './i18n/langs';
-import { IObsidianContext, showError } from './utils/obsidian/obsidian-context';
-import { addNewProfile, removeProfile, setDefaultProfile } from './plugin/settings';
+import { IPluginSettings, isPluginSettingsWithOAuth2 } from '../../../plugin-settings';
+import { getGoogleOAuth2Client } from '../../blogger/oauth2-client';
+import { ITranslateKey } from '../../../i18n/langs';
+import { IObsidianContext, showError } from '../../../utils/obsidian/obsidian-context';
+import { addNewProfile, removeProfile, setDefaultProfile } from '../../../plugin/settings';
+import { IBloggerProfile } from '../../../types/blogger-profile';
 
 /**
  * Blogger profiles manage modal.

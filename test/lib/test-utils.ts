@@ -12,11 +12,11 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as process from 'node:process';
-import { IBloggerProfile } from '../../src/blogger-profile';
 import { __PLUGIN_DATA_JSON, __ROOT } from '../__root';
 import { loadSettingsFromJsonSync } from '../../src/plugin/settings-load-json';
 import { findDefaultProfile } from '../../src/plugin/settings';
 import { GOOGLE_OAUTH2_TOKEN_ENDPOINT } from '../../src/consts';
+import { IBloggerProfile } from '../../src/types/blogger-profile';
 
 /** ==================== 常數 / Constants ==================== */
 

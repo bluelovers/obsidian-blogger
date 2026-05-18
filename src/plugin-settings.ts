@@ -1,6 +1,5 @@
-import { IBloggerProfile } from './blogger-profile';
-
 import { EnumLanguageIDAll, EnumMathJaxOutputType, EnumPostStatus, EnumSettingsVersion } from './types/const';
+import { IBloggerProfile } from './types/blogger-profile';
 
 /**
  * OAuth2 客戶端憑證介面

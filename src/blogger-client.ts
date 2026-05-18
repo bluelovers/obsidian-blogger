@@ -5,7 +5,6 @@ import {
 	IBloggerPublishResult,
 } from './types/blogger-client-interface';
 import { RestClient } from './client/blogger/rest-client';
-import { IBloggerProfile } from './blogger-profile';
 import { getGoogleOAuth2Client } from './client/blogger/oauth2-client';
 import { getGlobalI18n } from './i18n/i18n';
 import { IPluginSettings, isPluginSettingsWithOAuth2 } from './plugin-settings';
@@ -21,6 +20,7 @@ import { AbstractBloggerClient } from './client/blogger/abstract-blogger-client'
 import { BloggerCoreApiClient } from './client/blogger/blogger-core-api-client';
 import { IHttpHeaders } from './types/http';
 import { ITSPickExtra } from 'ts-type';
+import { IBloggerProfile } from './types/blogger-profile';
 
 /**
  * Blogger REST 客戶端類別

@@ -1,6 +1,6 @@
 
 import { IPluginSettings } from '../../plugin-settings';
-import { BloggerPublishModal, IOnSubmit } from '../../blogger-publish-modal';
+import { BloggerPublishModal, IOnSubmit } from '../../client/obsidian/modal/blogger-publish-modal';
 import { IMatterData } from '../../types';
 import { IBloggerClientResult, IBloggerPublishResult } from '../../types/blogger-client-interface';
 import { IObsidianContext } from './obsidian-context';

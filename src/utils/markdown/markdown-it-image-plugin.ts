@@ -81,11 +81,11 @@ function pluginImpl(md: MarkdownIt): void {
     const height = token.attrs?.[2]?.[1];
     if (width) {
       if (height) {
-        return `<img src="${src}" width="${width}" height="${height}" alt="">`;
+        return `<img ${src}="../.." width="${width}" height="${height}" alt="">`;
       }
-      return `<img src="${src}" width="${width}" alt="">`;
+      return `<img ${src}="../.." width="${width}" alt="">`;
     } else {
-      return `<img src="${src}" alt="">`;
+      return `<img ${src}="../.." alt="">`;
     }
   };
 }

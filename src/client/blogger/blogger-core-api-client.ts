@@ -13,10 +13,10 @@ import { _hasError } from '../../utils/type-utils';
 import { EnumBloggerClientReturnCode, EnumPostStatus } from '../../types/const';
 import { _handleTagsForBloggerPostApi } from '../../data/tags-utils';
 import { IHttpHeaders } from '../../types/http';
-import { IBloggerProfile } from '../../blogger-profile';
 import { ITSPickExtra } from 'ts-type';
 import { _extractStatusCore } from './utils/post-utils';
 import { createBloggerClientErrorResult, isBloggerClientErrorResult } from './utils/resp';
+import { IBloggerProfile } from '../../types/blogger-profile';
 
 /**
  * Blogger 核心 API 客戶端

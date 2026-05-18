@@ -1,23 +1,23 @@
 import { Platform, Plugin } from 'obsidian';
-import { BloggerSettingTab } from './setting-tab';
-import { addIcons } from './icons';
+import { BloggerSettingTab } from './client/obsidian/settings/setting-tab';
+import { addIcons } from './utils/obsidian/icons';
 import {
   IBloggerPostParams,
 } from './types/blogger-client-interface';
-import { openProfileChooserModal } from './blogger-profile-chooser-modal';
+import { openProfileChooserModal } from './client/obsidian/modal/blogger-profile-chooser-modal';
 import {
   IPluginSettings,
 } from './plugin-settings';
 import { IObsidianContext, showError } from './utils/obsidian/obsidian-context';
 import { isString } from 'lodash-es';
-import { IBloggerProfile } from './blogger-profile';
 import { getBloggerClient } from './blogger-client';
-import { getGlobalMarkdownParser, setupMarkdownParser } from './markdown-it-default';
+import { getGlobalMarkdownParser, setupMarkdownParser } from './utils/markdown/markdown-it-default';
 import { getGlobalI18n, setGlobalLang } from './i18n/i18n';
 import { MobileOAuth2Helper } from './blogger-oauth2-client';
 import { EnumPostStatus } from './types/const';
 import { findDefaultProfile, handleSettingsUpgrade } from './plugin/settings';
 import { createObsidianContextMain } from './utils/obsidian/obsidian-context-main';
+import { IBloggerProfile } from './types/blogger-profile';
 
 const doClientPublish = async (
   ctx: IObsidianContext,

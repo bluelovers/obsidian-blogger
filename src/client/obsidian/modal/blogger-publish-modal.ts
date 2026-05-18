@@ -1,14 +1,15 @@
 import { App, Modal, Setting } from 'obsidian';
-import { IBloggerClientResult, IBloggerPostParams, IBloggerPublishResult } from './types/blogger-client-interface';
-import { getGlobalI18n } from './i18n/i18n';
-import { IMatterData } from './types';
-import { IPluginSettings } from './plugin-settings';
-import { EnumPostStatus } from './types/const';
-import { ITranslateKey } from './i18n/langs';
-import { _getPostStatusFromTags, _togglePostStatus } from './data/tags-utils';
-import { IObsidianContext } from './utils/obsidian/obsidian-context';
-import { BLOGGER_DEFAULT_PROFILE_NAME } from './consts';
-import { IBloggerProfile } from './blogger-profile';
+import { IBloggerClientResult, IBloggerPostParams, IBloggerPublishResult } from '../../../types/blogger-client-interface';
+import { getGlobalI18n } from '../../../i18n/i18n';
+import { IMatterData } from '../../../types';
+import { IPluginSettings } from '../../../plugin-settings';
+import { EnumPostStatus } from '../../../types/const';
+import { ITranslateKey } from '../../../i18n/langs';
+import { _getPostStatusFromTags, _togglePostStatus } from '../../../data/tags-utils';
+import { IObsidianContext } from '../../../utils/obsidian/obsidian-context';
+import { BLOGGER_DEFAULT_PROFILE_NAME } from '../../../consts';
+
+import { IBloggerProfile } from '../../../types/blogger-profile';
 
 /**
  * 發布對話框提交回呼函式型別

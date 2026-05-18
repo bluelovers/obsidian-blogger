@@ -1,5 +1,4 @@
 import { getBloggerRestEndpoint, IBloggerRestEndpoint } from './utils/url';
-import { IBloggerProfile } from '../../blogger-profile';
 import {
 	IBloggerMediaUploadResult,
 	IBloggerPostParams,
@@ -9,6 +8,7 @@ import { IBloggerPostApiReturn } from './rest-client';
 import { EnumPostStatus } from '../../types/const';
 import { ISafeAny } from '../../types';
 import { IBloggerRestClientContext } from './types';
+import { IBloggerProfile } from '../../types/blogger-profile';
 
 /**
  * Blogger REST 客戶端 Google OAuth2 上下文環境類別

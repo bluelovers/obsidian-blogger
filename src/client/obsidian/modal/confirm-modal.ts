@@ -1,8 +1,8 @@
 import { Modal, Setting } from 'obsidian';
-import { getGlobalI18n } from './i18n/i18n';
-import { EnumConfirmCode } from './types/const';
-import { ITranslateKey } from './i18n/langs';
-import type { IObsidianContext } from './utils/obsidian/obsidian-context';
+import { getGlobalI18n } from '../../../i18n/i18n';
+import { EnumConfirmCode } from '../../../types/const';
+import { ITranslateKey } from '../../../i18n/langs';
+import type { IObsidianContext } from '../../../utils/obsidian/obsidian-context';
 
 export interface IConfirmModalMessages
 {

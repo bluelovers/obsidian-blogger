@@ -1,4 +1,4 @@
-import { IBloggerPostParamsCore } from './types/blogger-client-interface';
+import { IBloggerPostParamsCore } from './blogger-client-interface';
 
 /**
  * 安全 Any 型別（明確標記跳過 ESLint 檢查）

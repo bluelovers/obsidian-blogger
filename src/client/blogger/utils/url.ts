@@ -1,6 +1,7 @@
 import { isFunction, isString, template } from 'lodash-es';
 import { BLOGGER_API_ENDPOINT } from '../../../consts';
-import { IBloggerProfile } from '../../../blogger-profile';
+
+import { IBloggerProfile } from '../../../types/blogger-profile';
 
 /**
  * URL 取得器函式型別

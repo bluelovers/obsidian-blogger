@@ -1,6 +1,5 @@
 import { Notice, Platform, Setting } from 'obsidian';
 import { getGlobalI18n } from '../../i18n/i18n';
-import { IBloggerProfile } from '../../blogger-profile';
 import { BLOGGER_API_ENDPOINT } from '../../consts';
 import { IFreshInternalOAuth2Token, OAuth2Client } from '../blogger/oauth2-client';
 import { generateQueryString, isValidBloggerUrl } from '../../utils';
@@ -11,6 +10,7 @@ import { IAbstractRequestClientLike } from '../request/abstract-request-client';
 import { AbstractObsidianModal } from './abstract-obsidian-modal';
 import { IObsidianContext, showError } from '../../utils/obsidian/obsidian-context';
 import { EnumHttpMethod } from '../request/http-post';
+import { IBloggerProfile } from '../../types/blogger-profile';
 
 export const openProfileModal = (
   ctx: IObsidianContext,

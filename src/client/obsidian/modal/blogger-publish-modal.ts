@@ -1,11 +1,11 @@
 import { App, Modal, Setting } from 'obsidian';
 import { IBloggerClientResult, IBloggerPostParams, IBloggerPublishResult } from '../../../types/blogger-client-interface';
 import { getGlobalI18n } from '../../../i18n/i18n';
-import { IMatterData } from '../../../types';
+import { IMatterData } from '../../../types/types';
 import { IPluginSettings } from '../../../plugin-settings';
 import { EnumPostStatus } from '../../../types/const';
 import { ITranslateKey } from '../../../i18n/langs';
-import { _getPostStatusFromTags, _togglePostStatus } from '../../../data/tags-utils';
+import { _getPostStatusFromTags, _togglePostStatus } from '../../../utils/tags-utils';
 import { IObsidianContext } from '../../../utils/obsidian/obsidian-context';
 import { BLOGGER_DEFAULT_PROFILE_NAME } from '../../../consts';
 

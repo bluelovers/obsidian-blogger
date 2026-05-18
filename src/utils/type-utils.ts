@@ -1,5 +1,5 @@
 import { IBloggerPublishResultError } from '../types/blogger-client-interface';
-import { IMedia, ISafeAny } from '../types';
+import { IMedia, ISafeAny } from '../types/types';
 import { isArray, isString } from 'lodash-es';
 
 /**

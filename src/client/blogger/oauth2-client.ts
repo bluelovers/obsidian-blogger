@@ -4,7 +4,7 @@ import {
 	GOOGLE_OAUTH2_TOKEN_ENDPOINT,
 	GOOGLE_OAUTH2_VALIDATE_TOKEN_ENDPOINT,
 } from '../../consts';
-import { IBrand } from '../../types';
+import { IBrand } from '../../types/types';
 import { getGlobalI18n } from '../../i18n/i18n';
 import { IOauth2ClientCredentials } from '../../plugin-settings';
 import { AbstractRequestClientWithConstructor } from '../request/request-client';

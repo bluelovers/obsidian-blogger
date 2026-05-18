@@ -6,11 +6,11 @@ import {
 } from '../../types/blogger-client-interface';
 import { IObsidianContext } from '../../utils/obsidian/obsidian-context';
 import { IPluginSettings } from '../../plugin-settings';
-import { IMatterData } from '../../types';
+import { IMatterData } from '../../types/types';
 import { getGlobalI18n } from '../../i18n/i18n';
 import { EnumBloggerClientReturnCode, EnumConfirmCode } from '../../types/const';
 import { getGlobalMarkdownParser } from '../../utils/markdown/markdown-it-default';
-import { _frontMatterToBloggerPostParams, _updateFrontMatterTagsByPostStatus } from '../../data/tags-utils';
+import { _frontMatterToBloggerPostParams, _updateFrontMatterTagsByPostStatus } from '../../utils/tags-utils';
 import { isFunction } from 'lodash-es';
 
 import { processFile } from '../../utils/obsidian/obsidian-utils';

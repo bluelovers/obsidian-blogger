@@ -1,4 +1,4 @@
-import { ISafeAny } from '../../types';
+import { ISafeAny } from '../../types/types';
 import { getBoundary } from '../../utils';
 import { FormItems, IFormItemNameMapper } from '../../utils/type-utils';
 import { IBloggerPostApiBody, IBloggerPostApiReturn } from '../blogger/rest-client';

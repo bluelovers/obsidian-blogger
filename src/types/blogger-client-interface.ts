@@ -1,5 +1,5 @@
 import { IErrorWithCode } from '../utils/type-utils';
-import { ISafeAny } from '../types';
+import { ISafeAny } from '../types/types';
 import { EnumBloggerClientReturnCode, EnumobsidianBloggerTags, EnumPostStatus } from './const';
 
 /**

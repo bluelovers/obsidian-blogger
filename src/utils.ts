@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { ISafeAny, IURLInput, IURLParams } from './types';
+import { ISafeAny, IURLInput, IURLParams } from './types/types';
 
 export function generateLink(url: IURLInput, queryParams: IURLParams = {})
 {

@@ -11,7 +11,7 @@ import { IBloggerRestEndpointHelperDetect, IEndpointRequestInit, requestUrlEndpo
 import { getGlobalI18n } from '../../i18n/i18n';
 import { _hasError } from '../../utils/type-utils';
 import { EnumBloggerClientReturnCode, EnumPostStatus } from '../../types/const';
-import { _handleTagsForBloggerPostApi } from '../../data/tags-utils';
+import { _handleTagsForBloggerPostApi } from '../../utils/tags-utils';
 import { IHttpHeaders } from '../../types/http';
 import { ITSPickExtra } from 'ts-type';
 import { _extractStatusCore } from './utils/post-utils';

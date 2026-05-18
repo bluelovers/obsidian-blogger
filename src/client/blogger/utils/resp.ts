@@ -1,4 +1,4 @@
-import { ISafeAny } from '../../../types';
+import { ISafeAny } from '../../../types/types';
 import { EnumBloggerClientReturnCode } from '../../../types/const';
 import { IBloggerClientErrorResult, IBloggerClientResult } from '../../../types/blogger-client-interface';
 import { _hasError } from '../../../utils/type-utils';

@@ -7,7 +7,7 @@ import { isString } from 'lodash-es';
 import { ERROR_NOTICE_TIMEOUT } from '../../consts';
 import { openPublishModal } from './open-publish-modal';
 import { openConfirmModal } from '../../client/obsidian/modal/confirm-modal';
-import { IMatterData } from '../../types';
+import { IMatterData } from '../../types/types';
 import { IObsidianRequest } from '../../client/request/abstract-request-client';
 import { openWithBrowser } from '../webview/webview-utils';
 import BloggerPlugin from '../../main';

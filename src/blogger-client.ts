@@ -10,7 +10,7 @@ import { getGlobalI18n } from './i18n/i18n';
 import { IPluginSettings, isPluginSettingsWithOAuth2 } from './plugin-settings';
 import { _hasError } from './utils/type-utils';
 import { EnumBloggerClientReturnCode, EnumPostStatus } from './types/const';
-import { _handleTagsForBloggerPostApi } from './data/tags-utils';
+import { _handleTagsForBloggerPostApi } from './utils/tags-utils';
 import { IObsidianContext } from './utils/obsidian/obsidian-context';
 import { EnumBloggerRestEndpoint, getUrl, getUrlCore } from './client/blogger/utils/url';
 import { BloggerRestClientGoogleOAuth2Context } from './client/blogger/blogger-rest-client-google-o-auth2-context';

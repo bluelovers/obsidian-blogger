@@ -6,7 +6,7 @@ import {
 } from '../../types/blogger-client-interface';
 import { IBloggerPostApiReturn } from './rest-client';
 import { EnumPostStatus } from '../../types/const';
-import { ISafeAny } from '../../types';
+import { ISafeAny } from '../../types/types';
 import { IBloggerRestClientContext } from './types';
 import { IBloggerProfile } from '../../types/blogger-profile';
 

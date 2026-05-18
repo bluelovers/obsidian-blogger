@@ -3,7 +3,7 @@ import {
 	IBloggerPostParams,
 	IBloggerPublishResult,
 } from '../../types/blogger-client-interface';
-import { ISafeAny } from '../../types';
+import { ISafeAny } from '../../types/types';
 import { IBloggerRestEndpoint } from './utils/url';
 import { IFormItemNameMapper } from '../../utils/type-utils';
 

@@ -1,4 +1,4 @@
-import { IURLInput } from '../../types';
+import { IURLInput } from '../../types/types';
 
 /**
  * 使用瀏覽器開啟網址

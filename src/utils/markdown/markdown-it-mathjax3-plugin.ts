@@ -7,7 +7,7 @@ import { RegisterHTMLHandler } from 'mathjax-full/js/handlers/html';
 import { AssistiveMmlHandler } from 'mathjax-full/js/a11y/assistive-mml';
 import { mathjax } from 'mathjax-full/js/mathjax';
 import juice from 'juice';
-import { ISafeAny } from '../../types';
+import { ISafeAny } from '../../types/types';
 
 import { EnumMathJaxOutputType } from '../../types/const';
 

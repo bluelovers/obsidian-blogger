@@ -1,5 +1,5 @@
 import { App, TFile } from 'obsidian';
-import { IMatterData } from '../../types';
+import { IMatterData } from '../../types/types';
 
 /**
  * 處理檔案，提取內容與 Frontmatter

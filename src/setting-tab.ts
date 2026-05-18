@@ -1,4 +1,4 @@
-import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { PluginSettingTab, Setting } from 'obsidian';
 import { getGlobalI18n } from './i18n/i18n';
 import { BloggerProfileManageModal } from './blogger-profile-manage-modal';
 import { IPluginSettings } from './plugin-settings';
@@ -6,15 +6,15 @@ import { getGlobalMarkdownParser, setupMarkdownParser } from './markdown-it-defa
 
 import { EnumMathJaxOutputType, EnumPostStatus } from './types/const';
 import { ITranslateKey } from './i18n/langs';
-import BloggerPlugin from './main';
+import type { IObsidianContext } from './utils/obsidian/obsidian-context';
 
 export class BloggerSettingTab extends PluginSettingTab {
   constructor(
-    readonly plugin: BloggerPlugin,
+    protected readonly ctx: IObsidianContext,
     protected readonly settings: IPluginSettings,
     protected readonly saveSettings: () => Promise<void>,
   ) {
-    super(plugin.app, plugin);
+    super(ctx.app, ctx.plugin);
   }
 
   display(): void {
@@ -68,7 +68,7 @@ export class BloggerSettingTab extends PluginSettingTab {
       .setDesc(t('settings_profilesDesc'))
       .addButton((button) =>
         button.setButtonText(t('settings_profilesModal')).onClick(() => {
-          new BloggerProfileManageModal(this.plugin, this.settings, this.saveSettings).open();
+          new BloggerProfileManageModal(this.ctx, this.settings, this.saveSettings).open();
         }),
       );
 

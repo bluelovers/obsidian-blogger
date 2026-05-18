@@ -1,4 +1,4 @@
-import { Modal, Plugin, Setting } from 'obsidian';
+import { Modal, Setting } from 'obsidian';
 import { IBloggerProfile, rendererProfile } from './blogger-profile';
 import { getGlobalI18n } from './i18n/i18n';
 import { openProfileModal } from './client/obsidian/blogger-profile-modal';
@@ -8,7 +8,6 @@ import { getGoogleOAuth2Client } from './client/blogger/oauth2-client';
 import { ITranslateKey } from './i18n/langs';
 import { IObsidianContext, showError } from './utils/obsidian/obsidian-context';
 import { addNewProfile, removeProfile, setDefaultProfile } from './plugin/settings';
-import BloggerPlugin from './main';
 
 /**
  * Blogger profiles manage modal.
@@ -16,11 +15,11 @@ import BloggerPlugin from './main';
 export class BloggerProfileManageModal extends Modal {
   protected readonly profiles: IBloggerProfile[];
   constructor(
-    readonly plugin: BloggerPlugin,
+    readonly ctx: IObsidianContext,
     readonly settings: IPluginSettings,
     protected readonly saveSettings: () => Promise<void>,
   ) {
-    super(plugin.app);
+    super(ctx.app);
     this.profiles = settings.profiles;
   }
 
@@ -54,9 +53,9 @@ export class BloggerProfileManageModal extends Modal {
               return;
             }
             const { profile: newProfile, atIndex } = await openProfileModal(
-              this.plugin,
+              this.ctx,
               profile,
-              getGoogleOAuth2Client(this.settings, this.plugin.ctx),
+              getGoogleOAuth2Client(this.settings, this.ctx),
               index,
             );
             if (!isNil(atIndex) && atIndex > -1) {
@@ -108,9 +107,9 @@ export class BloggerProfileManageModal extends Modal {
               return;
             }
             const { profile } = await openProfileModal(
-              this.plugin,
+              this.ctx,
               {},
-              getGoogleOAuth2Client(this.settings, this.plugin.ctx),
+              getGoogleOAuth2Client(this.settings, this.ctx),
             );
 
             addNewProfile({

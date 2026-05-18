@@ -1,4 +1,4 @@
-import { Notice, Platform, Plugin, Setting } from 'obsidian';
+import { Notice, Platform, Setting } from 'obsidian';
 import { getGlobalI18n } from '../../i18n/i18n';
 import { IBloggerProfile } from '../../blogger-profile';
 import { BLOGGER_API_ENDPOINT } from '../../consts';
@@ -9,18 +9,18 @@ import { ITranslateKey } from '../../i18n/langs';
 import { IAbstractRequestClientLike } from '../request/abstract-request-client';
 
 import { AbstractObsidianModal } from './abstract-obsidian-modal';
-import { showError } from '../../utils/obsidian/obsidian-context';
+import { IObsidianContext, showError } from '../../utils/obsidian/obsidian-context';
 import { EnumHttpMethod } from '../request/http-post';
 
 export const openProfileModal = (
-  plugin: Plugin,
+  ctx: IObsidianContext,
   profile: Partial<IBloggerProfile>,
   oAuth2Client: OAuth2Client,
   atIndex = -1,
 ): Promise<{ profile: IBloggerProfile; atIndex?: number }> => {
   return new Promise((resolve, reject) => {
     const modal = new BloggerProfileModal(
-      plugin,
+      ctx,
       (profile, atIndex) => {
         resolve({
           profile,
@@ -64,13 +64,13 @@ class BloggerProfileModal extends AbstractObsidianModal
   protected readonly profileData: Partial<IBloggerProfile>;
 
   constructor(
-    readonly plugin: Plugin,
+    readonly ctx: IObsidianContext,
     protected readonly onSubmit: (profile: IBloggerProfile, atIndex?: number) => void,
     profile: Partial<IBloggerProfile>,
     protected readonly oAuth2Client: OAuth2Client,
     protected readonly atIndex: number = -1,
   ) {
-    super(plugin.app);
+    super(ctx.app);
 
     this.profileData = Object.assign({}, profile);
   }

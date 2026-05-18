@@ -79,7 +79,7 @@ export abstract class AbstractBloggerClient implements IBloggerClient
 						profileName: this.profile.name,
 					}),
 				},
-				this.ctx.app,
+				this.ctx,
 			);
 			if (confirm.code !== EnumConfirmCode.Cancel)
 			{

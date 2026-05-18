@@ -8,7 +8,8 @@ import {
 import { getGlobalI18n } from './i18n/i18n';
 import { IFreshInternalOAuth2Token, OAuth2Client, generateCodeVerifier } from './client/blogger/oauth2-client';
 import { createServer } from 'http';
-import { Notice, Plugin } from 'obsidian';
+import { Notice } from 'obsidian';
+import type { IObsidianContext } from './utils/obsidian/obsidian-context';
 
 const getListeningPort = (server: ReturnType<typeof createServer>): number => {
   const address = server.address();
@@ -90,10 +91,10 @@ export class MobileOAuth2Helper {
   static setOAuth2Record = (oAuth2Record: (typeof MobileOAuth2Helper)['oAuth2Record']): void => {
     MobileOAuth2Helper.oAuth2Record = oAuth2Record;
   };
-  static setUp(plugin: Plugin) {
+  static setUp(ctx: IObsidianContext) {
     if (MobileOAuth2Helper.isSetUp) return;
     MobileOAuth2Helper.isSetUp = true;
-    plugin.registerObsidianProtocolHandler(BLOGGER_OAUTH2_URL_ACTION, async (e) => {
+    ctx.plugin.registerObsidianProtocolHandler(BLOGGER_OAUTH2_URL_ACTION, async (e) => {
       if (e.action === BLOGGER_OAUTH2_URL_ACTION) {
         if (MobileOAuth2Helper.oAuth2Record === null) {
           throw new Error('oAuth2Record === null');

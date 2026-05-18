@@ -6,37 +6,33 @@ import {
 } from './types/blogger-client-interface';
 import { openProfileChooserModal } from './blogger-profile-chooser-modal';
 import {
-  DEFAULT_SETTINGS,
-  upgradeSettings,
   IPluginSettings,
 } from './plugin-settings';
-import { createObsidianContext, IObsidianContext, showError } from './utils/obsidian/obsidian-context';
+import { IObsidianContext, showError } from './utils/obsidian/obsidian-context';
 import { isString } from 'lodash-es';
 import { IBloggerProfile } from './blogger-profile';
 import { getBloggerClient } from './blogger-client';
 import { getGlobalMarkdownParser, setupMarkdownParser } from './markdown-it-default';
 import { getGlobalI18n, setGlobalLang } from './i18n/i18n';
 import { MobileOAuth2Helper } from './blogger-oauth2-client';
-import { EnumPostStatus, EnumSettingsVersion } from './types/const';
-import { openPublishModal } from './utils/obsidian/open-publish-modal';
-import { openConfirmModal } from './confirm-modal';
+import { EnumPostStatus } from './types/const';
 import { findDefaultProfile, handleSettingsUpgrade } from './plugin/settings';
 import { createObsidianContextMain } from './utils/obsidian/obsidian-context-main';
 
 const doClientPublish = async (
-  plugin: BloggerPlugin,
+  ctx: IObsidianContext,
   profileOrName: IBloggerProfile | string,
   defaultPostParams?: IBloggerPostParams,
 ): Promise<void> =>
 {
   let profile: IBloggerProfile | undefined;
   if (isString(profileOrName)) {
-    profile = plugin.settings.profiles.find((it) => it.name === profileOrName);
+    profile = ctx.plugin.settings.profiles.find((it) => it.name === profileOrName);
   } else {
     profile = profileOrName;
   }
   if (profile) {
-    const client = getBloggerClient(plugin.ctx, plugin.settings, plugin.saveSettings, profile);
+    const client = getBloggerClient(ctx, ctx.plugin.settings, ctx.plugin.saveSettings, profile);
     if (client) {
       await client.publishPost(defaultPostParams);
     }
@@ -75,7 +71,7 @@ export default class BloggerPlugin extends Plugin {
     setupMarkdownParser(getGlobalMarkdownParser(), this.settings);
     addIcons();
     if (Platform.isMobile) {
-      MobileOAuth2Helper.setUp(this);
+      MobileOAuth2Helper.setUp(this.ctx);
     }
 
     // this.registerProtocolHandler();
@@ -96,7 +92,7 @@ export default class BloggerPlugin extends Plugin {
             title: '',
             content: '',
           };
-          await doClientPublish(this, defaultProfile, params);
+          await doClientPublish(this.ctx, defaultProfile, params);
         } else {
           showError(getGlobalI18n().t('error_noDefaultProfile') ?? 'No default profile found.');
         }
@@ -111,7 +107,7 @@ export default class BloggerPlugin extends Plugin {
       },
     });
 
-    this.addSettingTab(new BloggerSettingTab(this, this.settings, this.saveSettings));
+    this.addSettingTab(new BloggerSettingTab(this.ctx, this.settings, this.saveSettings));
   };
 
   onunload = () => {};
@@ -151,10 +147,10 @@ export default class BloggerPlugin extends Plugin {
   protected openProfileChooser = async () =>
   {
     if (this.settings.profiles.length === 1) {
-      await doClientPublish(this, this.settings.profiles[0]);
+      await doClientPublish(this.ctx, this.settings.profiles[0]);
     } else if (this.settings.profiles.length > 1) {
-      const profile = await openProfileChooserModal(this.app, this.settings.profiles);
-      await doClientPublish(this, profile);
+      const profile = await openProfileChooserModal(this.ctx, this.settings.profiles);
+      await doClientPublish(this.ctx, profile);
     } else {
       showError(getGlobalI18n().t('error_noProfile'));
     }

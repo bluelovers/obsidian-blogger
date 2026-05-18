@@ -20,6 +20,15 @@ This file provides guidance to agents when working with code in this repository.
 - **OAuth2 has two code paths** — desktop (`reauthorizeGoogleTokenOnLocalHost`, uses `createServer` on 127.0.0.1) and web (`reauthorizeGoogleTokenOnWeb`, uses `privet-kitty.github.io` proxy). Selection is via `Platform.isMobile` in `main.ts` line 61.
 - **`IObsidianContext`** (`src/utils/obsidian/obsidian-context.ts`) — central context object built by `createObsidianContextMain()`. Always carries a `plugin: BloggerPlugin` reference in production; test environments may omit it. Components with `ctx` should use `ctx.plugin` instead of threading callbacks through constructor chains.
 
+## Refactoring Principles
+
+- **低階工具函數不應複雜化** — 工具函數應保持最小依賴簽章，不要為了統一而強制改為接受 `ctx: IObsidianContext`。例如：
+  - `getActiveFile(app: App)` 只需 `App`，不需要 `ctx`
+  - `loadSettingsFromObsidianPlugin(plugin: Pick<Plugin, 'loadData'>)` 只需 `plugin`，名稱已表明意圖
+  - `processFile(file: TFile, app: App)` 只需 `App`，不需要 `ctx`
+  - **判斷標準**：函數是否僅使用 `ctx.app` 或 `ctx.plugin` 中單一職責的 API？如果是，應直接接受該最小依賴，而非整個 `ctx`。
+  - **例外**：Obsidian API 的子類別（`Modal`、`PluginSettingTab`）由於框架限制不得不傳入 `app`，此為可接受的例外。
+
 ## Non-Obvious Patterns
 
 - **`Brand<K, T>` type** in `src/types.ts` — branded type used to distinguish `IFreshInternalOAuth2Token` from expired `IInternalOAuth2Token`. The `isFreshInternalOAuth2Token` guard checks `expiresAt > Date.now()`.

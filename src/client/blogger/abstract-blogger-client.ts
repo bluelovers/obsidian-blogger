@@ -147,34 +147,16 @@ export abstract class AbstractBloggerClient implements IBloggerClient
 				// const modified = matter.stringify(postParams.content, matterData, matterOptions);
 				// this.updateFrontMatter(modified);
 				/**
-				 * 若取得當前活躍檔案，則更新其 Frontmatter
-				 * Update its Frontmatter via fileCtx
+				 * 寫入發布成功的結果（包含狀態標籤更新）
+				 * Update publish success result (including status tags update)
 				 */
-				await fileCtx.updateFrontmatter((fm: IMatterData) =>
-				{
-					fm.profileName = this.profile.name;
-					fm.postId = postId;
-					fm.url = result.data.url;
-
-					fm.tags = _updateFrontMatterTagsByPostStatus(fm, result.data.status);
-
-					/**
-					 * 當自訂標題與檔案名稱不同時，一併紀錄至 Frontmatter
-					 * If the custom title differs from the file name, also record it in Frontmatter
-					 */
-					if (postParams.title && postParams.title !== fileCtx.file.basename)
-					{
-						fm.title = postParams.title;
-					}
-
-					/**
-					 * 執行外部傳入的自訂 Frontmatter 更新邏輯
-					 * Execute custom Frontmatter update logic passed from outside
-					 */
-					if (isFunction(updateMatterData))
-					{
-						updateMatterData(fm);
-					}
+				await fileCtx.frontmatter.blogger.updatePublishSuccess({
+					profileName: this.profile.name,
+					postId: postId,
+					url: result.data.url,
+					status: result.data.status,
+					customTitle: postParams.title,
+					extraUpdate: updateMatterData,
 				});
 
 				/**
@@ -242,7 +224,7 @@ export abstract class AbstractBloggerClient implements IBloggerClient
 			 */
 			if (defaultPostParams)
 			{
-				postParams = this.readFromFrontMatter(title, matterData, defaultPostParams);
+				postParams = fileCtx.frontmatter.blogger.toPostParams({ ...defaultPostParams, title });
 				postParams.content = content;
 				result = await this.tryToPublish({
 					fileCtx,
@@ -267,7 +249,7 @@ export abstract class AbstractBloggerClient implements IBloggerClient
 						resolve,
 					) =>
 					{
-						postParams = this.readFromFrontMatter(title, matterData, postParams);
+						postParams = fileCtx.frontmatter.blogger.toPostParams({ ...postParams, title });
 						postParams.content = content;
 						try
 						{
@@ -289,13 +271,10 @@ export abstract class AbstractBloggerClient implements IBloggerClient
 									throw new Error(r.message);
 								}
 								/**
-								 * 取得當前檔案並更新其中的標籤狀態
+								 * 僅更新文章狀態標籤
 								 * Update its tag status via fileCtx
 								 */
-								await fileCtx.updateFrontmatter((fm: IMatterData) =>
-								{
-									fm.tags = _updateFrontMatterTagsByPostStatus(fm, r.data!.status);
-								});
+								await fileCtx.frontmatter.blogger.updateStatusTags(r.data!.status);
 								this.ctx.showNotice(getGlobalI18n().t('message_postStatusUpdated'));
 								publishModal.close();
 								resolve!(r);
@@ -366,23 +345,5 @@ export abstract class AbstractBloggerClient implements IBloggerClient
 		}
 	}
 
-	/**
-	 * 從 Frontmatter 中讀取並合併發布參數
-	 * Read and merge publish parameters from Frontmatter
-	 *
-	 * @param noteTitle - 筆記標題 / Note title
-	 * @param matterData - 筆記的 Frontmatter 資料 / Frontmatter data of the note
-	 * @param params - 既有的發布參數 / Existing publish parameters
-	 * @returns 處理過後的最終發布參數 / Processed final publish parameters
-	 */
-	protected readFromFrontMatter(
-		noteTitle: string,
-		matterData: IMatterData,
-		params: Partial<IBloggerPostParams>,
-	): IBloggerPostParams
-	{
-		const postParams = { ...params };
-		postParams.title = noteTitle;
-		return _frontMatterToBloggerPostParams(matterData, postParams);
-	}
+
 }

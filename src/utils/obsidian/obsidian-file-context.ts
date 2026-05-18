@@ -1,7 +1,7 @@
 import { App, TFile } from 'obsidian';
 import { IMatterData } from '../../types/types';
-import { processFile } from './obsidian-utils';
 import { IObsidianContext } from './obsidian-context';
+import { createFrontmatterContext } from './obsidian-frontmatter-context';
 
 /**
  * 建立單一檔案的上下文
@@ -16,6 +16,8 @@ import { IObsidianContext } from './obsidian-context';
  */
 export function createFileContext(file: TFile, ctx: IObsidianContext)
 {
+	const frontmatterCtx = createFrontmatterContext(file, ctx);
+
 	return {
 		/**
 		 * 取得當前鎖定的目標檔案
@@ -27,35 +29,12 @@ export function createFileContext(file: TFile, ctx: IObsidianContext)
 		},
 
 		/**
-		 * 取得該檔案目前的 Frontmatter 快取
-		 * Get current Frontmatter cache for the file
-		 *
-		 * @returns Frontmatter 資料 / Frontmatter data
+		 * 取得檔案的 Frontmatter 管理器
+		 * Get Frontmatter manager for the file
 		 */
-		getFrontmatter(): IMatterData | undefined
+		get frontmatter()
 		{
-			return ctx.app.metadataCache.getFileCache(file)?.frontmatter as IMatterData | undefined;
-		},
-
-		/**
-		 * 更新該檔案的 Frontmatter
-		 * Update Frontmatter for the file
-		 *
-		 * @param matterDataOrCallback - 要更新的 Frontmatter 屬性，或用來修改的 callback 函式 / Frontmatter properties to update, or callback function
-		 */
-		async updateFrontmatter(matterDataOrCallback: Partial<IMatterData> | ((matter: IMatterData) => void)): Promise<void>
-		{
-			await ctx.app.fileManager.processFrontMatter(file, (matter: IMatterData) =>
-			{
-				if (typeof matterDataOrCallback === 'function')
-				{
-					matterDataOrCallback(matter);
-				}
-				else
-				{
-					Object.assign(matter, matterDataOrCallback);
-				}
-			});
+			return frontmatterCtx;
 		},
 
 		/**
@@ -68,7 +47,12 @@ export function createFileContext(file: TFile, ctx: IObsidianContext)
 		 */
 		async processData(): Promise<{ content: string; matter: IMatterData }>
 		{
-			return processFile(file, ctx.app);
+			const matter = await frontmatterCtx.readEnsure();
+			const raw = await ctx.app.vault.read(file);
+			return {
+				content: raw.replace(/^---[\s\S]+?---/, '').trim(),
+				matter,
+			};
 		},
 	} as const;
 }

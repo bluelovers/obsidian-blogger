@@ -7,6 +7,8 @@ import { EnumPostStatus } from './types/const';
 import { ITranslateKey } from './i18n/langs';
 import { _getPostStatusFromTags, _togglePostStatus } from './data/tags-utils';
 import { IObsidianContext } from './utils/obsidian/obsidian-context';
+import { BLOGGER_DEFAULT_PROFILE_NAME } from './consts';
+import { IBloggerProfile } from './blogger-profile';
 
 /**
  * 發布對話框提交回呼函式型別
@@ -86,18 +88,43 @@ export class BloggerPublishModal extends Modal {
 	 *
 	 * @param params - 初始發布參數 / Initial publish parameters
 	 */
+	protected get profile(): IBloggerProfile | undefined
+	{
+		const profileName = this.matterData.profileName ?? BLOGGER_DEFAULT_PROFILE_NAME;
+		return this.settings.profiles.find(p => p.name === profileName);
+	}
+
 	protected display(params: Partial<IBloggerPostParams>): void
 	{
     const t = (key: ITranslateKey, vars?: Record<string, string>): string => {
       return getGlobalI18n().t(key, vars);
     };
+    const profile = this.profile;
 
     const { contentEl } = this;
 
     contentEl.empty();
     contentEl.createEl('h1', { text: t('publishModal_title') });
 
+    /** 顯示 Blog 資訊 / Display blog info */
+    if (profile)
+    {
+      new Setting(contentEl)
+        .setName('Blog')
+        .setDesc(`${profile.name}（ID: ${profile.blogId}）`);
+    }
+
+    /** 顯示文章資訊 / Display post info */
+    {
+      const postTitle = this.matterData.title ?? '(untitled)';
+      const postIdText = this.matterData.postId ?? '(new)';
+      new Setting(contentEl)
+        .setName('Post')
+        .setDesc(`${postTitle}（ID: ${postIdText}）`);
+    }
+
 		const defaultPostStatus = _togglePostStatus(params.status, this.settings.defaultPostStatus)!;
+		params.status = defaultPostStatus;
 
     new Setting(contentEl)
       .setName(t('publishModal_postStatus'))

@@ -15,6 +15,8 @@ import { _handleTagsForBloggerPostApi } from '../../data/tags-utils';
 import { IHttpHeaders } from '../../types/http';
 import { IBloggerProfile } from '../../blogger-profile';
 import { ITSPickExtra } from 'ts-type';
+import { _extractStatusCore } from './utils/post-utils';
+import { createBloggerClientErrorResult, isBloggerClientErrorResult } from './utils/resp';
 
 /**
  * Blogger 核心 API 客戶端
@@ -94,11 +96,7 @@ export class BloggerCoreApiClient
 			{
 				message = `${message} ${getGlobalI18n().t('error_postNotExistRemotely')}`;
 			}
-			return {
-				code: EnumBloggerClientReturnCode.Error,
-				message,
-				response: resp,
-			};
+			return createBloggerClientErrorResult(message, resp);
 		}
 		/**
 		 * 嘗試解析 API 回應，若成功則回傳處理結果
@@ -119,11 +117,7 @@ export class BloggerCoreApiClient
 		 */
 		catch (e)
 		{
-			return {
-				code: EnumBloggerClientReturnCode.Error,
-				message: getGlobalI18n().t('error_cannotParseResponse'),
-				response: resp,
-			};
+			return createBloggerClientErrorResult(getGlobalI18n().t('error_cannotParseResponse'), resp);
 		}
 	}
 
@@ -145,6 +139,16 @@ export class BloggerCoreApiClient
 		postParams: Partial<IBloggerPostParams>,
 	): Promise<IBloggerClientResult<IBloggerPublishResult>>
 	{
+
+
+		console.dir({
+			title,
+
+			content,
+
+			postParams,
+		});
+
 		/** ========== Status-only PATCH 路徑 ========== */
 		/**
 		 * 判斷是否執行僅更新狀態（Status-only）的操作路徑
@@ -154,11 +158,7 @@ export class BloggerCoreApiClient
 		{
 			if (!postParams.postId)
 			{
-				return {
-					code: EnumBloggerClientReturnCode.Error,
-					message: getGlobalI18n().t('error_noPostId'),
-					response: undefined,
-				};
+				return createBloggerClientErrorResult(getGlobalI18n().t('error_noPostId'), undefined);
 			}
 			return this.updatePostStatusOnly(postParams.postId, postParams.status!);
 		}
@@ -182,15 +182,41 @@ export class BloggerCoreApiClient
 		if (postParams.postId)
 		{
 			const resp = await this._requestUrlEndpoint(
-				EnumBloggerRestEndpoint.editPost,
+				EnumBloggerRestEndpoint.patchPost,
 				{
 					query: {
 						postId: postParams.postId,
+						isDraft,
 					},
 					body,
 				},
 			);
-			return this._handlePublishResponse(resp, postParams, true);
+			const contentResult = this._handlePublishResponse(resp, postParams, true);
+
+			/**
+			 * Blogger API v3 的 posts.update (PUT) 不處理文章狀態變更。
+			 * 必須額外呼叫專用的 posts.publish / posts.revert 端點。
+			 *
+			 * 使用 patch 也無法解決此問題
+			 *
+			 * Blogger API v3 posts.update (PUT) does not handle post status changes.
+			 * Must call dedicated posts.publish / posts.revert endpoints separately.
+			 */
+			if (!isBloggerClientErrorResult(contentResult))
+			{
+				const currentStatus = _extractStatusCore(contentResult.data);
+
+				if (currentStatus !== postParams.status)
+				{
+					console.error('Blogger API v3 posts.update (PUT) does not handle post status changes. Must call dedicated posts.publish / posts.revert endpoints separately.', {
+						currentStatus,
+						expectedStatus: postParams.status,
+					});
+
+					return this.updatePostStatusOnly(postParams.postId, postParams.status!);
+				}
+			}
+			return contentResult;
 		}
 		/**
 		 * 若參數中無 postId，代表是建立新文章（POST 請求）
@@ -291,21 +317,29 @@ export class BloggerCoreApiClient
 	 * @param targetStatus - 目標文章狀態 / Target post status
 	 * @returns 包含發布結果的 Promise / Promise containing publish result
 	 */
-	async updatePostStatusOnly(postId: IBloggerProfile["blogId"], targetStatus: EnumPostStatus): Promise<IBloggerClientResult<IBloggerPublishResult>>
+	async updatePostStatusOnly(postId: IBloggerProfile["blogId"], targetStatus: EnumPostStatus, doCheckStatus?: boolean): Promise<IBloggerClientResult<IBloggerPublishResult>>
 	{
-		const getResp = await this.getPost(postId, EnumBloggerViewMode.AUTHOR);
-		if (getResp.code !== EnumBloggerClientReturnCode.OK)
+		if (doCheckStatus)
 		{
-			return getResp; // 返回獲取失敗錯誤 / Return fetch error
-		}
+			const getResp = await this.getPost(postId, EnumBloggerViewMode.AUTHOR);
 
-		// 判斷目前狀態 / Determine current status
-		const currentStatus = getResp.data?.status ?? EnumPostStatus.Live;
+			if (isBloggerClientErrorResult(getResp))
+			{
+				return getResp; // 返回獲取失敗錯誤 / Return fetch error
+			}
 
-		if (currentStatus === targetStatus)
-		{
-			// 狀態已一致，直接返回成功 / Status matches, return OK directly
-			return getResp;
+			/**
+			 * 判斷目前狀態 / Determine current status
+			 *
+			 * 注意 getResp.response 才是真正的回傳狀態
+			 */
+			const currentStatus = _extractStatusCore(getResp.data);
+
+			if (currentStatus === targetStatus)
+			{
+				/** 狀態已一致，直接返回成功 / Status matches, return OK directly */
+				return getResp;
+			}
 		}
 
 		if (targetStatus === EnumPostStatus.Live)

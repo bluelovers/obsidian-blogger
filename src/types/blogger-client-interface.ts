@@ -21,7 +21,7 @@ interface _IBloggerClientResult<R extends ISafeAny = ISafeAny>
  *
  * @template T - 成功時攜帶的資料類型 / Data type on success
  */
-interface IBloggerClientOkResult<T, R extends ISafeAny = ISafeAny> extends _IBloggerClientResult<R>
+export interface IBloggerClientOkResult<T, R extends ISafeAny = ISafeAny> extends _IBloggerClientResult<R>
 {
 	code: EnumBloggerClientReturnCode.OK;
 	/** 成功結果資料 / Success result data */
@@ -32,7 +32,7 @@ interface IBloggerClientOkResult<T, R extends ISafeAny = ISafeAny> extends _IBlo
  * Blogger 客戶端錯誤結果介面（內部使用）
  * Blogger client error result interface (internal)
  */
-interface IBloggerClientErrorResult<R extends ISafeAny = ISafeAny> extends _IBloggerClientResult<R>
+export interface IBloggerClientErrorResult<R extends ISafeAny = ISafeAny> extends _IBloggerClientResult<R>
 {
 	code: EnumBloggerClientReturnCode.Error;
 	/** 錯誤訊息 / Error message */

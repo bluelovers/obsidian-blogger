@@ -13,10 +13,11 @@ import { openWithBrowser } from '../webview/webview-utils';
  * @param app Obsidian App 實例
  * @returns Obsidian 上下文
  */
-export function createObsidianContextMain(app: App)
+export function createObsidianContextMain(app: App, plugin: BloggerPlugin)
 {
 	return createObsidianContext({
 		app,
+		plugin,
 
 		openPublishModal,
 		openConfirmModal,
@@ -31,5 +32,5 @@ export function createObsidianContextMain(app: App)
  */
 export function createObsidianContextMainByPlugin(plugin: BloggerPlugin)
 {
-	return createObsidianContextMain(plugin.app)
+	return createObsidianContextMain(plugin.app, plugin)
 }

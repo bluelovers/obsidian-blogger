@@ -139,7 +139,7 @@ export class BloggerPublishModal extends Modal {
           });
       });
 
-    /** 僅當筆記已有 postId（已發布過）時顯示「僅更新狀態」選項 */
+    /** 僅當筆記已有 postId（已發布過）時顯示進階選項 */
     if (this.hasPostId)
     {
       new Setting(contentEl)
@@ -151,6 +151,20 @@ export class BloggerPublishModal extends Modal {
             .onChange((value) =>
             {
               params.updateStatusOnly = value;
+            });
+        });
+
+      new Setting(contentEl)
+        .setName(t('settings_enableSmartPreCheck'))
+        .setDesc(t('settings_enableSmartPreCheckDesc'))
+        .addToggle((toggle) =>
+        {
+          toggle
+            .setValue(this.settings.enableSmartPreCheck)
+            .onChange(async (value) =>
+            {
+              this.settings.enableSmartPreCheck = value;
+              await this.ctx.plugin.saveSettings();
             });
         });
     }

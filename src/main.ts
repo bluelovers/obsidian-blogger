@@ -61,7 +61,7 @@ export default class BloggerPlugin extends Plugin {
   {
     if (!this.#ctx)
     {
-      this.#ctx = createObsidianContextMain(this.app);
+      this.#ctx = createObsidianContextMain(this.app, this);
     }
     return this.#ctx;
   }

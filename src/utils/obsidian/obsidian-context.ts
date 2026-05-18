@@ -10,6 +10,7 @@ import { openConfirmModal } from '../../confirm-modal';
 import { IMatterData } from '../../types';
 import { IObsidianRequest } from '../../client/request/abstract-request-client';
 import { openWithBrowser } from '../webview/webview-utils';
+import BloggerPlugin from '../../main';
 
 /**
  * 顯示 Obsidian 通知
@@ -91,6 +92,8 @@ export function showError<T>(error: unknown): IBloggerClientResult<T>
 export function createObsidianContext(context: {
 	app?: App,
 
+	plugin?: BloggerPlugin,
+
 	openPublishModal?: typeof openPublishModal,
 	openConfirmModal?: typeof openConfirmModal,
 
@@ -111,6 +114,8 @@ export function createObsidianContext(context: {
 	context ??= {} as any;
 	return {
 		app: context.app!,
+
+		plugin: context.plugin!,
 
 		obsidianRequest: context.obsidianRequest!,
 

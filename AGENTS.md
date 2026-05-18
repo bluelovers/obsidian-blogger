@@ -18,6 +18,7 @@ This file provides guidance to agents when working with code in this repository.
   - `getBloggerClient()` — from `src/blogger-client.ts`
 - **Settings** live in `src/plugin-settings.ts`. `DEFAULT_SETTINGS` is the base; `upgradeSettings()` returns `{ needUpgrade, settings }` but currently always returns `needUpgrade: false` (stub for future migrations).
 - **OAuth2 has two code paths** — desktop (`reauthorizeGoogleTokenOnLocalHost`, uses `createServer` on 127.0.0.1) and web (`reauthorizeGoogleTokenOnWeb`, uses `privet-kitty.github.io` proxy). Selection is via `Platform.isMobile` in `main.ts` line 61.
+- **`IObsidianContext`** (`src/utils/obsidian/obsidian-context.ts`) — central context object built by `createObsidianContextMain()`. Always carries a `plugin: BloggerPlugin` reference in production; test environments may omit it. Components with `ctx` should use `ctx.plugin` instead of threading callbacks through constructor chains.
 
 ## Non-Obvious Patterns
 
@@ -27,6 +28,7 @@ This file provides guidance to agents when working with code in this repository.
 - **`doClientPublish()` in `src/main.ts`** — throws `Error` when profile is not found (line 41), which is inconsistent with the `showError()` pattern used elsewhere. This is a known rough edge.
 - **`processFile()` in `src/utils.ts`** — strips YAML frontmatter via regex (`/^---[\s\S]+?---/`) rather than using Obsidian's frontmatter API. This means non-standard frontmatter delimiters could break it.
 - **`IBloggerPostParams`** — `status` accepts only `'draft'` or `'live'` (from `EnumPostStatus` enum in `blogger-client-interface.ts`). Labels is always `[]` in the default publish command.
+- **`enableSmartPreCheck`** in `IPluginSettings` (default `false`) — when enabled, `BloggerCoreApiClient.publish()` queries current post status via GET before updating. Decides operation order: LIVE→DRAFT reverts first then PATCH; DRAFT→LIVE PATCHes first then publishes. The toggle appears both in settings tab and publish modal (only for existing posts), synced via the same `settings` reference. Published modal uses `ctx.plugin.saveSettings()` to persist.
 
 ## Source File Map
 
@@ -41,6 +43,8 @@ This file provides guidance to agents when working with code in this repository.
 | `src/types.ts` | `ISafeAny`, `IBrand`, `IMedia`, `FormItems`, `isMedia()` |
 | `src/utils.ts` | `showError()`, `processFile()`, `openWithBrowser()`, `getBoundary()` |
 | `src/consts.ts` | All OAuth2 endpoints, `BLOGGER_API_ENDPOINT`, `ERROR_NOTICE_TIMEOUT` |
+| `src/utils/obsidian/obsidian-context.ts` | `IObsidianContext`, `createObsidianContext()` context factory |
+| `src/utils/obsidian/obsidian-context-main.ts` | `createObsidianContextMain()` production context builder, always provides `plugin` |
 | `src/i18n.ts` | Translation function, `setGlobalLang()` |
 | `src/markdown-it-default.ts` | Markdown parser setup with plugins |
 | `src/markdown-it-mathjax3-plugin.ts` | MathJax v3 rendering plugin |

@@ -1,4 +1,4 @@
-import { App, moment, Notice } from 'obsidian';
+import { App, moment, Notice, TFile } from 'obsidian';
 import { ILanguageID } from '../../i18n/langs';
 import { EnumBloggerClientReturnCode, EnumLanguageIDAll } from '../../types/const';
 import { tryCatch } from '../try';
@@ -12,6 +12,7 @@ import { IObsidianRequest } from '../../client/request/abstract-request-client';
 import { openWithBrowser } from '../webview/webview-utils';
 import BloggerPlugin from '../../main';
 import { getActiveFile } from './app/file';
+import { createFileContext } from './obsidian-file-context';
 
 /**
  * 顯示 Obsidian 通知
@@ -116,7 +117,7 @@ export function createObsidianContext(context: {
 
 	const app = context.app!;
 
-	return {
+	const ctx = {
 		app,
 
 		plugin: context.plugin!,
@@ -144,7 +145,24 @@ export function createObsidianContext(context: {
 		{
 			return getActiveFile(app);
 		},
-	};
+
+		/**
+		 * 建立指定檔案（或當前活動檔案）的 FileContext
+		 * Create FileContext for specified (or currently active) file
+		 *
+		 * @param file - 指定檔案（若未提供則取當前活動檔案）/ Specified file (or active file if not provided)
+		 * @returns 檔案上下文或 null / File context or null
+		 */
+		createFileContext(file?: TFile)
+		{
+			const targetFile = file ?? getActiveFile(app);
+			if (!targetFile) return null;
+
+			return createFileContext(targetFile, ctx);
+		},
+	} as const;
+
+	return ctx;
 }
 
 /**

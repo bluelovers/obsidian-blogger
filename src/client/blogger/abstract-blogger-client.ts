@@ -13,7 +13,7 @@ import { getGlobalMarkdownParser } from '../../utils/markdown/markdown-it-defaul
 import { _frontMatterToBloggerPostParams, _updateFrontMatterTagsByPostStatus } from '../../utils/tags-utils';
 import { isFunction } from 'lodash-es';
 
-import { processFile } from '../../utils/obsidian/obsidian-utils';
+import { IFileContext } from '../../utils/obsidian/obsidian-file-context';
 import { IBloggerProfile } from '../../types/blogger-profile';
 
 /**
@@ -103,11 +103,12 @@ export abstract class AbstractBloggerClient implements IBloggerClient
 	 * @returns 發布結果 Promise / Promise of publish result
 	 */
 	protected async tryToPublish(params: {
+		fileCtx: IFileContext;
 		postParams: Partial<IBloggerPostParams>;
 		updateMatterData?: (matter: Partial<IMatterData>) => void;
 	}): Promise<IBloggerClientResult<IBloggerPublishResult>>
 	{
-		const { postParams, updateMatterData } = params;
+		const { fileCtx, postParams, updateMatterData } = params;
 		const result = await this.publish(
 			postParams.title ?? 'A post from Obsidian!',
 			// FIXME: this modification should be done on the renderer side
@@ -145,40 +146,36 @@ export abstract class AbstractBloggerClient implements IBloggerClient
 			{
 				// const modified = matter.stringify(postParams.content, matterData, matterOptions);
 				// this.updateFrontMatter(modified);
-				const file = this.ctx.getActiveFile();
 				/**
 				 * 若取得當前活躍檔案，則更新其 Frontmatter
-				 * If active file is retrieved, update its Frontmatter
+				 * Update its Frontmatter via fileCtx
 				 */
-				if (file)
+				await fileCtx.updateFrontmatter((fm: IMatterData) =>
 				{
-					await this.ctx.app.fileManager.processFrontMatter(file, (fm: IMatterData) =>
+					fm.profileName = this.profile.name;
+					fm.postId = postId;
+					fm.url = result.data.url;
+
+					fm.tags = _updateFrontMatterTagsByPostStatus(fm, result.data.status);
+
+					/**
+					 * 當自訂標題與檔案名稱不同時，一併紀錄至 Frontmatter
+					 * If the custom title differs from the file name, also record it in Frontmatter
+					 */
+					if (postParams.title && postParams.title !== fileCtx.file.basename)
 					{
-						fm.profileName = this.profile.name;
-						fm.postId = postId;
-						fm.url = result.data.url;
+						fm.title = postParams.title;
+					}
 
-						fm.tags = _updateFrontMatterTagsByPostStatus(fm, result.data.status);
-
-						/**
-						 * 當自訂標題與檔案名稱不同時，一併紀錄至 Frontmatter
-						 * If the custom title differs from the file name, also record it in Frontmatter
-						 */
-						if (postParams.title && postParams.title !== file.basename)
-						{
-							fm.title = postParams.title;
-						}
-
-						/**
-						 * 執行外部傳入的自訂 Frontmatter 更新邏輯
-						 * Execute custom Frontmatter update logic passed from outside
-						 */
-						if (isFunction(updateMatterData))
-						{
-							updateMatterData(fm);
-						}
-					});
-				}
+					/**
+					 * 執行外部傳入的自訂 Frontmatter 更新邏輯
+					 * Execute custom Frontmatter update logic passed from outside
+					 */
+					if (isFunction(updateMatterData))
+					{
+						updateMatterData(fm);
+					}
+				});
 
 				/**
 				 * 根據設定決定是否在發布後使用瀏覽器開啟文章網址
@@ -218,19 +215,19 @@ export abstract class AbstractBloggerClient implements IBloggerClient
 				throw new Error(getGlobalI18n().t('error_noEndpoint'));
 			}
 			// const { activeEditor } = this.plugin.app.workspace;
-			const file = this.ctx.getActiveFile();
+			const fileCtx = this.ctx.createFileContext();
 			/**
 			 * 確保當前有開啟的 Markdown 檔案可供處理
 			 * Ensure there is an active Markdown file to process
 			 */
-			if (file === null)
+			if (fileCtx === null)
 			{
 				throw new Error(getGlobalI18n().t('error_noActiveFile'));
 			}
 
 			// read note title, content and matter data
-			const title = file.basename;
-			const { content, matter: matterData } = await processFile(file, this.ctx.app);
+			const title = fileCtx.file.basename;
+			const { content, matter: matterData } = await fileCtx.processData();
 
 			// check if profile selected is matched to the one in note property,
 			// if not, ask whether to update or not
@@ -248,6 +245,7 @@ export abstract class AbstractBloggerClient implements IBloggerClient
 				postParams = this.readFromFrontMatter(title, matterData, defaultPostParams);
 				postParams.content = content;
 				result = await this.tryToPublish({
+					fileCtx,
 					postParams,
 				});
 			}
@@ -290,18 +288,14 @@ export abstract class AbstractBloggerClient implements IBloggerClient
 								{
 									throw new Error(r.message);
 								}
-								const file = this.ctx.getActiveFile();
 								/**
 								 * 取得當前檔案並更新其中的標籤狀態
-								 * Get current file and update its tag status
+								 * Update its tag status via fileCtx
 								 */
-								if (file)
+								await fileCtx.updateFrontmatter((fm: IMatterData) =>
 								{
-									await this.ctx.app.fileManager.processFrontMatter(file, (fm: IMatterData) =>
-									{
-										fm.tags = _updateFrontMatterTagsByPostStatus(fm, r.data!.status);
-									});
-								}
+									fm.tags = _updateFrontMatterTagsByPostStatus(fm, r.data!.status);
+								});
 								this.ctx.showNotice(getGlobalI18n().t('message_postStatusUpdated'));
 								publishModal.close();
 								resolve!(r);
@@ -309,6 +303,7 @@ export abstract class AbstractBloggerClient implements IBloggerClient
 							}
 							/** 正常發布/更新路徑 */
 							const r = await this.tryToPublish({
+								fileCtx,
 								postParams,
 								updateMatterData,
 							});

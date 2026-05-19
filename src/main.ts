@@ -19,6 +19,7 @@ import { findDefaultProfile, handleSettingsUpgrade } from './plugin/settings';
 import { createObsidianContextMain } from './utils/obsidian/obsidian-context-main';
 import { IBloggerProfile } from './types/blogger-profile';
 import { BloggerDashboardView, BLOGGER_DASHBOARD_VIEW_TYPE } from './client/obsidian/view/blogger-dashboard-view';
+import { BloggerBasesView, BLOGGER_BASES_VIEW_TYPE } from './client/obsidian/view/blogger-bases-view';
 
 const doClientPublish = async (
   ctx: IObsidianContext,
@@ -82,6 +83,13 @@ export default class BloggerPlugin extends Plugin {
       BLOGGER_DASHBOARD_VIEW_TYPE,
       (leaf: WorkspaceLeaf) => new BloggerDashboardView(leaf, this.ctx),
     );
+
+    /** 註冊 Blogger Bases View（供 Obsidian Bases 系統使用）*/
+    this.registerBasesView(BLOGGER_BASES_VIEW_TYPE, {
+      name: 'Blogger Status',
+      icon: 'blogger-logo',
+      factory: (controller, containerEl) => new BloggerBasesView(controller, containerEl),
+    });
 
     this.addRibbonIcon('blogger-logo', getGlobalI18n().t('ribbon_iconTitle'), () => {
       this.openProfileChooser();

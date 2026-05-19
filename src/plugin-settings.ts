@@ -43,6 +43,9 @@ export interface IPluginSettings extends Partial<IOauth2ClientCredentials>
 	/** 是否啟用 HTML 渲染 / Whether to enable HTML rendering */
 	enableHtml: boolean;
 
+	/** 是否啟用 Blogger Dashboard 儀表板 / Whether to enable Blogger Dashboard view */
+	enableDashboard: boolean;
+
 	/**
 	 * 更新文章前是否先查詢當前狀態
 	 * Whether to check current post status before updating
@@ -90,6 +93,7 @@ export const DEFAULT_SETTINGS: IPluginSettings = {
 	openPublishedPageWithBrowser: false,
 	mathJaxOutputType: EnumMathJaxOutputType.SVG,
 	enableHtml: false,
+	enableDashboard: false,
 	enableSmartPreCheck: false,
 };
 

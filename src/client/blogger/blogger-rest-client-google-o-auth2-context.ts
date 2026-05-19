@@ -80,6 +80,9 @@ export class BloggerRestClientGoogleOAuth2Context implements IBloggerRestClientC
 					postId: response.id,
 					url: response.url,
 					status: response.status ?? EnumPostStatus.Live,
+					published: response.published,
+					updated: response.updated,
+					images: response.images,
 				};
 			}
 			/**

@@ -27,6 +27,25 @@ export type ISafeAny = any;
 export type IBrand<K, T> = K & { __brand: T };
 
 /**
+ * Blogger 後設資料巢狀結構
+ * Blogger metadata nested structure
+ *
+ * 儲存 Blogger API 回傳的資料，在發布成功後寫入 Frontmatter 的 blogger 欄位。
+ * Stored in the blogger field of Frontmatter after successful publishing.
+ */
+export interface IBloggerMeta
+{
+	/** 發布時間（ISO 8601 格式）/ Published time (ISO 8601 format) */
+	published?: string;
+
+	/** 更新時間（ISO 8601 格式）/ Updated time (ISO 8601 format) */
+	updated?: string;
+
+	/** 文章縮圖 URL / Post thumbnail URL */
+	thumbnail?: string;
+}
+
+/**
  * Front Matter 資料型別
  * Front matter data type
  *
@@ -42,6 +61,13 @@ export type IMatterData = {
 	 * @see https://github.com/privet-kitty/obsidian-blogger
 	 */
 	labels?: string[];
+
+	/**
+	 * Blogger 回傳後設資料巢狀欄位
+	 * Blogger response metadata nested field
+	 */
+	blogger?: IBloggerMeta;
+
 	[p: string]: ISafeAny;
 } & Partial<IBloggerPostParamsCore>;
 

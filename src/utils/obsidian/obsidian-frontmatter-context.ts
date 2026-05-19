@@ -99,12 +99,18 @@ export function createFrontmatterContext(file: TFile, ctx: IObsidianContext)
 			/**
 			 * 寫入發布成功的結果（包含狀態標籤更新）
 			 * Update publish success result (including status tags update)
+			 *
+			 * 會一併將 Blogger API 回傳的 published / updated 日期與 thumbnail 寫入 Frontmatter。
+			 * Also writes published / updated dates and thumbnail from Blogger API response.
 			 */
 			async updatePublishSuccess(params: {
 				profileName: string;
 				postId: `${number}`;
 				url: string;
 				status: EnumPostStatus;
+				published?: string;
+				updated?: string;
+				thumbnail?: string;
 				customTitle?: string;
 				extraUpdate?: (matter: IMatterData) => void;
 			}): Promise<void>
@@ -119,6 +125,17 @@ export function createFrontmatterContext(file: TFile, ctx: IObsidianContext)
 					if (params.customTitle && params.customTitle !== file.basename)
 					{
 						fm.title = params.customTitle;
+					}
+
+					/** 寫入 Blogger API 回傳的後設資料巢狀欄位 */
+					if (params.published || params.updated || params.thumbnail)
+					{
+						fm.blogger = {
+							...(fm.blogger ?? {}),
+							...(params.published ? { published: params.published } : {}),
+							...(params.updated ? { updated: params.updated } : {}),
+							...(params.thumbnail ? { thumbnail: params.thumbnail } : {}),
+						};
 					}
 
 					params.extraUpdate?.(fm);

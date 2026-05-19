@@ -1,4 +1,4 @@
-import { Platform, Plugin } from 'obsidian';
+import { Platform, Plugin, WorkspaceLeaf } from 'obsidian';
 import { BloggerSettingTab } from './client/obsidian/settings/setting-tab';
 import { addIcons } from './utils/obsidian/icons';
 import {
@@ -18,6 +18,7 @@ import { EnumPostStatus } from './types/const';
 import { findDefaultProfile, handleSettingsUpgrade } from './plugin/settings';
 import { createObsidianContextMain } from './utils/obsidian/obsidian-context-main';
 import { IBloggerProfile } from './types/blogger-profile';
+import { BloggerDashboardView, BLOGGER_DASHBOARD_VIEW_TYPE } from './client/obsidian/view/blogger-dashboard-view';
 
 const doClientPublish = async (
   ctx: IObsidianContext,
@@ -75,6 +76,13 @@ export default class BloggerPlugin extends Plugin {
     }
 
     // this.registerProtocolHandler();
+
+    /** 註冊 Blogger Dashboard Base View */
+    this.registerView(
+      BLOGGER_DASHBOARD_VIEW_TYPE,
+      (leaf: WorkspaceLeaf) => new BloggerDashboardView(leaf, this.ctx),
+    );
+
     this.addRibbonIcon('blogger-logo', getGlobalI18n().t('ribbon_iconTitle'), () => {
       this.openProfileChooser();
     });
@@ -107,7 +115,29 @@ export default class BloggerPlugin extends Plugin {
       },
     });
 
+    this.addCommand({
+      id: 'openDashboard',
+      name: getGlobalI18n().t('command_openDashboard'),
+      callback: () => {
+        if (!this.settings.enableDashboard)
+        {
+          showError(getGlobalI18n().t('error_dashboardDisabled'));
+          return;
+        }
+        this.activateDashboardView();
+      },
+    });
+
     this.addSettingTab(new BloggerSettingTab(this.ctx, this.settings, this.saveSettings));
+
+    /** 延遲初始化儀表板（確保外掛載入完成後再開啟 View）*/
+    this.app.workspace.onLayoutReady(() =>
+    {
+      if (this.settings.enableDashboard)
+      {
+        this.initDashboardView();
+      }
+    });
   };
 
   onunload = () => {};
@@ -141,6 +171,71 @@ export default class BloggerPlugin extends Plugin {
         this.ribbonBloggerIcon.remove();
         this.ribbonBloggerIcon = null;
       }
+    }
+  };
+
+  /**
+   * 初始化 Blogger Dashboard View（若尚未存在）
+   * Initialize the Blogger Dashboard view (if not already created)
+   */
+  protected initDashboardView = () =>
+  {
+    const existing = this.app.workspace.getLeavesOfType(BLOGGER_DASHBOARD_VIEW_TYPE);
+    if (existing.length === 0)
+    {
+      this.app.workspace.getRightLeaf(false)?.setViewState({
+        type: BLOGGER_DASHBOARD_VIEW_TYPE,
+        active: true,
+      });
+    }
+  };
+
+  /**
+   * 啟用 Blogger Dashboard View（若已存在則切換至該 Leaf）
+   * Activate the Blogger Dashboard view (switches to existing leaf if present)
+   */
+  protected activateDashboardView = () =>
+  {
+    const existing = this.app.workspace.getLeavesOfType(BLOGGER_DASHBOARD_VIEW_TYPE);
+    if (existing.length > 0)
+    {
+      this.app.workspace.revealLeaf(existing[0]);
+    }
+    else
+    {
+      this.app.workspace.getRightLeaf(false)?.setViewState({
+        type: BLOGGER_DASHBOARD_VIEW_TYPE,
+        active: true,
+      });
+    }
+  };
+
+  /**
+   * 根據設定更新 Blogger Dashboard View
+   * Update Blogger Dashboard view based on settings
+   *
+   * 當用戶在設定中切換「啟用儀表板」時，此方法負責建立或銷毀 View Leaf。
+   * When the user toggles "Enable Dashboard" in settings, this method creates or destroys view leaves.
+   */
+  protected updateDashboardView = () =>
+  {
+    if (this.settings.enableDashboard)
+    {
+      /** 啟用：若尚無 Leaf 則建立一個 */
+      const existing = this.app.workspace.getLeavesOfType(BLOGGER_DASHBOARD_VIEW_TYPE);
+      if (existing.length === 0)
+      {
+        this.app.workspace.getRightLeaf(false)?.setViewState({
+          type: BLOGGER_DASHBOARD_VIEW_TYPE,
+          active: true,
+        });
+      }
+    }
+    else
+    {
+      /** 停用：銷毀所有現有 Dashboard Leaf */
+      this.app.workspace.getLeavesOfType(BLOGGER_DASHBOARD_VIEW_TYPE)
+        .forEach(leaf => leaf.detach());
     }
   };
 

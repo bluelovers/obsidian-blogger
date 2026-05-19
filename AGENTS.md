@@ -69,3 +69,10 @@ This file provides guidance to agents when working with code in this repository.
 - `this.#settings` in `BloggerPlugin` is `PluginSettings | undefined` but accessed with `!` non-null assertion (line 49 of `main.ts`) — will throw if accessed before `onload` completes.
 - The `#settings` private field uses a getter that asserts non-null — always access via `this.settings` (the getter), never `this.#settings` directly.
 - `esbuild.config.mjs` is an ESM module (`.mjs`), loaded via `node esbuild.config.mjs`, not `tsx`.
+
+## references
+
+- https://obsidian.md/zh-TW/help/developers
+- https://docs.obsidian.md/Home
+
+

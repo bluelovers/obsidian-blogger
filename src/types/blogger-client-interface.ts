@@ -138,16 +138,30 @@ interface _IBloggerPublishResult
 	url: string;
 }
 
+/** Blogger API 文章圖片資訊 */
+export interface IBloggerImage
+{
+	/** 圖片 URL / Image URL */
+	url: string;
+}
+
 /**
  * 發布結果介面
  * Publish result interface
  *
- * 繼承自 `IBloggerPostParams` 的 `postId` 與 `status`，加上 `url`。
- * Extends `IBloggerPostParams` with `postId` and `status`, plus `url`.
+ * 繼承自 `IBloggerPostParams` 的 `postId` 與 `status`，加上 `url`、`published`、`updated` 與 `images`。
+ * Extends `IBloggerPostParams` with `postId` and `status`, plus `url`, `published`, `updated`, and `images`.
  */
 export interface IBloggerPublishResult extends Pick<IBloggerPostParams, 'postId' | 'status'>, _IBloggerPublishResult
 {
+	/** 發布時間（ISO 8601 格式）/ Published time (ISO 8601 format) */
+	published?: string;
 
+	/** 更新時間（ISO 8601 格式）/ Updated time (ISO 8601 format) */
+	updated?: string;
+
+	/** 文章圖片列表（Blogger API 回傳）/ Post images from Blogger API */
+	images?: IBloggerImage[];
 }
 
 export interface IBloggerPublishResultError<T extends Error = Error>

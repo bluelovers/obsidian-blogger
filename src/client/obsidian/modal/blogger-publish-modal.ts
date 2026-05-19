@@ -95,6 +95,22 @@ export class BloggerPublishModal extends Modal {
 		return this.settings.profiles.find(p => p.name === profileName);
 	}
 
+	/**
+	 * 取得當前啟用檔案在 Vault 中的相對路徑
+	 * Get the Vault relative path of the current active file
+	 *
+	 * @returns 檔案路徑或 undefined / File path or undefined
+	 */
+	protected get filePath(): string | undefined
+	{
+		const activeFile = this.ctx.getActiveFile();
+		if (activeFile)
+		{
+			return activeFile.path;
+		}
+		return undefined;
+	}
+
 	protected display(params: Partial<IBloggerPostParams>): void
 	{
     const t = (key: ITranslateKey, vars?: Record<string, string>): string => {
@@ -106,6 +122,21 @@ export class BloggerPublishModal extends Modal {
 
     contentEl.empty();
     contentEl.createEl('h1', { text: t('publishModal_title') });
+
+    /** 顯示當前檔案路徑 / Display current file path */
+    {
+      const path = this.filePath;
+      if (path)
+      {
+        const filePathEl = contentEl.createEl('div', {
+          cls: 'setting-item-description',
+          text: `📄 ${path}`,
+        });
+        filePathEl.style.padding = '0 0 12px 0';
+        filePathEl.style.fontSize = 'var(--font-small)';
+        filePathEl.style.color = 'var(--text-muted)';
+      }
+    }
 
     /** 顯示 Blog 資訊 / Display blog info */
     if (profile)

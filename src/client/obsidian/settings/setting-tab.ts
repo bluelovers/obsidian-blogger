@@ -130,6 +130,17 @@ export class BloggerSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
+      .setName(t('settings_enableDashboard'))
+      .setDesc(t('settings_enableDashboardDesc'))
+      .addToggle((toggle) =>
+        toggle.setValue(this.settings.enableDashboard).onChange(async (value) => {
+          this.settings.enableDashboard = value;
+          await this.saveSettings();
+          (this.ctx.plugin as any).updateDashboardView();
+        }),
+      );
+
+    new Setting(containerEl)
       .setName(t('settings_enableHtml'))
       .setDesc(t('settings_enableHtmlDesc'))
       .addToggle((toggle) =>

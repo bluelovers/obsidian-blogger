@@ -245,6 +245,18 @@ export interface IBloggerPostApiReturn extends Omit<IBloggerPostApiBody, 'labels
 	}
 
 	/**
+	 * 文章圖片列表（可選）
+	 * Post images (optional)
+	 *
+	 * 使用 view=AUTHOR 查詢時，Blogger API 可能回傳文章中的圖片資訊。
+	 * Images returned by the Blogger API when querying with view=AUTHOR.
+	 */
+	images?: {
+		/** 圖片 URL / Image URL */
+		url: string;
+	}[];
+
+	/**
 	 * 文章狀態
 	 * Post status
 	 *

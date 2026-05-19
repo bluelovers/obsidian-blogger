@@ -150,11 +150,15 @@ export abstract class AbstractBloggerClient implements IBloggerClient
 				 * 寫入發布成功的結果（包含狀態標籤更新）
 				 * Update publish success result (including status tags update)
 				 */
+				const thumbnail = result.data.images?.[0]?.url;
 				await fileCtx.frontmatter.blogger.updatePublishSuccess({
 					profileName: this.profile.name,
 					postId: postId,
 					url: result.data.url,
 					status: result.data.status,
+					published: result.data.published,
+					updated: result.data.updated,
+					thumbnail,
 					customTitle: postParams.title,
 					extraUpdate: updateMatterData,
 				});

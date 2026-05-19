@@ -16,6 +16,7 @@
   "error_profileNotMatch": "Blogger profile not match. Which one do you want to use?",
   "error_noActiveFile": "No active document opened.",
   "error_mediaUploadFailed": "Media file <%= name %> upload failed.",
+  "error_dashboardDisabled": "Blogger Dashboard is disabled. Enable it in settings first.",
   "error_noEditorOrFile": "No editor or file found",
   "error_googleOAuth2StateMismatch": "Google OAuth2 request and response mismatch.: <%= req %> vs <%= res %>",
   "error_requestFailed": "Request failed <%= code %> <%= message %>.",
@@ -71,6 +72,8 @@
   "settings_MathJaxOutputTypeSVGDesc": "Convert MathJax to SVG. Browser render SVG, no plugin needed for Blogger.",
   "settings_enableSmartPreCheck": "Check post status before update",
   "settings_enableSmartPreCheckDesc": "When enabled, queries the current post status before updating, and automatically selects the correct API endpoint sequence based on status changes. This works around Blogger API limitation where PATCH cannot change post status.",
+  "settings_enableDashboard": "Enable Blogger Dashboard",
+  "settings_enableDashboardDesc": "If enabled, a sidebar panel showing the status of all published posts will be available.",
   "settings_enableHtml": "Enable HTML",
   "settings_enableHtmlDesc": "Enable HTML tags in notes. This might cause XSS attack to your Blogger.",
   "loginModal_title": "Blogger Login",
@@ -103,5 +106,17 @@
   "profilesChooserModal_pickOne": "Click to pick one profile to publish.",
   "profiles_default": "Default profile",
   "profileNotMatch_useOld": "Use \"<%= profileName %>\" in the note",
-  "profileNotMatch_useNew": "Create a new post using \"<%= profileName %>\""
+  "profileNotMatch_useNew": "Create a new post using \"<%= profileName %>\"",
+
+  "command_openDashboard": "Open Blogger Dashboard",
+
+  "bloggerDashboard_title": "Blogger Dashboard",
+  "bloggerDashboard_empty": "No articles",
+  "bloggerDashboard_statusLive": "Published",
+  "bloggerDashboard_statusDraft": "Draft",
+  "bloggerDashboard_statusUnpublished": "Unpublished",
+  "bloggerDashboard_statusScheduled": "Scheduled",
+  "bloggerDashboard_statusTrashed": "Deleted",
+  "bloggerDashboard_updatedAt": "Updated: <%= date %>",
+  "bloggerDashboard_publishedAt": "Published: <%= date %>"
 }

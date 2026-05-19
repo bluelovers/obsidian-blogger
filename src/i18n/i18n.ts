@@ -36,7 +36,7 @@ export class I18n
 			default:
 		}
 
-		console.log('i18n lang:', this.lang, this._data);
+		// console.log('i18n lang:', this.lang, this._data);
 	}
 
 	/**

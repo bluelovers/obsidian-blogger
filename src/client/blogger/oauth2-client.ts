@@ -319,6 +319,28 @@ export class OAuth2Client extends AbstractRequestClientWithConstructor
 		};
 		if (!isFreshInternalOAuth2Token(res as IInternalOAuth2Token))
 		{
+			/**
+			 * 檢查 Google 是否回傳了錯誤訊息（如 invalid_grant）
+			 * Check if Google returned an error response (e.g., invalid_grant)
+			 *
+			 * 當 refresh_token 已過期/被撤銷時，Google 會回傳類似：
+			 * { "error": "invalid_grant", "error_description": "Token has been revoked" }
+			 * 此時應將原始錯誤資訊一併顯示，幫助使用者判斷需要重新授權。
+			 * When the refresh_token has expired/revoked, Google returns something like:
+			 * { "error": "invalid_grant", "error_description": "Token has been revoked" }
+			 * The original error info should be included to help users decide to reauthorize.
+			 */
+			const googleError = resp.error as string | undefined;
+			const googleErrorDesc = resp.error_description as string | undefined;
+			if (googleError || googleErrorDesc)
+			{
+				throw new Error(
+					getGlobalI18n().t('error_googleAuthFailed', {
+						error: googleError ?? 'unknown',
+						desc: googleErrorDesc ?? '',
+					}),
+				);
+			}
 			throw new Error(getGlobalI18n().t('error_invalidGoogleToken'));
 		}
 		return res as IFreshInternalOAuth2Token;

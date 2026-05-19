@@ -97,12 +97,17 @@ export class BloggerRestClient extends AbstractBloggerClient
 		{
 			throw new Error(getGlobalI18n().t('error_noOAuth2ClientCredentials'));
 		}
+		/**
+		 * 嘗試刷新 Token
+		 * Try to refresh token
+		 *
+		 * 不再使用 .catch() 吞噬原始錯誤，讓錯誤訊息（如 invalid_grant、網路問題）
+		 * 自然傳播至外層的 showError() 處理。
+		 * No longer use .catch() to swallow the original error — let the error message
+		 * (e.g., invalid_grant, network issue) propagate naturally to the outer showError() handler.
+		 */
 		const fresh_token = await getGoogleOAuth2Client(this.settings, this.ctx)
-			.ensureFreshToken(token)
-			.catch(() =>
-			{
-				throw new Error(getGlobalI18n().t('error_invalidGoogleToken'));
-			});
+			.ensureFreshToken(token);
 		/**
 		 * 檢查是否取得新 Token，若有更新則存回設定檔並觸發保存
 		 * Check if a new Token was acquired, save it back to profile and trigger save if updated

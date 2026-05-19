@@ -21,7 +21,7 @@ import { IBloggerProfile } from '../../src/types/blogger-profile';
 /** ==================== 常數 / Constants ==================== */
 
 /** 僅允許操作的目標文章 ID / The only post ID allowed to operate on */
-export const DRAFT_POST_ID = '2330039242586333609' as const;
+export const DRAFT_POST_ID = '984648475646277424' as const;
 
 /** ==================== 型別 / Types ==================== */
 
@@ -52,6 +52,10 @@ export async function loadCredentials(): Promise<ICredentials>
 
 	const profile = findDefaultProfile(data)!;
 	const token = profile.googleOAuth2Token;
+
+	const { googleOAuth2Token, ...rest } = profile;
+
+	console.dir({ ...rest }, { depth: null });
 
 	/** 若權杖過期，自動 refresh（僅記憶體，不寫回 data.json） */
 	if (token.expiresAt <= Date.now())

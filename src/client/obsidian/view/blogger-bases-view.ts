@@ -1,4 +1,4 @@
-import { BasesView, QueryController, BasesPropertyId, BasesEntry } from 'obsidian';
+import { App, BasesView, QueryController, BasesPropertyId, BasesEntry } from 'obsidian';
 import { _getPostStatusFromTags } from '../../../utils/tags-utils';
 import { EnumPostStatus } from '../../../types/const';
 import { getGlobalI18n } from '../../../i18n/i18n';
@@ -187,16 +187,25 @@ function _parseTags(tagsStr: string | null): string[]
  * Extract Blogger internal tags from the tags property
  *
  * @param entry - Bases 條目 / Bases entry
+ * @param app - Obsidian App 實例（用於 metadata cache 回退）/ Obsidian App instance (for metadata cache fallback)
  * @returns Blogger 內部標籤陣列 / Blogger internal tags array
  */
-function _getBloggerTags(entry: BasesEntry): string[]
+function _getBloggerTags(entry: BasesEntry, app?: App): string[]
 {
 	/**
 	 * 嘗試多個可能的 tags 屬性名稱，以相容不同的 frontmatter 格式
 	 * Try multiple possible tag property names for frontmatter format compatibility
+	 *
+	 * Obsidian 將 frontmatter tags 視為特殊屬性，Bases 系統不一定會以
+	 * `note.tags` 的形式暴露。此處同時嘗試 `note.labels`（舊版相容）
+	 * 與 `note.tag`（Obsidian 內部可能使用單數形式）。
+	 * Obsidian treats frontmatter tags as a special property, the Bases system
+	 * may not expose it via `note.tags`. Also try `note.labels` (legacy) and
+	 * `note.tag` (Obsidian may use singular internally).
 	 */
 	const possibleProps: BasesPropertyId[] = [
 		'note.tags' as BasesPropertyId,
+		'note.tag' as BasesPropertyId,
 		'note.labels' as BasesPropertyId,
 	];
 
@@ -210,6 +219,34 @@ function _getBloggerTags(entry: BasesEntry): string[]
 			{
 				return tags;
 			}
+		}
+	}
+
+	/**
+	 * 回退方案：透過 metadata cache 直接讀取 tags
+	 * Fallback: read tags directly via metadata cache
+	 *
+	 * 當 Bases 系統不 expose note.tags 時，直接從 Obsidian 的 metadata cache
+	 * 讀取 tags 資訊。優先使用 frontmatter tags，若無則使用 inline tags。
+	 * When Bases does not expose note.tags, read tags directly from Obsidian's
+	 * metadata cache. Prefers frontmatter tags, falls back to inline tags.
+	 */
+	if (app && entry.file)
+	{
+		const metadata = app.metadataCache.getFileCache(entry.file);
+
+		/** 嘗試 frontmatter tags / Try frontmatter tags */
+		const frontmatterTags = metadata?.frontmatter?.tags;
+		if (Array.isArray(frontmatterTags) && frontmatterTags.length > 0)
+		{
+			return frontmatterTags.map(String);
+		}
+
+		/** 嘗試 inline tags：metadata?.tags 為 TagCache[]（{ tag, position } 格式）/ Try inline tags */
+		const inlineTags = metadata?.tags;
+		if (Array.isArray(inlineTags) && inlineTags.length > 0)
+		{
+			return inlineTags.map(t => t.tag.replace(/^#/, ''));
 		}
 	}
 
@@ -233,19 +270,24 @@ export class BloggerBasesView extends BasesView
 
 	private containerEl: HTMLElement;
 
+	/** Obsidian App 實例（用於存取 metadata cache）/ Obsidian App instance (for metadata cache access) */
+	private _app: App;
+
 	/**
 	 * 建立 Blogger Bases 檢視實例
 	 * Create Blogger Bases View instance
 	 *
 	 * @param controller - QueryController 實例 / QueryController instance
 	 * @param parentEl - 父容器元素 / Parent container element
+	 * @param app - Obsidian App 實例 / Obsidian App instance
 	 */
-	constructor(controller: QueryController, parentEl: HTMLElement)
+	constructor(controller: QueryController, parentEl: HTMLElement, app: App)
 	{
 		super(controller);
 
 		/** 建立檢視容器 */
 		this.containerEl = parentEl.createDiv('blogger-bases-view-container');
+		this._app = app;
 	}
 
 	/**
@@ -309,7 +351,7 @@ export class BloggerBasesView extends BasesView
 			});
 
 			/** 從 tags 屬性解析發布狀態 */
-			const bloggerTags = _getBloggerTags(entry);
+			const bloggerTags = _getBloggerTags(entry, this._app);
 			const { status, statusLabel, statusClass } = _getArticleStatusInfo(bloggerTags);
 
 			/** 狀態標籤（彩色徽章） */

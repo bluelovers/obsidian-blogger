@@ -88,7 +88,7 @@ export default class BloggerPlugin extends Plugin {
     this.registerBasesView(BLOGGER_BASES_VIEW_TYPE, {
       name: 'Blogger Status',
       icon: 'blogger-logo',
-      factory: (controller, containerEl) => new BloggerBasesView(controller, containerEl),
+      factory: (controller, containerEl) => new BloggerBasesView(controller, containerEl, this.app),
     });
 
     this.addRibbonIcon('blogger-logo', getGlobalI18n().t('ribbon_iconTitle'), () => {
@@ -99,6 +99,30 @@ export default class BloggerPlugin extends Plugin {
       id: 'defaultPublish',
       name: getGlobalI18n().t('command_publishWithDefault'),
       editorCallback: async () =>
+      {
+        const defaultProfile = findDefaultProfile(this.#settings!);
+        if (defaultProfile) {
+          const params: IBloggerPostParams = {
+            status: this.#settings?.defaultPostStatus ?? EnumPostStatus.Draft,
+            tags: [],
+            title: '',
+            content: '',
+          };
+          await doClientPublish(this.ctx, defaultProfile, params);
+        } else {
+          showError(getGlobalI18n().t('error_noDefaultProfile') ?? 'No default profile found.');
+        }
+      },
+    });
+
+    /**
+     * 透過 REST API / MCP 從外部呼叫發布（使用 callback 而非 editorCallback，確保 command_execute 能正確觸發）
+     * Publish via REST API / MCP (uses callback instead of editorCallback to ensure command_execute compatibility)
+     */
+    this.addCommand({
+      id: 'mcpPublish',
+      name: '[MCP] 發布目前筆記（使用默認值）',
+      callback: async () =>
       {
         const defaultProfile = findDefaultProfile(this.#settings!);
         if (defaultProfile) {

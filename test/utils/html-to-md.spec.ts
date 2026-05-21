@@ -20,7 +20,7 @@
 /// <reference types="vitest" />
 
 import { describe, it, expect } from 'vitest';
-import { convertHtmlToMarkdown } from '../../src/utils/md-compare-utils';
+import { convertHtmlToMarkdown, normalizeMarkdown } from '../../src/utils/md-compare-utils';
 import { getGlobalMarkdownParser } from '../../src/utils/markdown/markdown-it-default';
 import { ALL_TEST_GROUPS, ITestGroup } from '../fixtures/md-conversion-test-cases';
 
@@ -124,7 +124,13 @@ function runGroupConversion(group: ITestGroup): IHtmlToMdGroupResult
 		.filter(tc => !tc.skip)
 		.map(tc =>
 		{
-			const originalMd = tc.md.trim();
+			/**
+			 * 原始 MD 經過與 pipeline 相同的正規化後再比對，
+			 * 消除僅因格式風格（空白正規化、縮排等）導致的差異。
+			 * Original MD is normalized the same way as pipeline output
+			 * before comparison, eliminating style-only differences.
+			 */
+			const originalMd = normalizeMarkdown(tc.md.trim());
 
 			/** Direct 路徑：fixture HTML → turndown */
 			const directMd = directHtmlToMd(tc.html);
@@ -134,18 +140,34 @@ function runGroupConversion(group: ITestGroup): IHtmlToMdGroupResult
 			const { html: pipelineHtml, md: pipelineMd } = pipelineMdToHtmlToMd(tc.md);
 			const pipelineTrimmed = pipelineMd.trim();
 
+			/**
+			 * 相等性判斷：
+			 * - 空字串/純空白輸入：兩邊處理後都為空 → isEqual = true
+			 * - 一般輸入：直接比較內容是否相等
+			 * Equality check:
+			 * - Empty/whitespace-only input: both sides are empty after processing → isEqual = true
+			 * - Normal input: compare content directly
+			 */
+			const isOriginalEmpty = originalMd.length === 0;
+			const directIsEqual = isOriginalEmpty
+				? directTrimmed.length === 0
+				: directTrimmed === originalMd;
+			const pipelineIsEqual = isOriginalEmpty
+				? pipelineTrimmed.length === 0
+				: pipelineTrimmed === originalMd;
+
 			return {
 				name: tc.name,
 
 				/** Direct */
 				directHtml: tc.html,
 				directMd: directTrimmed,
-				directMatchesOriginal: originalMd.length > 0 && directTrimmed === originalMd,
+				directMatchesOriginal: directIsEqual,
 
 				/** Pipeline */
 				pipelineHtml,
 				pipelineMd: pipelineTrimmed,
-				pipelineMatchesOriginal: originalMd.length > 0 && pipelineTrimmed === originalMd,
+				pipelineMatchesOriginal: pipelineIsEqual,
 			};
 		});
 

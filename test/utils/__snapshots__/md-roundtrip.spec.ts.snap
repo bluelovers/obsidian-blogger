@@ -21,18 +21,18 @@ exports[`MD Round-trip (MD → HTML → MD) > Basic Inline Elements > should cap
   {
     "intermediateHtml": "<p>This is <em>italic</em> text</p>
 ",
-    "isEqual": false,
+    "isEqual": true,
     "name": "italic text",
     "originalMd": "This is *italic* text",
-    "roundTripMd": "This is _italic_ text",
+    "roundTripMd": "This is *italic* text",
   },
   {
     "intermediateHtml": "<p><em><strong>bold italic</strong></em> and <strong>bold <em>italic</em></strong></p>
 ",
-    "isEqual": false,
+    "isEqual": true,
     "name": "bold and italic combined",
     "originalMd": "***bold italic*** and **bold *italic***",
-    "roundTripMd": "_**bold italic**_ and **bold _italic_**",
+    "roundTripMd": "***bold italic*** and **bold *italic***",
   },
   {
     "intermediateHtml": "<p>Use the <code>console.log()</code> function</p>
@@ -45,10 +45,10 @@ exports[`MD Round-trip (MD → HTML → MD) > Basic Inline Elements > should cap
   {
     "intermediateHtml": "<p>This is <s>deleted</s> text</p>
 ",
-    "isEqual": false,
+    "isEqual": true,
     "name": "strikethrough",
     "originalMd": "This is ~~deleted~~ text",
-    "roundTripMd": "This is deleted text",
+    "roundTripMd": "This is ~~deleted~~ text",
   },
 ]
 `;
@@ -71,13 +71,13 @@ exports[`MD Round-trip (MD → HTML → MD) > Block Elements > should capture ro
 <p>Second paragraph</p>
 </blockquote>
 ",
-    "isEqual": false,
+    "isEqual": true,
     "name": "blockquote with multiple paragraphs",
     "originalMd": "> First paragraph
 >
 > Second paragraph",
     "roundTripMd": "> First paragraph
-> 
+>
 > Second paragraph",
   },
   {
@@ -85,36 +85,40 @@ exports[`MD Round-trip (MD → HTML → MD) > Block Elements > should capture ro
 console.log(x);
 </code></pre>
 ",
-    "isEqual": false,
+    "isEqual": true,
     "name": "fenced code block",
     "originalMd": "\`\`\`
 const x = 1;
 console.log(x);
 \`\`\`",
-    "roundTripMd": "const x = 1;
-    console.log(x);",
+    "roundTripMd": "\`\`\`
+const x = 1;
+console.log(x);
+\`\`\`",
   },
   {
     "intermediateHtml": "<pre><code class="language-javascript">const x = 1;
 console.log(x);
 </code></pre>
 ",
-    "isEqual": false,
+    "isEqual": true,
     "name": "fenced code block with language",
     "originalMd": "\`\`\`javascript
 const x = 1;
 console.log(x);
 \`\`\`",
-    "roundTripMd": "const x = 1;
-    console.log(x);",
+    "roundTripMd": "\`\`\`javascript
+const x = 1;
+console.log(x);
+\`\`\`",
   },
   {
     "intermediateHtml": "<hr>
 ",
-    "isEqual": false,
+    "isEqual": true,
     "name": "horizontal rule",
     "originalMd": "---",
-    "roundTripMd": "* * *",
+    "roundTripMd": "---",
   },
 ]
 `;
@@ -168,20 +172,18 @@ exports[`MD Round-trip (MD → HTML → MD) > Headings > should capture round-tr
   {
     "intermediateHtml": "<h1>Heading 1</h1>
 ",
-    "isEqual": false,
+    "isEqual": true,
     "name": "h1",
     "originalMd": "# Heading 1",
-    "roundTripMd": "Heading 1
-=========",
+    "roundTripMd": "# Heading 1",
   },
   {
     "intermediateHtml": "<h2>Heading 2</h2>
 ",
-    "isEqual": false,
+    "isEqual": true,
     "name": "h2",
     "originalMd": "## Heading 2",
-    "roundTripMd": "Heading 2
----------",
+    "roundTripMd": "## Heading 2",
   },
   {
     "intermediateHtml": "<h3>Heading 3</h3>
@@ -237,20 +239,20 @@ exports[`MD Round-trip (MD → HTML → MD) > Links and Images > should capture 
     "roundTripMd": "[OpenAI](https://openai.com "Visit OpenAI")",
   },
   {
-    "intermediateHtml": "<p><img https://example.com/image.png="../.." alt="Alt text"></p>
+    "intermediateHtml": "<p><img src="https://example.com/image.png" alt="Alt text"></p>
 ",
-    "isEqual": false,
+    "isEqual": true,
     "name": "image",
     "originalMd": "![Alt text](https://example.com/image.png)",
-    "roundTripMd": "",
+    "roundTripMd": "![Alt text](https://example.com/image.png)",
   },
   {
-    "intermediateHtml": "<p><img https://example.com/image.png="../.." alt="Alt text"></p>
+    "intermediateHtml": "<p><img src="https://example.com/image.png" title="Title" alt="Alt text"></p>
 ",
-    "isEqual": false,
+    "isEqual": true,
     "name": "image with title",
     "originalMd": "![Alt text](https://example.com/image.png "Title")",
-    "roundTripMd": "",
+    "roundTripMd": "![Alt text](https://example.com/image.png "Title")",
   },
   {
     "intermediateHtml": "<p>Visit <a href="https://openai.com">OpenAI</a> for more info.</p>
@@ -272,14 +274,14 @@ exports[`MD Round-trip (MD → HTML → MD) > Lists > should capture round-trip 
 <li>Item 3</li>
 </ul>
 ",
-    "isEqual": false,
+    "isEqual": true,
     "name": "unordered list",
     "originalMd": "- Item 1
 - Item 2
 - Item 3",
-    "roundTripMd": "*   Item 1
-*   Item 2
-*   Item 3",
+    "roundTripMd": "- Item 1
+- Item 2
+- Item 3",
   },
   {
     "intermediateHtml": "<ol>
@@ -288,14 +290,14 @@ exports[`MD Round-trip (MD → HTML → MD) > Lists > should capture round-trip 
 <li>Third</li>
 </ol>
 ",
-    "isEqual": false,
+    "isEqual": true,
     "name": "ordered list",
     "originalMd": "1. First
 2. Second
 3. Third",
-    "roundTripMd": "1.  First
-2.  Second
-3.  Third",
+    "roundTripMd": "1. First
+2. Second
+3. Third",
   },
   {
     "intermediateHtml": "<ul>
@@ -308,16 +310,16 @@ exports[`MD Round-trip (MD → HTML → MD) > Lists > should capture round-trip 
 <li>Parent 2</li>
 </ul>
 ",
-    "isEqual": false,
+    "isEqual": true,
     "name": "nested unordered list",
     "originalMd": "- Parent 1
   - Child 1
   - Child 2
 - Parent 2",
-    "roundTripMd": "*   Parent 1
-    *   Child 1
-    *   Child 2
-*   Parent 2",
+    "roundTripMd": "- Parent 1
+  - Child 1
+  - Child 2
+- Parent 2",
   },
   {
     "intermediateHtml": "<ul>
@@ -326,14 +328,14 @@ exports[`MD Round-trip (MD → HTML → MD) > Lists > should capture round-trip 
 <li><code>code item</code></li>
 </ul>
 ",
-    "isEqual": false,
+    "isEqual": true,
     "name": "unordered with inline formatting",
     "originalMd": "- **Bold item**
 - *Italic item*
 - \`code item\`",
-    "roundTripMd": "*   **Bold item**
-*   _Italic item_
-*   \`code item\`",
+    "roundTripMd": "- **Bold item**
+- *Italic item*
+- \`code item\`",
   },
 ]
 `;
@@ -344,13 +346,12 @@ exports[`MD Round-trip (MD → HTML → MD) > Mixed Content > should capture rou
     "intermediateHtml": "<h1>Title</h1>
 <p>This is a paragraph after the title.</p>
 ",
-    "isEqual": false,
+    "isEqual": true,
     "name": "heading with paragraph",
     "originalMd": "# Title
 
 This is a paragraph after the title.",
-    "roundTripMd": "Title
-=====
+    "roundTripMd": "# Title
 
 This is a paragraph after the title.",
   },
@@ -387,9 +388,9 @@ Third paragraph.",
 > - with a list
 > - inside it",
     "roundTripMd": "> A blockquote
-> 
-> *   with a list
-> *   inside it",
+>
+> - with a list
+> - inside it",
   },
 ]
 `;

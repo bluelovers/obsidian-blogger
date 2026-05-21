@@ -26,23 +26,23 @@ exports[`HTML → MD Conversion (turndown) > Basic Inline Elements > should matc
     },
     {
       "directHtml": "<p>This is <em>italic</em> text</p>",
-      "directMatchesOriginal": false,
-      "directMd": "This is _italic_ text",
+      "directMatchesOriginal": true,
+      "directMd": "This is *italic* text",
       "name": "italic text",
       "pipelineHtml": "<p>This is <em>italic</em> text</p>
 ",
-      "pipelineMatchesOriginal": false,
-      "pipelineMd": "This is _italic_ text",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "This is *italic* text",
     },
     {
       "directHtml": "<p><em><strong>bold italic</strong></em> and <strong>bold <em>italic</em></strong></p>",
-      "directMatchesOriginal": false,
-      "directMd": "_**bold italic**_ and **bold _italic_**",
+      "directMatchesOriginal": true,
+      "directMd": "***bold italic*** and **bold *italic***",
       "name": "bold and italic combined",
       "pipelineHtml": "<p><em><strong>bold italic</strong></em> and <strong>bold <em>italic</em></strong></p>
 ",
-      "pipelineMatchesOriginal": false,
-      "pipelineMd": "_**bold italic**_ and **bold _italic_**",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "***bold italic*** and **bold *italic***",
     },
     {
       "directHtml": "<p>Use the <code>console.log()</code> function</p>",
@@ -56,13 +56,13 @@ exports[`HTML → MD Conversion (turndown) > Basic Inline Elements > should matc
     },
     {
       "directHtml": "<p>This is <s>deleted</s> text</p>",
-      "directMatchesOriginal": false,
-      "directMd": "This is deleted text",
+      "directMatchesOriginal": true,
+      "directMd": "This is ~~deleted~~ text",
       "name": "strikethrough",
       "pipelineHtml": "<p>This is <s>deleted</s> text</p>
 ",
-      "pipelineMatchesOriginal": false,
-      "pipelineMd": "This is deleted text",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "This is ~~deleted~~ text",
     },
   ],
 }
@@ -91,9 +91,9 @@ exports[`HTML → MD Conversion (turndown) > Block Elements > should match snaps
 <p>First paragraph</p>
 <p>Second paragraph</p>
 </blockquote>",
-      "directMatchesOriginal": false,
+      "directMatchesOriginal": true,
       "directMd": "> First paragraph
-> 
+>
 > Second paragraph",
       "name": "blockquote with multiple paragraphs",
       "pipelineHtml": "<blockquote>
@@ -101,53 +101,61 @@ exports[`HTML → MD Conversion (turndown) > Block Elements > should match snaps
 <p>Second paragraph</p>
 </blockquote>
 ",
-      "pipelineMatchesOriginal": false,
+      "pipelineMatchesOriginal": true,
       "pipelineMd": "> First paragraph
-> 
+>
 > Second paragraph",
     },
     {
       "directHtml": "<pre><code>const x = 1;
 console.log(x);
 </code></pre>",
-      "directMatchesOriginal": false,
-      "directMd": "const x = 1;
-    console.log(x);",
+      "directMatchesOriginal": true,
+      "directMd": "\`\`\`
+const x = 1;
+console.log(x);
+\`\`\`",
       "name": "fenced code block",
       "pipelineHtml": "<pre><code>const x = 1;
 console.log(x);
 </code></pre>
 ",
-      "pipelineMatchesOriginal": false,
-      "pipelineMd": "const x = 1;
-    console.log(x);",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "\`\`\`
+const x = 1;
+console.log(x);
+\`\`\`",
     },
     {
       "directHtml": "<pre><code class="language-javascript">const x = 1;
 console.log(x);
 </code></pre>",
-      "directMatchesOriginal": false,
-      "directMd": "const x = 1;
-    console.log(x);",
+      "directMatchesOriginal": true,
+      "directMd": "\`\`\`javascript
+const x = 1;
+console.log(x);
+\`\`\`",
       "name": "fenced code block with language",
       "pipelineHtml": "<pre><code class="language-javascript">const x = 1;
 console.log(x);
 </code></pre>
 ",
-      "pipelineMatchesOriginal": false,
-      "pipelineMd": "const x = 1;
-    console.log(x);",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "\`\`\`javascript
+const x = 1;
+console.log(x);
+\`\`\`",
     },
     {
       "directHtml": "<hr>
 ",
-      "directMatchesOriginal": false,
-      "directMd": "* * *",
+      "directMatchesOriginal": true,
+      "directMd": "---",
       "name": "horizontal rule",
       "pipelineHtml": "<hr>
 ",
-      "pipelineMatchesOriginal": false,
-      "pipelineMd": "* * *",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "---",
     },
   ],
 }
@@ -159,20 +167,20 @@ exports[`HTML → MD Conversion (turndown) > Edge Cases > should match snapshot 
   "results": [
     {
       "directHtml": "",
-      "directMatchesOriginal": false,
+      "directMatchesOriginal": true,
       "directMd": "",
       "name": "empty string",
       "pipelineHtml": "",
-      "pipelineMatchesOriginal": false,
+      "pipelineMatchesOriginal": true,
       "pipelineMd": "",
     },
     {
       "directHtml": "",
-      "directMatchesOriginal": false,
+      "directMatchesOriginal": true,
       "directMd": "",
       "name": "only whitespace",
       "pipelineHtml": "",
-      "pipelineMatchesOriginal": false,
+      "pipelineMatchesOriginal": true,
       "pipelineMd": "",
     },
     {
@@ -188,7 +196,7 @@ exports[`HTML → MD Conversion (turndown) > Edge Cases > should match snapshot 
     {
       "directHtml": "<p>Line 1</p>
 <p>Line 2</p>",
-      "directMatchesOriginal": false,
+      "directMatchesOriginal": true,
       "directMd": "Line 1
 
 Line 2",
@@ -196,7 +204,7 @@ Line 2",
       "pipelineHtml": "<p>Line 1</p>
 <p>Line 2</p>
 ",
-      "pipelineMatchesOriginal": false,
+      "pipelineMatchesOriginal": true,
       "pipelineMd": "Line 1
 
 Line 2",
@@ -211,27 +219,23 @@ exports[`HTML → MD Conversion (turndown) > Headings > should match snapshot (d
   "results": [
     {
       "directHtml": "<h1>Heading 1</h1>",
-      "directMatchesOriginal": false,
-      "directMd": "Heading 1
-=========",
+      "directMatchesOriginal": true,
+      "directMd": "# Heading 1",
       "name": "h1",
       "pipelineHtml": "<h1>Heading 1</h1>
 ",
-      "pipelineMatchesOriginal": false,
-      "pipelineMd": "Heading 1
-=========",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "# Heading 1",
     },
     {
       "directHtml": "<h2>Heading 2</h2>",
-      "directMatchesOriginal": false,
-      "directMd": "Heading 2
----------",
+      "directMatchesOriginal": true,
+      "directMd": "## Heading 2",
       "name": "h2",
       "pipelineHtml": "<h2>Heading 2</h2>
 ",
-      "pipelineMatchesOriginal": false,
-      "pipelineMd": "Heading 2
----------",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "## Heading 2",
     },
     {
       "directHtml": "<h3>Heading 3</h3>",
@@ -306,20 +310,20 @@ exports[`HTML → MD Conversion (turndown) > Links and Images > should match sna
       "directMatchesOriginal": true,
       "directMd": "![Alt text](https://example.com/image.png)",
       "name": "image",
-      "pipelineHtml": "<p><img https://example.com/image.png="../.." alt="Alt text"></p>
+      "pipelineHtml": "<p><img src="https://example.com/image.png" alt="Alt text"></p>
 ",
-      "pipelineMatchesOriginal": false,
-      "pipelineMd": "",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "![Alt text](https://example.com/image.png)",
     },
     {
       "directHtml": "<p><img src="https://example.com/image.png" alt="Alt text" title="Title"></p>",
       "directMatchesOriginal": true,
       "directMd": "![Alt text](https://example.com/image.png "Title")",
       "name": "image with title",
-      "pipelineHtml": "<p><img https://example.com/image.png="../.." alt="Alt text"></p>
+      "pipelineHtml": "<p><img src="https://example.com/image.png" title="Title" alt="Alt text"></p>
 ",
-      "pipelineMatchesOriginal": false,
-      "pipelineMd": "",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "![Alt text](https://example.com/image.png "Title")",
     },
     {
       "directHtml": "<p>Visit <a href="https://openai.com">OpenAI</a> for more info.</p>",
@@ -345,10 +349,10 @@ exports[`HTML → MD Conversion (turndown) > Lists > should match snapshot (dire
 <li>Item 2</li>
 <li>Item 3</li>
 </ul>",
-      "directMatchesOriginal": false,
-      "directMd": "*   Item 1
-*   Item 2
-*   Item 3",
+      "directMatchesOriginal": true,
+      "directMd": "- Item 1
+- Item 2
+- Item 3",
       "name": "unordered list",
       "pipelineHtml": "<ul>
 <li>Item 1</li>
@@ -356,10 +360,10 @@ exports[`HTML → MD Conversion (turndown) > Lists > should match snapshot (dire
 <li>Item 3</li>
 </ul>
 ",
-      "pipelineMatchesOriginal": false,
-      "pipelineMd": "*   Item 1
-*   Item 2
-*   Item 3",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "- Item 1
+- Item 2
+- Item 3",
     },
     {
       "directHtml": "<ol>
@@ -367,10 +371,10 @@ exports[`HTML → MD Conversion (turndown) > Lists > should match snapshot (dire
 <li>Second</li>
 <li>Third</li>
 </ol>",
-      "directMatchesOriginal": false,
-      "directMd": "1.  First
-2.  Second
-3.  Third",
+      "directMatchesOriginal": true,
+      "directMd": "1. First
+2. Second
+3. Third",
       "name": "ordered list",
       "pipelineHtml": "<ol>
 <li>First</li>
@@ -378,10 +382,10 @@ exports[`HTML → MD Conversion (turndown) > Lists > should match snapshot (dire
 <li>Third</li>
 </ol>
 ",
-      "pipelineMatchesOriginal": false,
-      "pipelineMd": "1.  First
-2.  Second
-3.  Third",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "1. First
+2. Second
+3. Third",
     },
     {
       "directHtml": "<ul>
@@ -393,11 +397,11 @@ exports[`HTML → MD Conversion (turndown) > Lists > should match snapshot (dire
 </li>
 <li>Parent 2</li>
 </ul>",
-      "directMatchesOriginal": false,
-      "directMd": "*   Parent 1
-    *   Child 1
-    *   Child 2
-*   Parent 2",
+      "directMatchesOriginal": true,
+      "directMd": "- Parent 1
+  - Child 1
+  - Child 2
+- Parent 2",
       "name": "nested unordered list",
       "pipelineHtml": "<ul>
 <li>Parent 1
@@ -409,11 +413,11 @@ exports[`HTML → MD Conversion (turndown) > Lists > should match snapshot (dire
 <li>Parent 2</li>
 </ul>
 ",
-      "pipelineMatchesOriginal": false,
-      "pipelineMd": "*   Parent 1
-    *   Child 1
-    *   Child 2
-*   Parent 2",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "- Parent 1
+  - Child 1
+  - Child 2
+- Parent 2",
     },
     {
       "directHtml": "<ul>
@@ -421,10 +425,10 @@ exports[`HTML → MD Conversion (turndown) > Lists > should match snapshot (dire
 <li><em>Italic item</em></li>
 <li><code>code item</code></li>
 </ul>",
-      "directMatchesOriginal": false,
-      "directMd": "*   **Bold item**
-*   _Italic item_
-*   \`code item\`",
+      "directMatchesOriginal": true,
+      "directMd": "- **Bold item**
+- *Italic item*
+- \`code item\`",
       "name": "unordered with inline formatting",
       "pipelineHtml": "<ul>
 <li><strong>Bold item</strong></li>
@@ -432,10 +436,10 @@ exports[`HTML → MD Conversion (turndown) > Lists > should match snapshot (dire
 <li><code>code item</code></li>
 </ul>
 ",
-      "pipelineMatchesOriginal": false,
-      "pipelineMd": "*   **Bold item**
-*   _Italic item_
-*   \`code item\`",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "- **Bold item**
+- *Italic item*
+- \`code item\`",
     },
   ],
 }
@@ -448,18 +452,16 @@ exports[`HTML → MD Conversion (turndown) > Mixed Content > should match snapsh
     {
       "directHtml": "<h1>Title</h1>
 <p>This is a paragraph after the title.</p>",
-      "directMatchesOriginal": false,
-      "directMd": "Title
-=====
+      "directMatchesOriginal": true,
+      "directMd": "# Title
 
 This is a paragraph after the title.",
       "name": "heading with paragraph",
       "pipelineHtml": "<h1>Title</h1>
 <p>This is a paragraph after the title.</p>
 ",
-      "pipelineMatchesOriginal": false,
-      "pipelineMd": "Title
-=====
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "# Title
 
 This is a paragraph after the title.",
     },
@@ -495,9 +497,9 @@ Third paragraph.",
 </blockquote>",
       "directMatchesOriginal": false,
       "directMd": "> A blockquote
-> 
-> *   with a list
-> *   inside it",
+>
+> - with a list
+> - inside it",
       "name": "blockquote with list inside",
       "pipelineHtml": "<blockquote>
 <p>A blockquote</p>
@@ -509,9 +511,9 @@ Third paragraph.",
 ",
       "pipelineMatchesOriginal": false,
       "pipelineMd": "> A blockquote
-> 
-> *   with a list
-> *   inside it",
+>
+> - with a list
+> - inside it",
     },
   ],
 }

@@ -199,13 +199,13 @@ exports[`MD → HTML Conversion > Links and Images > should match snapshot 1`] =
     {
       "input": "![Alt text](https://example.com/image.png)",
       "name": "image",
-      "output": "<p><img https://example.com/image.png="../.." alt="Alt text"></p>
+      "output": "<p><img src="https://example.com/image.png" alt="Alt text"></p>
 ",
     },
     {
       "input": "![Alt text](https://example.com/image.png "Title")",
       "name": "image with title",
-      "output": "<p><img https://example.com/image.png="../.." alt="Alt text"></p>
+      "output": "<p><img src="https://example.com/image.png" title="Title" alt="Alt text"></p>
 ",
     },
     {

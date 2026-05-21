@@ -6,13 +6,19 @@ import MarkdownItMathJax3Plugin from './markdown-it-mathjax3-plugin';
 import footnote from 'markdown-it-footnote';
 
 const createDefaultMarkdownParser = () => {
-  const markdownParser = new MarkdownIt({ linkify: true, breaks: true })
+  const markdownParser = new MarkdownIt({
+    linkify: true,
+    breaks: true,
+    strikethrough: true,
+  } as any)
     .use(MarkdownItImagePluginInstance.plugin)
     .use(footnote);
   markdownParser.renderer.rules.image = (tokens, idx) => {
     const token = tokens[idx];
     const srcIndex = token.attrIndex('src');
     const src = token.attrs ? token.attrs[srcIndex][1] : '';
+    const titleIndex = token.attrIndex('title');
+    const title = (titleIndex >= 0 && token.attrs) ? token.attrs[titleIndex][1] : '';
     const altText = token.content;
 
     const [alt, size] = altText.split('|');
@@ -27,13 +33,14 @@ const createDefaultMarkdownParser = () => {
         width = trim(size);
       }
     }
+    const titleAttr = title ? ` title="${title}"` : '';
     if (width) {
       if (height) {
-        return `<img ${src}="../.." width="${width}" height="${height}" alt="${alt}">`;
+        return `<img src="${src}"${titleAttr} width="${width}" height="${height}" alt="${alt}">`;
       }
-      return `<img ${src}="../.." width="${width}" alt="${alt}">`;
+      return `<img src="${src}"${titleAttr} width="${width}" alt="${alt}">`;
     } else {
-      return `<img ${src}="../.." alt="${alt}">`;
+      return `<img src="${src}"${titleAttr} alt="${alt}">`;
     }
   };
   return markdownParser;

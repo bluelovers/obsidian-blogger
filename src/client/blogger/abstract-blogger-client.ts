@@ -45,6 +45,28 @@ export abstract class AbstractBloggerClient implements IBloggerClient
 	)
 	{}
 
+	/**
+	 * 處理發布過程中的例外情況
+	 * Handle exceptions during publishing
+	 *
+	 * 若為 Error 實例則顯示錯誤通知，否則重新拋出。
+	 * If it's an Error instance, show error notice; otherwise re-throw.
+	 *
+	 * @param error - 捕獲的例外 / Caught exception
+	 * @returns 回傳類別結果（僅在 Error 時有回傳值）/ Client result (only returned for Error instances)
+	 */
+	protected _handleError(error: unknown): never
+	{
+		if (error instanceof Error)
+		{
+			return this.ctx.showError(error) as never;
+		}
+		else
+		{
+			throw error;
+		}
+	}
+
 	abstract publish(
 		title: string | undefined,
 		content: string | undefined,
@@ -302,18 +324,7 @@ export abstract class AbstractBloggerClient implements IBloggerClient
 						}
 						catch (error)
 						{
-							/**
-							 * 處理發布過程中的例外情況，若為 Error 實例則顯示錯誤通知
-							 * Handle exceptions during publishing, if it's an Error instance, show error notice
-							 */
-							if (error instanceof Error)
-							{
-								return this.ctx.showError(error);
-							}
-							else
-							{
-								throw error;
-							}
+							this._handleError(error);
 						}
 					},
 					matterData,
@@ -334,18 +345,7 @@ export abstract class AbstractBloggerClient implements IBloggerClient
 		}
 		catch (error)
 		{
-			/**
-			 * 捕獲全域流程例外，轉換為 Obsidian 錯誤通知
-			 * Catch global workflow exceptions and convert to Obsidian error notices
-			 */
-			if (error instanceof Error)
-			{
-				return this.ctx.showError(error);
-			}
-			else
-			{
-				throw error;
-			}
+			this._handleError(error);
 		}
 	}
 

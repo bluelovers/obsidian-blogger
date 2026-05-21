@@ -211,10 +211,10 @@ export function getBloggerClient(
 	if (!core) return null;
 
 	return new BloggerRestClient(
-		ctx,
-		settings,
-		saveSettings,
-		profile,
-		new BloggerRestClientGoogleOAuth2Context(profile.blogId),
+		core.ctx,
+		core.settings,
+		core.saveSettings,
+		core.profile,
+		core.context,
 	);
 }

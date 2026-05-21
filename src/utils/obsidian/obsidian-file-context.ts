@@ -2,6 +2,7 @@ import { App, TFile } from 'obsidian';
 import { IMatterData } from '../../types/types';
 import { IObsidianContext } from './obsidian-context';
 import { createFrontmatterContext } from './obsidian-frontmatter-context';
+import { stripFrontMatter } from './obsidian-utils';
 
 /**
  * 建立單一檔案的上下文
@@ -41,8 +42,6 @@ export function createFileContext(file: TFile, ctx: IObsidianContext)
 		 * 解析檔案，提取內文與 Frontmatter
 		 * Process file, extract content and Frontmatter
 		 *
-		 * 底層使用 obsidian-utils.ts 的 processFile
-		 *
 		 * @returns 包含內容與 Frontmatter 的物件 / Object containing content and Frontmatter
 		 */
 		async processData(): Promise<{ content: string; matter: IMatterData }>
@@ -50,7 +49,7 @@ export function createFileContext(file: TFile, ctx: IObsidianContext)
 			const matter = await frontmatterCtx.readEnsure();
 			const raw = await ctx.app.vault.read(file);
 			return {
-				content: raw.replace(/^---[\s\S]+?---/, '').trim(),
+				content: stripFrontMatter(raw),
 				matter,
 			};
 		},

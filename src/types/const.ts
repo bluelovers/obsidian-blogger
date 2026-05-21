@@ -106,3 +106,17 @@ export const enum EnumLanguageIDAll
 	/** 繁體中文 / Traditional Chinese */
 	zh_tw = 'zh_tw',
 }
+
+/**
+ * Blogger Dashboard Leaf 行為列舉
+ * Blogger Dashboard Leaf action enumeration
+ */
+export const enum EnumDashboardAction
+{
+	/** 若無現有 Leaf 則建立 */
+	Init = 'init',
+	/** 切換至現有 Leaf，若無則建立 */
+	Activate = 'activate',
+	/** 根據 enableDashboard 設定啟用或停用 */
+	Toggle = 'toggle',
+}

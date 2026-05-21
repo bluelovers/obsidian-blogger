@@ -14,7 +14,7 @@ import { getBloggerClient } from './blogger-client';
 import { getGlobalMarkdownParser, setupMarkdownParser } from './utils/markdown/markdown-it-default';
 import { getGlobalI18n, setGlobalLang } from './i18n/i18n';
 import { MobileOAuth2Helper } from './blogger-oauth2-client';
-import { EnumPostStatus } from './types/const';
+import { EnumPostStatus, EnumDashboardAction } from './types/const';
 import { findDefaultProfile, handleSettingsUpgrade } from './plugin/settings';
 import { createObsidianContextMain } from './utils/obsidian/obsidian-context-main';
 import { IBloggerProfile } from './types/blogger-profile';
@@ -48,6 +48,27 @@ const doClientPublish = async (
 };
 
 export default class BloggerPlugin extends Plugin {
+  /**
+   * 以預設設定檔發布文章（共用實作，供 defaultPublish 與 mcpPublish 呼叫）
+   * Publish post with default profile (shared implementation for defaultPublish and mcpPublish)
+   */
+  protected _publishWithDefault = async (): Promise<void> =>
+  {
+    const defaultProfile = findDefaultProfile(this.#settings!);
+    if (defaultProfile)
+    {
+      const params: IBloggerPostParams = {
+        status: this.#settings?.defaultPostStatus ?? EnumPostStatus.Draft,
+        tags: [],
+        title: '',
+        content: '',
+      };
+      await doClientPublish(this.ctx, defaultProfile, params);
+    } else
+    {
+      showError(getGlobalI18n().t('error_noDefaultProfile') ?? 'No default profile found.');
+    }
+  };
   #settings: IPluginSettings | undefined;
   get settings() {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -98,21 +119,7 @@ export default class BloggerPlugin extends Plugin {
     this.addCommand({
       id: 'defaultPublish',
       name: getGlobalI18n().t('command_publishWithDefault'),
-      editorCallback: async () =>
-      {
-        const defaultProfile = findDefaultProfile(this.#settings!);
-        if (defaultProfile) {
-          const params: IBloggerPostParams = {
-            status: this.#settings?.defaultPostStatus ?? EnumPostStatus.Draft,
-            tags: [],
-            title: '',
-            content: '',
-          };
-          await doClientPublish(this.ctx, defaultProfile, params);
-        } else {
-          showError(getGlobalI18n().t('error_noDefaultProfile') ?? 'No default profile found.');
-        }
-      },
+      editorCallback: async () => { await this._publishWithDefault(); },
     });
 
     /**
@@ -122,21 +129,7 @@ export default class BloggerPlugin extends Plugin {
     this.addCommand({
       id: 'mcpPublish',
       name: '[MCP] 發布目前筆記（使用默認值）',
-      callback: async () =>
-      {
-        const defaultProfile = findDefaultProfile(this.#settings!);
-        if (defaultProfile) {
-          const params: IBloggerPostParams = {
-            status: this.#settings?.defaultPostStatus ?? EnumPostStatus.Draft,
-            tags: [],
-            title: '',
-            content: '',
-          };
-          await doClientPublish(this.ctx, defaultProfile, params);
-        } else {
-          showError(getGlobalI18n().t('error_noDefaultProfile') ?? 'No default profile found.');
-        }
-      },
+      callback: async () => { await this._publishWithDefault(); },
     });
 
     this.addCommand({
@@ -156,7 +149,7 @@ export default class BloggerPlugin extends Plugin {
           showError(getGlobalI18n().t('error_dashboardDisabled'));
           return;
         }
-        this.activateDashboardView();
+        this._ensureDashboardView(EnumDashboardAction.Activate);
       },
     });
 
@@ -167,7 +160,7 @@ export default class BloggerPlugin extends Plugin {
     {
       if (this.settings.enableDashboard)
       {
-        this.initDashboardView();
+        this._ensureDashboardView(EnumDashboardAction.Init);
       }
     });
   };
@@ -207,67 +200,34 @@ export default class BloggerPlugin extends Plugin {
   };
 
   /**
-   * 初始化 Blogger Dashboard View（若尚未存在）
-   * Initialize the Blogger Dashboard view (if not already created)
-   */
-  protected initDashboardView = () =>
-  {
-    const existing = this.app.workspace.getLeavesOfType(BLOGGER_DASHBOARD_VIEW_TYPE);
-    if (existing.length === 0)
-    {
-      this.app.workspace.getRightLeaf(false)?.setViewState({
-        type: BLOGGER_DASHBOARD_VIEW_TYPE,
-        active: true,
-      });
-    }
-  };
-
-  /**
-   * 啟用 Blogger Dashboard View（若已存在則切換至該 Leaf）
-   * Activate the Blogger Dashboard view (switches to existing leaf if present)
-   */
-  protected activateDashboardView = () =>
-  {
-    const existing = this.app.workspace.getLeavesOfType(BLOGGER_DASHBOARD_VIEW_TYPE);
-    if (existing.length > 0)
-    {
-      this.app.workspace.revealLeaf(existing[0]);
-    }
-    else
-    {
-      this.app.workspace.getRightLeaf(false)?.setViewState({
-        type: BLOGGER_DASHBOARD_VIEW_TYPE,
-        active: true,
-      });
-    }
-  };
-
-  /**
-   * 根據設定更新 Blogger Dashboard View
-   * Update Blogger Dashboard view based on settings
+   * 確保 Blogger Dashboard View Leaf 處於正確狀態
+   * Ensure the Blogger Dashboard view leaf is in the correct state
    *
-   * 當用戶在設定中切換「啟用儀表板」時，此方法負責建立或銷毀 View Leaf。
-   * When the user toggles "Enable Dashboard" in settings, this method creates or destroys view leaves.
+   * @param action - 要執行的行為 / Action to perform
    */
-  protected updateDashboardView = () =>
+  public _ensureDashboardView = (action: EnumDashboardAction): void =>
   {
-    if (this.settings.enableDashboard)
-    {
-      /** 啟用：若尚無 Leaf 則建立一個 */
-      const existing = this.app.workspace.getLeavesOfType(BLOGGER_DASHBOARD_VIEW_TYPE);
-      if (existing.length === 0)
-      {
-        this.app.workspace.getRightLeaf(false)?.setViewState({
-          type: BLOGGER_DASHBOARD_VIEW_TYPE,
-          active: true,
-        });
-      }
-    }
-    else
+    if (action === EnumDashboardAction.Toggle && !this.settings.enableDashboard)
     {
       /** 停用：銷毀所有現有 Dashboard Leaf */
       this.app.workspace.getLeavesOfType(BLOGGER_DASHBOARD_VIEW_TYPE)
         .forEach(leaf => leaf.detach());
+      return;
+    }
+
+    const existing = this.app.workspace.getLeavesOfType(BLOGGER_DASHBOARD_VIEW_TYPE);
+    if (existing.length === 0)
+    {
+      /** 無現有 Leaf → 建立 */
+      this.app.workspace.getRightLeaf(false)?.setViewState({
+        type: BLOGGER_DASHBOARD_VIEW_TYPE,
+        active: true,
+      });
+    }
+    else if (action === EnumDashboardAction.Activate)
+    {
+      /** 有現有 Leaf 且要求啟用 → 切換 */
+      this.app.workspace.revealLeaf(existing[0]);
     }
   };
 

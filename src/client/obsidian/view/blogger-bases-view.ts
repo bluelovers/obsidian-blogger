@@ -1,26 +1,14 @@
 import { App, BasesView, QueryController, BasesPropertyId, BasesEntry } from 'obsidian';
-import { _getPostStatusFromTags } from '../../../utils/tags-utils';
 import { EnumPostStatus } from '../../../types/const';
-import { getGlobalI18n } from '../../../i18n/i18n';
-import { ITranslateKey } from '../../../i18n/langs';
+import { t } from '../../../utils/i18n-utils';
+import { getArticleStatusInfo, applyStatusBadgeStyle } from '../../../utils/blogger-status-utils';
+import { formatDate } from '../../../utils/date-utils';
 
 /**
  * Blogger Bases View Type
  * Blogger Bases 檢視類型
  */
 export const BLOGGER_BASES_VIEW_TYPE = 'blogger-bases-view';
-
-/**
- * 取得 i18n 翻譯
- * Get i18n translation
- *
- * @param key - 翻譯鍵值 / Translation key
- * @returns 翻譯後的字串 / Translated string
- */
-function _t(key: ITranslateKey, vars?: Record<string, string>): string
-{
-	return getGlobalI18n().t(key, vars);
-}
 
 /**
  * 安全地從 BasesEntry 取得屬性字串值
@@ -54,88 +42,6 @@ function _getStringValue(entry: BasesEntry, propertyId: BasesPropertyId): string
 	}
 
 	return str;
-}
-
-/**
- * 格式化日期字串
- * Format date string
- *
- * @param isoString - ISO 8601 日期字串 / ISO 8601 date string
- * @returns 格式化後的日期文字 / Formatted date text
- */
-function _formatDate(isoString?: string | null): string
-{
-	if (!isoString) return '—';
-
-	try
-	{
-		const d = new Date(isoString);
-		if (isNaN(d.getTime())) return isoString;
-		const y = d.getFullYear();
-		const m = String(d.getMonth() + 1).padStart(2, '0');
-		const day = String(d.getDate()).padStart(2, '0');
-		const h = String(d.getHours()).padStart(2, '0');
-		const min = String(d.getMinutes()).padStart(2, '0');
-		return `${y}-${m}-${day} ${h}:${min}`;
-	}
-	catch
-	{
-		return isoString;
-	}
-}
-
-/**
- * 取得文章狀態與對應的文字與 CSS 類別
- * Get post status with corresponding text and CSS class
- */
-function _getArticleStatusInfo(tags: string[]): {
-	status: EnumPostStatus | undefined;
-	statusLabel: string;
-	statusClass: string;
-}
-{
-	const status = _getPostStatusFromTags(tags);
-	if (!status)
-	{
-		return {
-			status: undefined,
-			statusLabel: _t('bloggerDashboard_statusUnpublished'),
-			statusClass: 'blogger-status-unpublished',
-		};
-	}
-	switch (status)
-	{
-		case EnumPostStatus.Live:
-			return {
-				status,
-				statusLabel: _t('bloggerDashboard_statusLive'),
-				statusClass: 'blogger-status-live',
-			};
-		case EnumPostStatus.Draft:
-			return {
-				status,
-				statusLabel: _t('bloggerDashboard_statusDraft'),
-				statusClass: 'blogger-status-draft',
-			};
-		case EnumPostStatus.Scheduled:
-			return {
-				status,
-				statusLabel: _t('bloggerDashboard_statusScheduled'),
-				statusClass: 'blogger-status-scheduled',
-			};
-		case EnumPostStatus.SoftTrashed:
-			return {
-				status,
-				statusLabel: _t('bloggerDashboard_statusTrashed'),
-				statusClass: 'blogger-status-trashed',
-			};
-		default:
-			return {
-				status,
-				statusLabel: 'Unknown',
-				statusClass: 'blogger-status-unknown',
-			};
-	}
 }
 
 /**
@@ -352,7 +258,7 @@ export class BloggerBasesView extends BasesView
 
 			/** 從 tags 屬性解析發布狀態 */
 			const bloggerTags = _getBloggerTags(entry, this._app);
-			const { status, statusLabel, statusClass } = _getArticleStatusInfo(bloggerTags);
+			const { status, statusLabel, statusClass } = getArticleStatusInfo(bloggerTags);
 
 			/** 狀態標籤（彩色徽章） */
 			const statusEl = metaEl.createSpan({
@@ -361,29 +267,7 @@ export class BloggerBasesView extends BasesView
 			});
 
 			/** 狀態色彩 */
-			switch (status)
-			{
-				case EnumPostStatus.Live:
-					statusEl.style.backgroundColor = 'var(--color-green)';
-					statusEl.style.color = '#fff';
-					break;
-				case EnumPostStatus.Draft:
-					statusEl.style.backgroundColor = 'var(--color-yellow)';
-					statusEl.style.color = '#000';
-					break;
-				case EnumPostStatus.SoftTrashed:
-					statusEl.style.backgroundColor = 'var(--color-red)';
-					statusEl.style.color = '#fff';
-					break;
-				case EnumPostStatus.Scheduled:
-					statusEl.style.backgroundColor = 'var(--color-blue)';
-					statusEl.style.color = '#fff';
-					break;
-				default:
-					statusEl.style.backgroundColor = 'var(--text-muted)';
-					statusEl.style.color = 'var(--text-on-accent)';
-					break;
-			}
+			applyStatusBadgeStyle(statusEl, status);
 
 			/** 日期資訊（發布日或更新日） */
 			const published = _getStringValue(entry, 'note.blogger.published' as BasesPropertyId);
@@ -395,8 +279,8 @@ export class BloggerBasesView extends BasesView
 					cls: 'blogger-bases-date',
 				});
 				const dateText = updated
-					? _t('bloggerDashboard_updatedAt', { date: _formatDate(updated) })
-					: _t('bloggerDashboard_publishedAt', { date: _formatDate(published) });
+					? t('bloggerDashboard_updatedAt', { date: formatDate(updated) })
+					: t('bloggerDashboard_publishedAt', { date: formatDate(published) });
 				dateEl.textContent = dateText;
 			}
 

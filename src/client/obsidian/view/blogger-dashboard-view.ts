@@ -1,10 +1,10 @@
 import { ItemView, WorkspaceLeaf, TFile } from 'obsidian';
 import { IMatterData, IBloggerMeta } from '../../../types/types';
 import { EnumPostStatus, EnumobsidianBloggerTags } from '../../../types/const';
-import { _getPostStatusFromTags } from '../../../utils/tags-utils';
 import { IObsidianContext } from '../../../utils/obsidian/obsidian-context';
-import { getGlobalI18n } from '../../../i18n/i18n';
-import { ITranslateKey } from '../../../i18n/langs';
+import { t } from '../../../utils/i18n-utils';
+import { getArticleStatusInfo, applyStatusBadgeStyle } from '../../../utils/blogger-status-utils';
+import { formatDate } from '../../../utils/date-utils';
 
 /**
  * Blogger Dashboard View Type
@@ -30,6 +30,9 @@ interface IDashboardArticle
 	/** 文字化狀態描述 / Status display text */
 	statusLabel: string;
 
+	/** 狀態 CSS 類別 / Status CSS class */
+	statusClass: string;
+
 	/** 發布日期（ISO 8601）/ Published date (ISO 8601) */
 	published?: string;
 
@@ -43,100 +46,6 @@ interface IDashboardArticle
 	url?: string;
 }
 
-/**
- * 取得 i18n 翻譯
- * Get i18n translation
- *
- * @param key - 翻譯鍵值 / Translation key
- * @returns 翻譯後的字串 / Translated string
- */
-function _t(key: ITranslateKey, vars?: Record<string, string>): string
-{
-	return getGlobalI18n().t(key, vars);
-}
-
-/**
- * 取得文章狀態與對應的文字與 CSS 類別
- * Get post status with corresponding text and CSS class
- */
-function _getArticleStatusInfo(tags: IMatterData['tags']): {
-	status: EnumPostStatus | undefined;
-	statusLabel: string;
-	statusClass: string;
-}
-{
-	const t = _t;
-	const status = _getPostStatusFromTags(tags);
-	if (!status)
-	{
-		return {
-			status: undefined,
-			statusLabel: t('bloggerDashboard_statusUnpublished'),
-			statusClass: 'blogger-status-unpublished',
-		};
-	}
-	switch (status)
-	{
-		case EnumPostStatus.Live:
-			return {
-				status,
-				statusLabel: t('bloggerDashboard_statusLive'),
-				statusClass: 'blogger-status-live',
-			};
-		case EnumPostStatus.Draft:
-			return {
-				status,
-				statusLabel: t('bloggerDashboard_statusDraft'),
-				statusClass: 'blogger-status-draft',
-			};
-		case EnumPostStatus.Scheduled:
-			return {
-				status,
-				statusLabel: t('bloggerDashboard_statusScheduled'),
-				statusClass: 'blogger-status-scheduled',
-			};
-		case EnumPostStatus.SoftTrashed:
-			return {
-				status,
-				statusLabel: t('bloggerDashboard_statusTrashed'),
-				statusClass: 'blogger-status-trashed',
-			};
-		default:
-			return {
-				status,
-				statusLabel: 'Unknown',
-				statusClass: 'blogger-status-unknown',
-			};
-	}
-}
-
-/**
- * 格式化日期字串
- * Format date string
- *
- * @param isoString - ISO 8601 日期字串 / ISO 8601 date string
- * @returns 格式化後的日期文字 / Formatted date text
- */
-function _formatDate(isoString?: string): string
-{
-	if (!isoString) return '—';
-
-	try
-	{
-		const d = new Date(isoString);
-		if (isNaN(d.getTime())) return isoString;
-		const y = d.getFullYear();
-		const m = String(d.getMonth() + 1).padStart(2, '0');
-		const day = String(d.getDate()).padStart(2, '0');
-		const h = String(d.getHours()).padStart(2, '0');
-		const min = String(d.getMinutes()).padStart(2, '0');
-		return `${y}-${m}-${day} ${h}:${min}`;
-	}
-	catch
-	{
-		return isoString;
-	}
-}
 
 /**
  * Blogger 儀表板檢視類別
@@ -187,7 +96,7 @@ export class BloggerDashboardView extends ItemView
 	 */
 	getDisplayText(): string
 	{
-		return _t('bloggerDashboard_title');
+		return t('bloggerDashboard_title');
 	}
 
 	/**
@@ -247,7 +156,7 @@ export class BloggerDashboardView extends ItemView
 		/** 建立標題區域 */
 		container.createEl('div', {
 			cls: 'blogger-dashboard-header',
-			text: _t('bloggerDashboard_title'),
+			text: t('bloggerDashboard_title'),
 		});
 
 		/** 建立清單容器 */
@@ -283,7 +192,7 @@ export class BloggerDashboardView extends ItemView
 			if (!Array.isArray(tags)) continue;
 			if (!tags.includes(EnumobsidianBloggerTags.Post)) continue;
 
-			const { status, statusLabel } = _getArticleStatusInfo(tags);
+			const { status, statusLabel, statusClass } = getArticleStatusInfo(tags);
 			const bloggerMeta: IBloggerMeta | undefined = frontmatter.blogger;
 
 			articles.push({
@@ -291,6 +200,7 @@ export class BloggerDashboardView extends ItemView
 				title: frontmatter.title ?? file.basename,
 				status,
 				statusLabel,
+				statusClass,
 				published: bloggerMeta?.published,
 				updated: bloggerMeta?.updated,
 				thumbnail: bloggerMeta?.thumbnail,
@@ -324,7 +234,7 @@ export class BloggerDashboardView extends ItemView
 		{
 			this.container.createEl('div', {
 				cls: 'blogger-dashboard-empty',
-				text: _t('bloggerDashboard_empty'),
+				text: t('bloggerDashboard_empty'),
 			});
 			return;
 		}
@@ -385,29 +295,8 @@ export class BloggerDashboardView extends ItemView
 		});
 
 		/** 狀態標籤 */
-		const { statusClass } = _getArticleStatusInfo([]);
-		let statusClassStr: string;
-		switch (article.status)
-		{
-			case EnumPostStatus.Live:
-				statusClassStr = 'blogger-status-live';
-				break;
-			case EnumPostStatus.Draft:
-				statusClassStr = 'blogger-status-draft';
-				break;
-			case EnumPostStatus.Scheduled:
-				statusClassStr = 'blogger-status-scheduled';
-				break;
-			case EnumPostStatus.SoftTrashed:
-				statusClassStr = 'blogger-status-trashed';
-				break;
-			default:
-				statusClassStr = 'blogger-status-unpublished';
-				break;
-		}
-
 		const statusEl = metaEl.createEl('span', {
-			cls: `blogger-status-badge ${statusClassStr}`,
+			cls: `blogger-status-badge ${article.statusClass}`,
 			text: article.statusLabel,
 		});
 		statusEl.style.display = 'inline-block';
@@ -417,29 +306,7 @@ export class BloggerDashboardView extends ItemView
 		statusEl.style.fontWeight = '600';
 
 		/** 狀態色彩 */
-		switch (article.status)
-		{
-			case EnumPostStatus.Live:
-				statusEl.style.backgroundColor = 'var(--color-green)';
-				statusEl.style.color = '#fff';
-				break;
-			case EnumPostStatus.Draft:
-				statusEl.style.backgroundColor = 'var(--color-yellow)';
-				statusEl.style.color = '#000';
-				break;
-			case EnumPostStatus.SoftTrashed:
-				statusEl.style.backgroundColor = 'var(--color-red)';
-				statusEl.style.color = '#fff';
-				break;
-			case EnumPostStatus.Scheduled:
-				statusEl.style.backgroundColor = 'var(--color-blue)';
-				statusEl.style.color = '#fff';
-				break;
-			default:
-				statusEl.style.backgroundColor = 'var(--text-muted)';
-				statusEl.style.color = 'var(--text-on-accent)';
-				break;
-		}
+		applyStatusBadgeStyle(statusEl, article.status);
 
 		/** 日期資訊 */
 		const dateEl = metaEl.createEl('span', {
@@ -452,8 +319,8 @@ export class BloggerDashboardView extends ItemView
 		if (article.published || article.updated)
 		{
 			const dateText = article.updated
-				? _t('bloggerDashboard_updatedAt', { date: _formatDate(article.updated) })
-				: _t('bloggerDashboard_publishedAt', { date: _formatDate(article.published) });
+				? t('bloggerDashboard_updatedAt', { date: formatDate(article.updated) })
+				: t('bloggerDashboard_publishedAt', { date: formatDate(article.published) });
 			dateEl.textContent = dateText;
 		}
 

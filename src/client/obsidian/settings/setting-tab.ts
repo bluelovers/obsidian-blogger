@@ -7,6 +7,7 @@ import { getGlobalMarkdownParser, setupMarkdownParser } from '../../../utils/mar
 import { EnumMathJaxOutputType, EnumPostStatus } from '../../../types/const';
 import { ITranslateKey } from '../../../i18n/langs';
 import type { IObsidianContext } from '../../../utils/obsidian/obsidian-context';
+import { EnumDashboardAction } from '../../../types/const';
 
 export class BloggerSettingTab extends PluginSettingTab {
   constructor(
@@ -136,7 +137,7 @@ export class BloggerSettingTab extends PluginSettingTab {
         toggle.setValue(this.settings.enableDashboard).onChange(async (value) => {
           this.settings.enableDashboard = value;
           await this.saveSettings();
-          (this.ctx.plugin as any).updateDashboardView();
+          this.ctx.plugin._ensureDashboardView(EnumDashboardAction.Toggle);
         }),
       );
 

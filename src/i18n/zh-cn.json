@@ -101,5 +101,13 @@
   "bloggerDashboard_statusScheduled": "已排程",
   "bloggerDashboard_statusTrashed": "已删除",
   "bloggerDashboard_updatedAt": "更新: <%= date %>",
-  "bloggerDashboard_publishedAt": "发布: <%= date %>"
+  "bloggerDashboard_publishedAt": "发布: <%= date %>",
+
+  "publishModal_syncButton": "从 Blogger 同步",
+  "publishModal_syncButtonTooltip": "从 Blogger 同步文章数据到本地",
+  "publishModal_syncNoPostId": "请先发布文章以启用同步",
+  "message_syncSuccess": "文章已从 Blogger 同步成功",
+  "message_syncContentIdentical": "本地内容与远程一致",
+  "message_syncContentDifferent": "本地内容与远程不同",
+  "message_syncFailed": "同步失败: <%= message %>"
 }

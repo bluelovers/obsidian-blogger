@@ -1,13 +1,15 @@
-import { App, Modal, Setting } from 'obsidian';
+import { App, Modal, Setting, Notice } from 'obsidian';
 import { IBloggerClientResult, IBloggerPostParams, IBloggerPublishResult } from '../../../types/blogger-client-interface';
 import { getGlobalI18n } from '../../../i18n/i18n';
 import { IMatterData } from '../../../types/types';
 import { IPluginSettings } from '../../../plugin-settings';
-import { EnumPostStatus } from '../../../types/const';
+import { EnumBloggerClientReturnCode, EnumPostStatus } from '../../../types/const';
 import { ITranslateKey } from '../../../i18n/langs';
 import { _getPostStatusFromTags, _togglePostStatus } from '../../../utils/tags-utils';
 import { IObsidianContext } from '../../../utils/obsidian/obsidian-context';
 import { BLOGGER_DEFAULT_PROFILE_NAME } from '../../../consts';
+import { compareWithLocal } from '../../../utils/md-compare-utils';
+import { stripFrontMatter } from '../../../utils/obsidian/obsidian-utils';
 
 import { IBloggerProfile } from '../../../types/blogger-profile';
 
@@ -31,6 +33,17 @@ export type IOnSubmit<T extends IBloggerClientResult<IBloggerPublishResult> = IB
 ) => void;
 
 /**
+ * 同步回呼函式型別
+ * Sync callback function type
+ *
+ * @param postId - 文章 ID / Post ID
+ * @returns Promise 包含發布結果（response 中含原始 API 資料）/ Promise containing publish result (response has raw API data)
+ */
+export type IOnSync = (
+	postId: `${number}`,
+) => Promise<IBloggerClientResult<IBloggerPublishResult>>;
+
+/**
  * Blogger 發布對話框類別
  * Blogger publish modal class
  */
@@ -44,6 +57,7 @@ export class BloggerPublishModal extends Modal {
    * @param hasPostId - 筆記是否已有 postId（已發布過）/ Whether the note already has a postId
    * @param onSubmit - 提交時的回呼函式 / Callback function on submit
    * @param matterData - 筆記的 Frontmatter 資料 / Frontmatter data of the note
+   * @param onSync - 同步時的回呼函式（可選）/ Callback function on sync (optional)
    */
   constructor(
     readonly ctx: IObsidianContext,
@@ -55,6 +69,10 @@ export class BloggerPublishModal extends Modal {
 		protected readonly hasPostId: boolean,
 		protected readonly onSubmit: IOnSubmit,
 		protected readonly matterData: IMatterData,
+		/**
+		 * 同步回呼（可選）/ Sync callback (optional)
+		 */
+		protected readonly onSync?: IOnSync,
   ) {
     super(ctx.app);
   }
@@ -205,6 +223,40 @@ export class BloggerPublishModal extends Modal {
       }
     }
 
+    /** ===== 同步按鈕 — 已發布可同步，未發布禁用 ===== */
+    /** Sync button — enabled when published, disabled when not */
+    {
+      const syncSetting = new Setting(contentEl);
+
+      if (this.hasPostId && this.onSync)
+      {
+        syncSetting
+          .setName(t('publishModal_syncButton'))
+          .setDesc(t('publishModal_syncButtonTooltip'))
+          .addButton((button) =>
+          {
+            button
+              .setButtonText(t('publishModal_syncButton'))
+              .onClick(async () =>
+              {
+                await this._handleSync();
+              });
+          });
+      }
+      else
+      {
+        syncSetting
+          .setName(t('publishModal_syncButton'))
+          .setDesc(t('publishModal_syncNoPostId'))
+          .addButton((button) =>
+          {
+            button
+              .setButtonText(t('publishModal_syncButton'))
+              .setDisabled(true);
+          });
+      }
+    }
+
     new Setting(contentEl).addButton((button) =>
       button
         .setButtonText(t('publishModal_publishButtonText'))
@@ -213,5 +265,159 @@ export class BloggerPublishModal extends Modal {
           this.onSubmit(params, (fm) => { }, this);
         }),
     );
+  }
+
+  /**
+   * 處理同步邏輯
+   * Handle sync logic
+   *
+   * 從遠端取得文章資料，更新本地 Frontmatter，並比較內容差異。
+   * Fetches post data from remote, updates local Frontmatter, and compares content differences.
+   */
+  protected async _handleSync(): Promise<void>
+  {
+    const t = (key: ITranslateKey, vars?: Record<string, string>): string =>
+    {
+      return getGlobalI18n().t(key, vars);
+    };
+
+    /** 確保有 postId 和 onSync 回呼 */
+    if (!this.matterData.postId || !this.onSync)
+    {
+      return;
+    }
+
+    try
+    {
+      /** 1. 呼叫 API 取得遠端文章資料 */
+      const result = await this.onSync(this.matterData.postId);
+
+      if (result.code !== EnumBloggerClientReturnCode.OK)
+      {
+        new Notice(t('message_syncFailed', { message: result.message ?? 'Unknown error' }));
+        return;
+      }
+
+      /**
+       * 2. 從 raw response 中提取資料
+       * 2. Extract data from raw response
+       *
+       * result.response 包含 IBloggerPostApiReturn 的完整資料（title, content, status 等）
+       * result.response contains full IBloggerPostApiReturn data (title, content, status, etc.)
+       */
+      const rawResponse = result.response as Record<string, any> | undefined;
+      const remoteTitle: string = rawResponse?.title ?? '';
+      const remoteContent: string = rawResponse?.content ?? '';
+      const remoteStatus: string = rawResponse?.status ?? '';
+      const remotePublished: string = rawResponse?.published ?? '';
+      const remoteUpdated: string = rawResponse?.updated ?? '';
+
+      /** 3. 建立 file context 並更新 Frontmatter */
+      /** 3. Create file context and update Frontmatter */
+      const fileCtx = this.ctx.createFileContext();
+      if (fileCtx)
+      {
+        await fileCtx.frontmatter.blogger.updatePublishSuccess({
+          profileName: this.matterData.profileName ?? BLOGGER_DEFAULT_PROFILE_NAME,
+          postId: this.matterData.postId,
+          url: result.data.url,
+          status: result.data.status,
+          published: remotePublished,
+          updated: remoteUpdated,
+          thumbnail: result.data.images?.[0]?.url,
+          customTitle: remoteTitle,
+        });
+
+        /**
+         * 若遠端狀態與本地不同，同步更新狀態標籤
+         * If remote status differs from local, sync status tags
+         */
+        if (remoteStatus && remoteStatus !== _getPostStatusFromTags(this.matterData.tags))
+        {
+          const statusEnum = remoteStatus === 'LIVE' ? EnumPostStatus.Live : EnumPostStatus.Draft;
+          await fileCtx.frontmatter.blogger.updateStatusTags(statusEnum);
+        }
+
+        new Notice(t('message_syncSuccess'));
+      }
+
+      /** 4. 讀取本地檔案內容（去除 Frontmatter）進行 MD 比較 */
+      /** 4. Read local file content (strip Frontmatter) for MD comparison */
+      const activeFile = this.ctx.getActiveFile();
+      if (activeFile && remoteContent)
+      {
+        const rawContent = await this.ctx.app.vault.read(activeFile);
+        const localMd = stripFrontMatter(rawContent);
+
+        const compareResult = compareWithLocal(remoteContent, localMd);
+
+        if (compareResult.isEqual)
+        {
+          new Notice(t('message_syncContentIdentical'));
+        }
+        else
+        {
+          /**
+           * 5. 內容不同時，在對話框中顯示 diff 結果
+           * 5. Show diff result in modal when content differs
+           */
+          this._showDiffResult(compareResult.diffHtml ?? '');
+        }
+      }
+    }
+    catch (error)
+    {
+      const message = error instanceof Error ? error.message : String(error);
+      new Notice(t('message_syncFailed', { message }));
+    }
+  }
+
+  /**
+   * 在對話框中顯示內容差異
+   * Show content diff in the modal
+   *
+   * @param diffHtml - HTML 格式的差異內容 / Diff content in HTML format
+   */
+  protected _showDiffResult(diffHtml: string): void
+  {
+    const t = (key: ITranslateKey, vars?: Record<string, string>): string =>
+    {
+      return getGlobalI18n().t(key, vars);
+    };
+
+    const { contentEl } = this;
+
+    /** 建立 diff 區塊容器 */
+    const diffContainer = contentEl.createEl('div', {
+      cls: 'blogger-diff-container',
+    });
+    diffContainer.style.marginTop = '16px';
+    diffContainer.style.padding = '12px';
+    diffContainer.style.border = '1px solid var(--background-modifier-border)';
+    diffContainer.style.borderRadius = '6px';
+    diffContainer.style.backgroundColor = 'var(--background-primary)';
+    diffContainer.style.maxHeight = '400px';
+    diffContainer.style.overflowY = 'auto';
+    diffContainer.style.whiteSpace = 'pre-wrap';
+    diffContainer.style.fontFamily = 'var(--font-monospace)';
+    diffContainer.style.fontSize = 'var(--font-small)';
+
+    /** 標題 */
+    diffContainer.createEl('div', {
+      cls: 'blogger-diff-title',
+      text: t('message_syncContentDifferent'),
+    }).style.cssText = 'font-weight: 600; margin-bottom: 8px; color: var(--text-warning);';
+
+    /** 差異內容 */
+    const diffBody = diffContainer.createEl('div', {
+      cls: 'blogger-diff-body',
+    });
+    diffBody.innerHTML = diffHtml;
+
+    /** 提醒：此為唯讀比對，不更新內容 */
+    diffContainer.createEl('div', {
+      cls: 'blogger-diff-note',
+      text: '⚠️ Read-only comparison — content will not be updated.',
+    }).style.cssText = 'margin-top: 8px; font-size: var(--font-smallest); color: var(--text-muted); font-style: italic;';
   }
 }

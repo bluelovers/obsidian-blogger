@@ -197,4 +197,18 @@ export interface IBloggerClient
 		defaultPostParams?: IBloggerPostParams,
 	): Promise<IBloggerClientResult<IBloggerPublishResult>>;
 
+	/**
+	 * 從 Blogger 同步文章資料（遠端 → 本地）
+	 * Sync post data from Blogger (remote → local)
+	 *
+	 * 透過 postId 從 Blogger API 取得遠端文章的最新資料，
+	 * 包含標題、狀態、內容（HTML）等。
+	 * Fetches the latest remote post data via postId, including title, status, content (HTML), etc.
+	 *
+	 * @param postId - 文章 ID / Post ID
+	 */
+	syncPost(
+		postId: `${number}`,
+	): Promise<IBloggerClientResult<IBloggerPublishResult>>;
+
 }

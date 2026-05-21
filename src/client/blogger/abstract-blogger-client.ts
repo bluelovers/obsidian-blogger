@@ -74,6 +74,23 @@ export abstract class AbstractBloggerClient implements IBloggerClient
 	): Promise<IBloggerClientResult<IBloggerPublishResult>>;
 
 	/**
+	 * 從 Blogger 同步文章資料（遠端 → 本地）
+	 * Sync post data from Blogger (remote → local)
+	 *
+	 * 基底實作拋出錯誤，子類別應覆寫以提供實際 API 呼叫邏輯。
+	 * Base implementation throws error, subclass should override with actual API call.
+	 *
+	 * @param postId - 文章 ID / Post ID
+	 */
+	async syncPost(postId: `${number}`): Promise<IBloggerClientResult<IBloggerPublishResult>>
+	{
+		throw new Error(getGlobalI18n().t('error_requestFailed', {
+			code: '501',
+			message: 'syncPost not implemented',
+		}));
+	}
+
+	/**
 	 * 檢查既有的設定檔名稱是否與當前一致
 	 * Check if existing profile name matches current one
 	 *
@@ -326,6 +343,14 @@ export abstract class AbstractBloggerClient implements IBloggerClient
 						{
 							this._handleError(error);
 						}
+					},
+					/**
+					 * 同步回呼：包裝 syncPost 方法
+					 * Sync callback: wraps syncPost method
+					 */
+					onSync: async (postId) =>
+					{
+						return this.syncPost(postId);
 					},
 					matterData,
 				});

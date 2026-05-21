@@ -12,7 +12,7 @@ import { _hasError } from './utils/type-utils';
 import { EnumBloggerClientReturnCode, EnumPostStatus } from './types/const';
 import { _handleTagsForBloggerPostApi } from './utils/tags-utils';
 import { IObsidianContext } from './utils/obsidian/obsidian-context';
-import { EnumBloggerRestEndpoint, getUrl, getUrlCore } from './client/blogger/utils/url';
+import { EnumBloggerRestEndpoint, EnumBloggerViewMode, getUrl, getUrlCore } from './client/blogger/utils/url';
 import { BloggerRestClientGoogleOAuth2Context } from './client/blogger/blogger-rest-client-google-o-auth2-context';
 import { IBloggerRestClientContext } from './client/blogger/types';
 import { AbstractBloggerClient } from './client/blogger/abstract-blogger-client';
@@ -142,6 +142,17 @@ export class BloggerRestClient extends AbstractBloggerClient
 	): Promise<IBloggerClientResult<IBloggerPublishResult>>
 	{
 		return this.coreApiClient.publish(title, content, postParams);
+	}
+
+	/**
+	 * 從 Blogger 同步文章資料（遠端 → 本地）
+	 * Sync post data from Blogger (remote → local)
+	 *
+	 * @param postId - 文章 ID / Post ID
+	 */
+	async syncPost(postId: `${number}`): Promise<IBloggerClientResult<IBloggerPublishResult>>
+	{
+		return this.coreApiClient.getPost(postId, EnumBloggerViewMode.AUTHOR);
 	}
 }
 

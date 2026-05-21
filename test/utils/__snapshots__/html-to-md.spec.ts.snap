@@ -1,0 +1,518 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`HTML → MD Conversion (turndown) > Basic Inline Elements > should match snapshot (direct + pipeline) 1`] = `
+{
+  "groupName": "Basic Inline Elements",
+  "results": [
+    {
+      "directHtml": "<p>Hello world</p>",
+      "directMatchesOriginal": true,
+      "directMd": "Hello world",
+      "name": "plain paragraph",
+      "pipelineHtml": "<p>Hello world</p>
+",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "Hello world",
+    },
+    {
+      "directHtml": "<p>This is <strong>bold</strong> text</p>",
+      "directMatchesOriginal": true,
+      "directMd": "This is **bold** text",
+      "name": "bold text",
+      "pipelineHtml": "<p>This is <strong>bold</strong> text</p>
+",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "This is **bold** text",
+    },
+    {
+      "directHtml": "<p>This is <em>italic</em> text</p>",
+      "directMatchesOriginal": false,
+      "directMd": "This is _italic_ text",
+      "name": "italic text",
+      "pipelineHtml": "<p>This is <em>italic</em> text</p>
+",
+      "pipelineMatchesOriginal": false,
+      "pipelineMd": "This is _italic_ text",
+    },
+    {
+      "directHtml": "<p><em><strong>bold italic</strong></em> and <strong>bold <em>italic</em></strong></p>",
+      "directMatchesOriginal": false,
+      "directMd": "_**bold italic**_ and **bold _italic_**",
+      "name": "bold and italic combined",
+      "pipelineHtml": "<p><em><strong>bold italic</strong></em> and <strong>bold <em>italic</em></strong></p>
+",
+      "pipelineMatchesOriginal": false,
+      "pipelineMd": "_**bold italic**_ and **bold _italic_**",
+    },
+    {
+      "directHtml": "<p>Use the <code>console.log()</code> function</p>",
+      "directMatchesOriginal": true,
+      "directMd": "Use the \`console.log()\` function",
+      "name": "inline code",
+      "pipelineHtml": "<p>Use the <code>console.log()</code> function</p>
+",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "Use the \`console.log()\` function",
+    },
+    {
+      "directHtml": "<p>This is <s>deleted</s> text</p>",
+      "directMatchesOriginal": false,
+      "directMd": "This is deleted text",
+      "name": "strikethrough",
+      "pipelineHtml": "<p>This is <s>deleted</s> text</p>
+",
+      "pipelineMatchesOriginal": false,
+      "pipelineMd": "This is deleted text",
+    },
+  ],
+}
+`;
+
+exports[`HTML → MD Conversion (turndown) > Block Elements > should match snapshot (direct + pipeline) 1`] = `
+{
+  "groupName": "Block Elements",
+  "results": [
+    {
+      "directHtml": "<blockquote>
+<p>This is a blockquote</p>
+</blockquote>",
+      "directMatchesOriginal": true,
+      "directMd": "> This is a blockquote",
+      "name": "blockquote",
+      "pipelineHtml": "<blockquote>
+<p>This is a blockquote</p>
+</blockquote>
+",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "> This is a blockquote",
+    },
+    {
+      "directHtml": "<blockquote>
+<p>First paragraph</p>
+<p>Second paragraph</p>
+</blockquote>",
+      "directMatchesOriginal": false,
+      "directMd": "> First paragraph
+> 
+> Second paragraph",
+      "name": "blockquote with multiple paragraphs",
+      "pipelineHtml": "<blockquote>
+<p>First paragraph</p>
+<p>Second paragraph</p>
+</blockquote>
+",
+      "pipelineMatchesOriginal": false,
+      "pipelineMd": "> First paragraph
+> 
+> Second paragraph",
+    },
+    {
+      "directHtml": "<pre><code>const x = 1;
+console.log(x);
+</code></pre>",
+      "directMatchesOriginal": false,
+      "directMd": "const x = 1;
+    console.log(x);",
+      "name": "fenced code block",
+      "pipelineHtml": "<pre><code>const x = 1;
+console.log(x);
+</code></pre>
+",
+      "pipelineMatchesOriginal": false,
+      "pipelineMd": "const x = 1;
+    console.log(x);",
+    },
+    {
+      "directHtml": "<pre><code class="language-javascript">const x = 1;
+console.log(x);
+</code></pre>",
+      "directMatchesOriginal": false,
+      "directMd": "const x = 1;
+    console.log(x);",
+      "name": "fenced code block with language",
+      "pipelineHtml": "<pre><code class="language-javascript">const x = 1;
+console.log(x);
+</code></pre>
+",
+      "pipelineMatchesOriginal": false,
+      "pipelineMd": "const x = 1;
+    console.log(x);",
+    },
+    {
+      "directHtml": "<hr>
+",
+      "directMatchesOriginal": false,
+      "directMd": "* * *",
+      "name": "horizontal rule",
+      "pipelineHtml": "<hr>
+",
+      "pipelineMatchesOriginal": false,
+      "pipelineMd": "* * *",
+    },
+  ],
+}
+`;
+
+exports[`HTML → MD Conversion (turndown) > Edge Cases > should match snapshot (direct + pipeline) 1`] = `
+{
+  "groupName": "Edge Cases",
+  "results": [
+    {
+      "directHtml": "",
+      "directMatchesOriginal": false,
+      "directMd": "",
+      "name": "empty string",
+      "pipelineHtml": "",
+      "pipelineMatchesOriginal": false,
+      "pipelineMd": "",
+    },
+    {
+      "directHtml": "",
+      "directMatchesOriginal": false,
+      "directMd": "",
+      "name": "only whitespace",
+      "pipelineHtml": "",
+      "pipelineMatchesOriginal": false,
+      "pipelineMd": "",
+    },
+    {
+      "directHtml": "<p>AT&amp;T uses &lt;tag&gt; &amp; &quot;quotes&quot;</p>",
+      "directMatchesOriginal": true,
+      "directMd": "AT&T uses <tag> & "quotes"",
+      "name": "special HTML characters",
+      "pipelineHtml": "<p>AT&amp;T uses &lt;tag&gt; &amp; &quot;quotes&quot;</p>
+",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "AT&T uses <tag> & "quotes"",
+    },
+    {
+      "directHtml": "<p>Line 1</p>
+<p>Line 2</p>",
+      "directMatchesOriginal": false,
+      "directMd": "Line 1
+
+Line 2",
+      "name": "multiple blank lines",
+      "pipelineHtml": "<p>Line 1</p>
+<p>Line 2</p>
+",
+      "pipelineMatchesOriginal": false,
+      "pipelineMd": "Line 1
+
+Line 2",
+    },
+  ],
+}
+`;
+
+exports[`HTML → MD Conversion (turndown) > Headings > should match snapshot (direct + pipeline) 1`] = `
+{
+  "groupName": "Headings",
+  "results": [
+    {
+      "directHtml": "<h1>Heading 1</h1>",
+      "directMatchesOriginal": false,
+      "directMd": "Heading 1
+=========",
+      "name": "h1",
+      "pipelineHtml": "<h1>Heading 1</h1>
+",
+      "pipelineMatchesOriginal": false,
+      "pipelineMd": "Heading 1
+=========",
+    },
+    {
+      "directHtml": "<h2>Heading 2</h2>",
+      "directMatchesOriginal": false,
+      "directMd": "Heading 2
+---------",
+      "name": "h2",
+      "pipelineHtml": "<h2>Heading 2</h2>
+",
+      "pipelineMatchesOriginal": false,
+      "pipelineMd": "Heading 2
+---------",
+    },
+    {
+      "directHtml": "<h3>Heading 3</h3>",
+      "directMatchesOriginal": true,
+      "directMd": "### Heading 3",
+      "name": "h3",
+      "pipelineHtml": "<h3>Heading 3</h3>
+",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "### Heading 3",
+    },
+    {
+      "directHtml": "<h4>Heading 4</h4>",
+      "directMatchesOriginal": true,
+      "directMd": "#### Heading 4",
+      "name": "h4",
+      "pipelineHtml": "<h4>Heading 4</h4>
+",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "#### Heading 4",
+    },
+    {
+      "directHtml": "<h5>Heading 5</h5>",
+      "directMatchesOriginal": true,
+      "directMd": "##### Heading 5",
+      "name": "h5",
+      "pipelineHtml": "<h5>Heading 5</h5>
+",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "##### Heading 5",
+    },
+    {
+      "directHtml": "<h6>Heading 6</h6>",
+      "directMatchesOriginal": true,
+      "directMd": "###### Heading 6",
+      "name": "h6",
+      "pipelineHtml": "<h6>Heading 6</h6>
+",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "###### Heading 6",
+    },
+  ],
+}
+`;
+
+exports[`HTML → MD Conversion (turndown) > Links and Images > should match snapshot (direct + pipeline) 1`] = `
+{
+  "groupName": "Links and Images",
+  "results": [
+    {
+      "directHtml": "<p><a href="https://openai.com">OpenAI</a></p>",
+      "directMatchesOriginal": true,
+      "directMd": "[OpenAI](https://openai.com)",
+      "name": "basic link",
+      "pipelineHtml": "<p><a href="https://openai.com">OpenAI</a></p>
+",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "[OpenAI](https://openai.com)",
+    },
+    {
+      "directHtml": "<p><a href="https://openai.com" title="Visit OpenAI">OpenAI</a></p>",
+      "directMatchesOriginal": true,
+      "directMd": "[OpenAI](https://openai.com "Visit OpenAI")",
+      "name": "link with title",
+      "pipelineHtml": "<p><a href="https://openai.com" title="Visit OpenAI">OpenAI</a></p>
+",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "[OpenAI](https://openai.com "Visit OpenAI")",
+    },
+    {
+      "directHtml": "<p><img src="https://example.com/image.png" alt="Alt text"></p>",
+      "directMatchesOriginal": true,
+      "directMd": "![Alt text](https://example.com/image.png)",
+      "name": "image",
+      "pipelineHtml": "<p><img https://example.com/image.png="../.." alt="Alt text"></p>
+",
+      "pipelineMatchesOriginal": false,
+      "pipelineMd": "",
+    },
+    {
+      "directHtml": "<p><img src="https://example.com/image.png" alt="Alt text" title="Title"></p>",
+      "directMatchesOriginal": true,
+      "directMd": "![Alt text](https://example.com/image.png "Title")",
+      "name": "image with title",
+      "pipelineHtml": "<p><img https://example.com/image.png="../.." alt="Alt text"></p>
+",
+      "pipelineMatchesOriginal": false,
+      "pipelineMd": "",
+    },
+    {
+      "directHtml": "<p>Visit <a href="https://openai.com">OpenAI</a> for more info.</p>",
+      "directMatchesOriginal": true,
+      "directMd": "Visit [OpenAI](https://openai.com) for more info.",
+      "name": "link in paragraph",
+      "pipelineHtml": "<p>Visit <a href="https://openai.com">OpenAI</a> for more info.</p>
+",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "Visit [OpenAI](https://openai.com) for more info.",
+    },
+  ],
+}
+`;
+
+exports[`HTML → MD Conversion (turndown) > Lists > should match snapshot (direct + pipeline) 1`] = `
+{
+  "groupName": "Lists",
+  "results": [
+    {
+      "directHtml": "<ul>
+<li>Item 1</li>
+<li>Item 2</li>
+<li>Item 3</li>
+</ul>",
+      "directMatchesOriginal": false,
+      "directMd": "*   Item 1
+*   Item 2
+*   Item 3",
+      "name": "unordered list",
+      "pipelineHtml": "<ul>
+<li>Item 1</li>
+<li>Item 2</li>
+<li>Item 3</li>
+</ul>
+",
+      "pipelineMatchesOriginal": false,
+      "pipelineMd": "*   Item 1
+*   Item 2
+*   Item 3",
+    },
+    {
+      "directHtml": "<ol>
+<li>First</li>
+<li>Second</li>
+<li>Third</li>
+</ol>",
+      "directMatchesOriginal": false,
+      "directMd": "1.  First
+2.  Second
+3.  Third",
+      "name": "ordered list",
+      "pipelineHtml": "<ol>
+<li>First</li>
+<li>Second</li>
+<li>Third</li>
+</ol>
+",
+      "pipelineMatchesOriginal": false,
+      "pipelineMd": "1.  First
+2.  Second
+3.  Third",
+    },
+    {
+      "directHtml": "<ul>
+<li>Parent 1
+<ul>
+<li>Child 1</li>
+<li>Child 2</li>
+</ul>
+</li>
+<li>Parent 2</li>
+</ul>",
+      "directMatchesOriginal": false,
+      "directMd": "*   Parent 1
+    *   Child 1
+    *   Child 2
+*   Parent 2",
+      "name": "nested unordered list",
+      "pipelineHtml": "<ul>
+<li>Parent 1
+<ul>
+<li>Child 1</li>
+<li>Child 2</li>
+</ul>
+</li>
+<li>Parent 2</li>
+</ul>
+",
+      "pipelineMatchesOriginal": false,
+      "pipelineMd": "*   Parent 1
+    *   Child 1
+    *   Child 2
+*   Parent 2",
+    },
+    {
+      "directHtml": "<ul>
+<li><strong>Bold item</strong></li>
+<li><em>Italic item</em></li>
+<li><code>code item</code></li>
+</ul>",
+      "directMatchesOriginal": false,
+      "directMd": "*   **Bold item**
+*   _Italic item_
+*   \`code item\`",
+      "name": "unordered with inline formatting",
+      "pipelineHtml": "<ul>
+<li><strong>Bold item</strong></li>
+<li><em>Italic item</em></li>
+<li><code>code item</code></li>
+</ul>
+",
+      "pipelineMatchesOriginal": false,
+      "pipelineMd": "*   **Bold item**
+*   _Italic item_
+*   \`code item\`",
+    },
+  ],
+}
+`;
+
+exports[`HTML → MD Conversion (turndown) > Mixed Content > should match snapshot (direct + pipeline) 1`] = `
+{
+  "groupName": "Mixed Content",
+  "results": [
+    {
+      "directHtml": "<h1>Title</h1>
+<p>This is a paragraph after the title.</p>",
+      "directMatchesOriginal": false,
+      "directMd": "Title
+=====
+
+This is a paragraph after the title.",
+      "name": "heading with paragraph",
+      "pipelineHtml": "<h1>Title</h1>
+<p>This is a paragraph after the title.</p>
+",
+      "pipelineMatchesOriginal": false,
+      "pipelineMd": "Title
+=====
+
+This is a paragraph after the title.",
+    },
+    {
+      "directHtml": "<p>First paragraph.</p>
+<p>Second paragraph.</p>
+<p>Third paragraph.</p>",
+      "directMatchesOriginal": true,
+      "directMd": "First paragraph.
+
+Second paragraph.
+
+Third paragraph.",
+      "name": "multiple paragraphs",
+      "pipelineHtml": "<p>First paragraph.</p>
+<p>Second paragraph.</p>
+<p>Third paragraph.</p>
+",
+      "pipelineMatchesOriginal": true,
+      "pipelineMd": "First paragraph.
+
+Second paragraph.
+
+Third paragraph.",
+    },
+    {
+      "directHtml": "<blockquote>
+<p>A blockquote</p>
+<ul>
+<li>with a list</li>
+<li>inside it</li>
+</ul>
+</blockquote>",
+      "directMatchesOriginal": false,
+      "directMd": "> A blockquote
+> 
+> *   with a list
+> *   inside it",
+      "name": "blockquote with list inside",
+      "pipelineHtml": "<blockquote>
+<p>A blockquote</p>
+<ul>
+<li>with a list</li>
+<li>inside it</li>
+</ul>
+</blockquote>
+",
+      "pipelineMatchesOriginal": false,
+      "pipelineMd": "> A blockquote
+> 
+> *   with a list
+> *   inside it",
+    },
+  ],
+}
+`;

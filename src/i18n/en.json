@@ -118,5 +118,13 @@
   "bloggerDashboard_statusScheduled": "Scheduled",
   "bloggerDashboard_statusTrashed": "Deleted",
   "bloggerDashboard_updatedAt": "Updated: <%= date %>",
-  "bloggerDashboard_publishedAt": "Published: <%= date %>"
+  "bloggerDashboard_publishedAt": "Published: <%= date %>",
+
+  "publishModal_syncButton": "Sync from Blogger",
+  "publishModal_syncButtonTooltip": "Sync post data from Blogger to local",
+  "publishModal_syncNoPostId": "Publish first to enable sync",
+  "message_syncSuccess": "Post synced from Blogger successfully",
+  "message_syncContentIdentical": "Local content is identical to remote",
+  "message_syncContentDifferent": "Local content differs from remote",
+  "message_syncFailed": "Sync failed: <%= message %>"
 }

@@ -1,0 +1,323 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`MD → HTML Conversion > Basic Inline Elements > should match snapshot 1`] = `
+{
+  "groupName": "Basic Inline Elements",
+  "results": [
+    {
+      "input": "Hello world",
+      "name": "plain paragraph",
+      "output": "<p>Hello world</p>
+",
+    },
+    {
+      "input": "This is **bold** text",
+      "name": "bold text",
+      "output": "<p>This is <strong>bold</strong> text</p>
+",
+    },
+    {
+      "input": "This is *italic* text",
+      "name": "italic text",
+      "output": "<p>This is <em>italic</em> text</p>
+",
+    },
+    {
+      "input": "***bold italic*** and **bold *italic***",
+      "name": "bold and italic combined",
+      "output": "<p><em><strong>bold italic</strong></em> and <strong>bold <em>italic</em></strong></p>
+",
+    },
+    {
+      "input": "Use the \`console.log()\` function",
+      "name": "inline code",
+      "output": "<p>Use the <code>console.log()</code> function</p>
+",
+    },
+    {
+      "input": "This is ~~deleted~~ text",
+      "name": "strikethrough",
+      "output": "<p>This is <s>deleted</s> text</p>
+",
+    },
+  ],
+}
+`;
+
+exports[`MD → HTML Conversion > Block Elements > should match snapshot 1`] = `
+{
+  "groupName": "Block Elements",
+  "results": [
+    {
+      "input": "> This is a blockquote",
+      "name": "blockquote",
+      "output": "<blockquote>
+<p>This is a blockquote</p>
+</blockquote>
+",
+    },
+    {
+      "input": "> First paragraph
+>
+> Second paragraph",
+      "name": "blockquote with multiple paragraphs",
+      "output": "<blockquote>
+<p>First paragraph</p>
+<p>Second paragraph</p>
+</blockquote>
+",
+    },
+    {
+      "input": "\`\`\`
+const x = 1;
+console.log(x);
+\`\`\`",
+      "name": "fenced code block",
+      "output": "<pre><code>const x = 1;
+console.log(x);
+</code></pre>
+",
+    },
+    {
+      "input": "\`\`\`javascript
+const x = 1;
+console.log(x);
+\`\`\`",
+      "name": "fenced code block with language",
+      "output": "<pre><code class="language-javascript">const x = 1;
+console.log(x);
+</code></pre>
+",
+    },
+    {
+      "input": "---",
+      "name": "horizontal rule",
+      "output": "<hr>
+",
+    },
+  ],
+}
+`;
+
+exports[`MD → HTML Conversion > Edge Cases > should match snapshot 1`] = `
+{
+  "groupName": "Edge Cases",
+  "results": [
+    {
+      "input": "",
+      "name": "empty string",
+      "output": "",
+    },
+    {
+      "input": "   
+
+  ",
+      "name": "only whitespace",
+      "output": "",
+    },
+    {
+      "input": "AT&T uses <tag> & "quotes"",
+      "name": "special HTML characters",
+      "output": "<p>AT&amp;T uses &lt;tag&gt; &amp; &quot;quotes&quot;</p>
+",
+    },
+    {
+      "input": "Line 1
+
+
+
+Line 2",
+      "name": "multiple blank lines",
+      "output": "<p>Line 1</p>
+<p>Line 2</p>
+",
+    },
+  ],
+}
+`;
+
+exports[`MD → HTML Conversion > Headings > should match snapshot 1`] = `
+{
+  "groupName": "Headings",
+  "results": [
+    {
+      "input": "# Heading 1",
+      "name": "h1",
+      "output": "<h1>Heading 1</h1>
+",
+    },
+    {
+      "input": "## Heading 2",
+      "name": "h2",
+      "output": "<h2>Heading 2</h2>
+",
+    },
+    {
+      "input": "### Heading 3",
+      "name": "h3",
+      "output": "<h3>Heading 3</h3>
+",
+    },
+    {
+      "input": "#### Heading 4",
+      "name": "h4",
+      "output": "<h4>Heading 4</h4>
+",
+    },
+    {
+      "input": "##### Heading 5",
+      "name": "h5",
+      "output": "<h5>Heading 5</h5>
+",
+    },
+    {
+      "input": "###### Heading 6",
+      "name": "h6",
+      "output": "<h6>Heading 6</h6>
+",
+    },
+  ],
+}
+`;
+
+exports[`MD → HTML Conversion > Links and Images > should match snapshot 1`] = `
+{
+  "groupName": "Links and Images",
+  "results": [
+    {
+      "input": "[OpenAI](https://openai.com)",
+      "name": "basic link",
+      "output": "<p><a href="https://openai.com">OpenAI</a></p>
+",
+    },
+    {
+      "input": "[OpenAI](https://openai.com "Visit OpenAI")",
+      "name": "link with title",
+      "output": "<p><a href="https://openai.com" title="Visit OpenAI">OpenAI</a></p>
+",
+    },
+    {
+      "input": "![Alt text](https://example.com/image.png)",
+      "name": "image",
+      "output": "<p><img https://example.com/image.png="../.." alt="Alt text"></p>
+",
+    },
+    {
+      "input": "![Alt text](https://example.com/image.png "Title")",
+      "name": "image with title",
+      "output": "<p><img https://example.com/image.png="../.." alt="Alt text"></p>
+",
+    },
+    {
+      "input": "Visit [OpenAI](https://openai.com) for more info.",
+      "name": "link in paragraph",
+      "output": "<p>Visit <a href="https://openai.com">OpenAI</a> for more info.</p>
+",
+    },
+  ],
+}
+`;
+
+exports[`MD → HTML Conversion > Lists > should match snapshot 1`] = `
+{
+  "groupName": "Lists",
+  "results": [
+    {
+      "input": "- Item 1
+- Item 2
+- Item 3",
+      "name": "unordered list",
+      "output": "<ul>
+<li>Item 1</li>
+<li>Item 2</li>
+<li>Item 3</li>
+</ul>
+",
+    },
+    {
+      "input": "1. First
+2. Second
+3. Third",
+      "name": "ordered list",
+      "output": "<ol>
+<li>First</li>
+<li>Second</li>
+<li>Third</li>
+</ol>
+",
+    },
+    {
+      "input": "- Parent 1
+  - Child 1
+  - Child 2
+- Parent 2",
+      "name": "nested unordered list",
+      "output": "<ul>
+<li>Parent 1
+<ul>
+<li>Child 1</li>
+<li>Child 2</li>
+</ul>
+</li>
+<li>Parent 2</li>
+</ul>
+",
+    },
+    {
+      "input": "- **Bold item**
+- *Italic item*
+- \`code item\`",
+      "name": "unordered with inline formatting",
+      "output": "<ul>
+<li><strong>Bold item</strong></li>
+<li><em>Italic item</em></li>
+<li><code>code item</code></li>
+</ul>
+",
+    },
+  ],
+}
+`;
+
+exports[`MD → HTML Conversion > Mixed Content > should match snapshot 1`] = `
+{
+  "groupName": "Mixed Content",
+  "results": [
+    {
+      "input": "# Title
+
+This is a paragraph after the title.",
+      "name": "heading with paragraph",
+      "output": "<h1>Title</h1>
+<p>This is a paragraph after the title.</p>
+",
+    },
+    {
+      "input": "First paragraph.
+
+Second paragraph.
+
+Third paragraph.",
+      "name": "multiple paragraphs",
+      "output": "<p>First paragraph.</p>
+<p>Second paragraph.</p>
+<p>Third paragraph.</p>
+",
+    },
+    {
+      "input": "> A blockquote
+> - with a list
+> - inside it",
+      "name": "blockquote with list inside",
+      "output": "<blockquote>
+<p>A blockquote</p>
+<ul>
+<li>with a list</li>
+<li>inside it</li>
+</ul>
+</blockquote>
+",
+    },
+  ],
+}
+`;

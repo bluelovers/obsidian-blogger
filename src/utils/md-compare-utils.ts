@@ -75,6 +75,97 @@ function _getTurndownService(): TurndownService
 		});
 
 		/**
+		 * 表格：<table> → GFM 風格表格
+		 * Table: <table> → GFM-style markdown table
+		 *
+		 * turndown 不內建表格支援，此規則自行解析 DOM 結構，
+		 * 將 <thead>/<th> 轉為表頭行，<tbody>/<td> 轉為資料行，
+		 * 支援 align 屬性（:---, :---:, ---:）。
+		 * turndown has no built-in table support; this rule parses the DOM,
+		 * converts <thead>/<th> → header row, <tbody>/<td> → data rows,
+		 * and supports the align attribute.
+		 */
+		_turndownService.addRule('table', {
+			filter: ['table'],
+			replacement: (_content, node) =>
+			{
+				const table = node as HTMLTableElement;
+				let result = '\n';
+
+				/** 輔助：將儲存格的 innerHTML 經 turndown 轉為行內 MD */
+				const cellToMd = (cell: HTMLElement): string =>
+				{
+					const innerMd = _turndownService!.turndown(cell.innerHTML);
+					return innerMd.replace(/\n/g, ' ').trim();
+				};
+
+				/** 輔助：取得儲存格對齊方式（支援 align 屬性與 style.textAlign） */
+				const getCellAlign = (cell: HTMLElement): string | null =>
+				{
+					const alignAttr = cell.getAttribute('align');
+					if (alignAttr) return alignAttr;
+					const styleAlign = cell.style.textAlign;
+					if (styleAlign) return styleAlign;
+					return null;
+				};
+
+				/** 輔助：建立 align 分隔列 */
+				const buildSeparator = (cells: HTMLElement[]): string =>
+				{
+					const parts = cells.map(cell =>
+					{
+						const align = getCellAlign(cell);
+						if (align === 'left') return ':---';
+						if (align === 'center') return ':---:';
+						if (align === 'right') return '---:';
+						return '---';
+					});
+					return '| ' + parts.join(' | ') + ' |\n';
+				};
+
+				/** 處理 <thead> */
+				const thead = table.querySelector('thead');
+				if (thead)
+				{
+					const headerRow = thead.querySelector('tr');
+					if (headerRow)
+					{
+						const cells = Array.from(headerRow.querySelectorAll('th, td')) as HTMLElement[];
+						result += '| ' + cells.map(cellToMd).join(' | ') + ' |\n';
+						result += buildSeparator(cells);
+					}
+				}
+
+				/** 處理 <tbody> */
+				const tbody = table.querySelector('tbody');
+				if (tbody)
+				{
+					Array.from(tbody.querySelectorAll('tr')).forEach(row =>
+					{
+						const cells = Array.from(row.querySelectorAll('td')) as HTMLElement[];
+						result += '| ' + cells.map(cellToMd).join(' | ') + ' |\n';
+					});
+				}
+
+				/**
+				 * 無 thead/tbody 的退化表格（僅 <tr> 直接掛在 <table> 下）
+				 * Degenerate table without thead/tbody
+				 */
+				if (!thead && !tbody)
+				{
+					Array.from(table.querySelectorAll('tr')).forEach((row, idx) =>
+					{
+						const cells = Array.from(row.querySelectorAll('th, td')) as HTMLElement[];
+						result += '| ' + cells.map(cellToMd).join(' | ') + ' |\n';
+						if (idx === 0) result += buildSeparator(cells);
+					});
+				}
+
+				return result;
+			},
+		});
+
+		/**
 		 * 程式碼區塊（含語言標記）：
 		 * <pre><code class="language-xxx"> → ```xxx
 		 *

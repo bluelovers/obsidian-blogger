@@ -16,15 +16,16 @@ Blogger API  →  HTML          →  turndown  →  MD (回存到本地)
 
 ### 初始狀態 / Baseline
 
-測試套件包含 **33 個測試案例**，涵蓋 7 個群組：
+測試套件包含 **37 個測試案例**，涵蓋 8 個群組：
 
 | 群組 | 案例數 | 涵蓋範圍 |
 |------|--------|---------|
-| Block Elements | 7 | 段落、標題、引言、列表、程式碼、水平線 |
 | Inline Formatting | 6 | 粗體、斜體、刪除線、程式碼、連結、圖片 |
+| Headings | 4 | h1~h6 |
+| Links and Images | 4 | 連結、圖片（含 title）、圖片縮放 |
 | Lists | 4 | 有序、無序、巢狀、行內格式 |
-| Tables | 3 | 表格基本、對齊、巢狀 |
-| Code Blocks | 3 | 圍柵式、含語言標記、水平線 |
+| **Tables** | **4** | **基本、對齊、行內格式、混合內容** |
+| Block Elements | 5 | 引言、程式碼區塊、水平線 |
 | Mixed Content | 4 | 標題+段落、引言+列表、多段落 |
 | Edge Cases | 6 | 空字串、純空白、特殊字元、多空行 |
 
@@ -91,26 +92,50 @@ export function normalizeMarkdown(md: string): string
 
 此函數已匯出（`export`），可在測試或同步流程中獨立使用。
 
+### 第五層：turndown 表格規則（重大缺失修復）
+
+**檔案**：`src/utils/md-compare-utils.ts`
+
+turndown **沒有內建表格支援**，因此 `<table>` 經過 pipeline 後表格結構會完全遺失（所有儲存格內容被單純串接）。
+
+為此新增自訂 `table` 規則：
+
+| 功能 | 說明 |
+|------|------|
+| `<thead><th>` → 表頭行 | 解析表頭內容，保留行內格式（粗體、程式碼、連結） |
+| `<tbody><td>` → 資料行 | 每格獨立經過 turndown 轉換，確保格式正確 |
+| `align` 屬性支援 | `left` → `:---`、`center` → `:---:`、`right` → `---:` |
+| 退化表格 | 無 `<thead>`/`<tbody>` 包裹的裸 `<tr>` 也正確處理 |
+
+修復後範例（Corepack 對比表，你的範例）：
+
+```
+原始 MD： |方法|指令範例|是否修改 `package.json`|...
+管線輸出：| 方法 | 指令範例 | 是否修改 `package.json` |...
+```
+
+表格已完成重建，`|` 計數前後一致。管道前後的單空格差異（`|Cell|` vs `| Cell |`）是可接受的格式風格。
+
 ---
 
 ## Results / 成果
 
 ### Pipeline 比對率歷程
 
-| 階段 | 匹配率 | 改善數 | 累計 |
-|------|--------|--------|------|
-| 初始（無客製） | **39.4%** (13/33) | — | — |
-| + turndown 選項配置 | **57.6%** (19/33) | +6 | +6 |
-| + turndown 自訂規則 | **60.6%** (20/33) | +1 | +7 |
-| + markdown-it 圖片 Bug 修復 | **66.7%** (22/33) | +2 | +9 |
-| + markdown-it strikethrough 啟用 | **72.7%** (24/33) | +2 | +11 |
-| + `normalizeMarkdown()` 空白/縮排正規化 | **97.0%** (32/33) | +8 | **+19** |
+| 階段 | 匹配率 | 改善 | 案例數 |
+|------|--------|------|--------|
+| 初始（無客製） | **39.4%** (13/33) | — | 33 |
+| + turndown 選項配置 | **57.6%** (19/33) | +6 | 33 |
+| + turndown 自訂規則 | **60.6%** (20/33) | +1 | 33 |
+| + markdown-it 修復（圖片、strikethrough） | **72.7%** (24/33) | +4 | 33 |
+| + `normalizeMarkdown()` 後製正規化 | **97.0%** (32/33) | +8 | 33 |
+| + turndown 表格規則 + 新測試案例 | **97.3%** (36/37) | +4 | **37** |
 
 ### 測試結果
 
-- **3 個測試檔案全部通過**：210 tests passed
-- **快照更新**：依階段 3~6 個
+- **3 個測試檔案全部通過**：236 tests passed
 - **測試框架**：Vitest v4.1.7
+- **測試案例**：從 33 個擴充至 **37 個**（新增 Tables 群組 4 案例）
 
 ### 剩餘 1 個不匹配案例
 
@@ -171,7 +196,7 @@ localMd     → trim() + normalizeMarkdown() (可選) → localMd
 
 | 檔案 | 異動摘要 |
 |------|---------|
-| `src/utils/md-compare-utils.ts` | 新增 `normalizeMarkdown()`（匯出）、整合至 `convertHtmlToMarkdown()`；turndown 選項 + 自訂規則 |
+| `src/utils/md-compare-utils.ts` | 新增 `normalizeMarkdown()`（匯出）、整合至 `convertHtmlToMarkdown()`；turndown 選項 + 自訂規則（刪除線、程式碼區塊、表格）；`getCellAlign()` 支援 `align` 屬性與 `style.textAlign` |
 | `src/utils/markdown/markdown-it-default.ts` | 圖片渲染器 title 屬性輸出；啟用 strikethrough |
 | `test/utils/html-to-md.spec.ts` | 匯入 `normalizeMarkdown`，原始 MD 正規化後比對；空字串相等性邏輯修正 |
 | `test/utils/md-to-html.spec.ts` | 無變更（僅快照更新） |

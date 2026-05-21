@@ -227,7 +227,35 @@ export const LISTS: ITestGroup = {
 	],
 };
 
-/** ==================== Group 5: 區塊元素 ==================== */
+/** ==================== Group 5: 表格 ==================== */
+
+export const TABLES: ITestGroup = {
+	name: 'Tables',
+	testCases: [
+		{
+			name: 'basic table',
+			md: '| Header 1 | Header 2 |\n| --- | --- |\n| Cell 1 | Cell 2 |',
+			html: '<table>\n<thead>\n<tr>\n<th>Header 1</th>\n<th>Header 2</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>Cell 1</td>\n<td>Cell 2</td>\n</tr>\n</tbody>\n</table>',
+		},
+		{
+			name: 'table with alignment',
+			md: '| Left | Center | Right |\n| :--- | :---: | ---: |\n| L | C | R |',
+			html: '<table>\n<thead>\n<tr>\n<th align="left">Left</th>\n<th align="center">Center</th>\n<th align="right">Right</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td align="left">L</td>\n<td align="center">C</td>\n<td align="right">R</td>\n</tr>\n</tbody>\n</table>',
+		},
+		{
+			name: 'table with inline formatting',
+			md: '| **Bold** | *Italic* |\n| --- | --- |\n| `code` | [link](http://example.com) |',
+			html: '<table>\n<thead>\n<tr>\n<th><strong>Bold</strong></th>\n<th><em>Italic</em></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><code>code</code></td>\n<td><a href="http://example.com">link</a></td>\n</tr>\n</tbody>\n</table>',
+		},
+		{
+			name: 'table with mixed content (Corepack)',
+			md: '| 方法 | 指令範例 | 是否修改 `package.json` |\n| --- | --- | --- |\n| **corepack use** | `corepack use pnpm@latest` | ✅ 會加上 `packageManager` |\n| **npm install -g** | `npm install -g pnpm@latest` | ❌ 不會修改 |',
+			html: '<table>\n<thead>\n<tr>\n<th>方法</th>\n<th>指令範例</th>\n<th>是否修改 <code>package.json</code></th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td><strong>corepack use</strong></td>\n<td><code>corepack use pnpm@latest</code></td>\n<td>✅ 會加上 <code>packageManager</code></td>\n</tr>\n<tr>\n<td><strong>npm install -g</strong></td>\n<td><code>npm install -g pnpm@latest</code></td>\n<td>❌ 不會修改</td>\n</tr>\n</tbody>\n</table>',
+		},
+	],
+};
+
+/** ==================== Group 6: 區塊元素 ==================== */
 
 export const BLOCK_ELEMENTS: ITestGroup = {
 	name: 'Block Elements',
@@ -260,7 +288,7 @@ export const BLOCK_ELEMENTS: ITestGroup = {
 	],
 };
 
-/** ==================== Group 6: 混合內容 ==================== */
+/** ==================== Group 7: 混合內容 ==================== */
 
 export const MIXED_CONTENT: ITestGroup = {
 	name: 'Mixed Content',
@@ -283,7 +311,7 @@ export const MIXED_CONTENT: ITestGroup = {
 	],
 };
 
-/** ==================== Group 7: 邊界情況 ==================== */
+/** ==================== Group 8: 邊界情況 ==================== */
 
 export const EDGE_CASES: ITestGroup = {
 	name: 'Edge Cases',
@@ -324,6 +352,7 @@ export const ALL_TEST_GROUPS: ITestGroup[] = [
 	HEADINGS,
 	LINKS_AND_IMAGES,
 	LISTS,
+	TABLES,
 	BLOCK_ELEMENTS,
 	MIXED_CONTENT,
 	EDGE_CASES,

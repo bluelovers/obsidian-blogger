@@ -321,3 +321,105 @@ Third paragraph.",
   ],
 }
 `;
+
+exports[`MD → HTML Conversion > Tables > should match snapshot 1`] = `
+{
+  "groupName": "Tables",
+  "results": [
+    {
+      "input": "| Header 1 | Header 2 |
+| --- | --- |
+| Cell 1 | Cell 2 |",
+      "name": "basic table",
+      "output": "<table>
+<thead>
+<tr>
+<th>Header 1</th>
+<th>Header 2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cell 1</td>
+<td>Cell 2</td>
+</tr>
+</tbody>
+</table>
+",
+    },
+    {
+      "input": "| Left | Center | Right |
+| :--- | :---: | ---: |
+| L | C | R |",
+      "name": "table with alignment",
+      "output": "<table>
+<thead>
+<tr>
+<th style="text-align:left">Left</th>
+<th style="text-align:center">Center</th>
+<th style="text-align:right">Right</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">L</td>
+<td style="text-align:center">C</td>
+<td style="text-align:right">R</td>
+</tr>
+</tbody>
+</table>
+",
+    },
+    {
+      "input": "| **Bold** | *Italic* |
+| --- | --- |
+| \`code\` | [link](http://example.com) |",
+      "name": "table with inline formatting",
+      "output": "<table>
+<thead>
+<tr>
+<th><strong>Bold</strong></th>
+<th><em>Italic</em></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>code</code></td>
+<td><a href="http://example.com">link</a></td>
+</tr>
+</tbody>
+</table>
+",
+    },
+    {
+      "input": "| 方法 | 指令範例 | 是否修改 \`package.json\` |
+| --- | --- | --- |
+| **corepack use** | \`corepack use pnpm@latest\` | ✅ 會加上 \`packageManager\` |
+| **npm install -g** | \`npm install -g pnpm@latest\` | ❌ 不會修改 |",
+      "name": "table with mixed content (Corepack)",
+      "output": "<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>指令範例</th>
+<th>是否修改 <code>package.json</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>corepack use</strong></td>
+<td><code>corepack use pnpm@latest</code></td>
+<td>✅ 會加上 <code>packageManager</code></td>
+</tr>
+<tr>
+<td><strong>npm install -g</strong></td>
+<td><code>npm install -g pnpm@latest</code></td>
+<td>❌ 不會修改</td>
+</tr>
+</tbody>
+</table>
+",
+    },
+  ],
+}
+`;
